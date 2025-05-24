@@ -1,47 +1,55 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-// Mock data similar to avail.subscan.io
-const mockChainData = {
-  finalizedBlocks: 1399813,
-  signedExtrinsics: 576934,
-  stakedAmount: '5.383B',
-  bondedAmount: '5.386B',
-  holders: 203302,
-  totalAccounts: 288348,
-  transfers: 643469,
-  inflationRate: 4.22,
-  tokenPrice: 0.03645154,
-  priceChange: -4.81,
-  totalIssuance: '10.442B',
-  circulating: { amount: '4.819B', percentage: 46.14 },
-  staking: { amount: '5.386B', percentage: 51.57 },
-  treasury: { amount: '230.471M', percentage: 2.20 },
-  others: { amount: '7.209M', percentage: 0.06 }
-}
-
-const mockLatestBlocks = [
-  { number: 1399813, hash: '0x1a2b3c...', time: Date.now() - 6000, extrinsics: 3 },
-  { number: 1399812, hash: '0x2b3c4d...', time: Date.now() - 12000, extrinsics: 2 },
-  { number: 1399811, hash: '0x3c4d5e...', time: Date.now() - 18000, extrinsics: 1 },
-  { number: 1399810, hash: '0x4d5e6f...', time: Date.now() - 24000, extrinsics: 4 },
-  { number: 1399809, hash: '0x5e6f7g...', time: Date.now() - 30000, extrinsics: 2 }
-]
+import { availAPI, type ChainData, type Block } from '@/lib/api'
+import { formatTimeAgo } from '@/lib/utils'
+import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
+import { BlocksChart } from '@/components/charts/BlocksChart'
+import { SearchComponent } from '@/components/dashboard/SearchComponent'
 
 export default function Dashboard() {
-  const [chainData, setChainData] = useState(mockChainData)
-  const [latestBlocks, setLatestBlocks] = useState(mockLatestBlocks)
+  const [chainData, setChainData] = useState<ChainData | null>(null)
+  const [latestBlocks, setLatestBlocks] = useState<Block[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [dataSource, setDataSource] = useState<'subscan' | 'rpc' | 'subquery'>('subscan')
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchData = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      console.log(`Fetching data from ${dataSource}...`)
+      
+      // Switch API source
+      availAPI.setDataSource(dataSource)
+      
+      // Fetch chain data and blocks in parallel
+      const [chainDataResult, blocksResult] = await Promise.all([
+        availAPI.getChainData(),
+        availAPI.getLatestBlocks(5)
+      ])
+      
+      setChainData(chainDataResult)
+      setLatestBlocks(blocksResult)
+      
+      console.log('Data fetched successfully:', { chainDataResult, blocksResult })
+    } catch (err) {
+      console.error('Error fetching data:', err)
+      setError('Failed to fetch data. Using fallback data.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [])
+    fetchData()
+    
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(fetchData, 30000)
+    
+    return () => clearInterval(interval)
+  }, [dataSource])
 
   const formatNumber = (num: number): string => {
     if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B'
@@ -59,7 +67,7 @@ export default function Dashboard() {
     return `${hours}h ago`
   }
 
-  if (isLoading) {
+  if (isLoading || !chainData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -69,7 +77,9 @@ export default function Dashboard() {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+          <p className="mt-4 text-muted-foreground">
+            {isLoading ? `Loading data from ${dataSource}...` : 'Initializing dashboard...'}
+          </p>
         </div>
       </div>
     )
@@ -86,8 +96,30 @@ export default function Dashboard() {
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
             </div>
+            {/* Data Source Selector */}
+            <select
+              value={dataSource}
+              onChange={(e) => setDataSource(e.target.value as 'subscan' | 'rpc' | 'subquery')}
+              className="hidden sm:block text-xs bg-background border rounded px-2 py-1"
+            >
+              <option value="subscan">Subscan API</option>
+              <option value="rpc">Direct RPC</option>
+              <option value="subquery">SubQuery</option>
+            </select>
           </div>
           <div className="flex items-center space-x-4">
+            {error && (
+              <div className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
+                {error}
+              </div>
+            )}
+            <button
+              onClick={fetchData}
+              disabled={isLoading}
+              className="text-xs bg-avail-600 text-white px-3 py-1 rounded hover:bg-avail-700 disabled:opacity-50"
+            >
+              {isLoading ? 'Loading...' : 'Refresh'}
+            </button>
             <div className="text-right text-sm">
               <div className="font-semibold">AVAIL ${chainData.tokenPrice.toFixed(8)}</div>
               <div className={`text-xs ${chainData.priceChange < 0 ? 'text-red-500' : 'text-green-500'}`}>
@@ -99,6 +131,14 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Search Section */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Search</h2>
+          <div className="bg-card p-6 rounded-lg border shadow-sm">
+            <SearchComponent />
+          </div>
+        </section>
+
         {/* Chain Statistics */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Chain Data</h2>
@@ -130,12 +170,44 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Token Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Token Distribution Chart */}
           <section>
             <h2 className="text-xl font-semibold mb-4">Token Distribution</h2>
             <div className="bg-card p-6 rounded-lg border shadow-sm">
-              <div className="text-lg font-semibold mb-4">Total Issuance: {chainData.totalIssuance}</div>
+              <TokenDistributionChart 
+                data={{
+                  circulating: chainData.circulating,
+                  staking: chainData.staking,
+                  treasury: chainData.treasury,
+                  others: chainData.others
+                }}
+                totalIssuance={chainData.totalIssuance}
+              />
+            </div>
+          </section>
+
+          {/* Block Activity Chart */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Block Activity</h2>
+            <div className="bg-card p-6 rounded-lg border shadow-sm">
+              {latestBlocks.length > 0 ? (
+                <BlocksChart blocks={latestBlocks} />
+              ) : (
+                <div className="h-80 flex items-center justify-center text-muted-foreground">
+                  No block data available
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* Additional Dashboard Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Token Distribution Details */}
+          <section>
+            <h2 className="text-xl font-semibold mb-4">Distribution Details</h2>
+            <div className="bg-card p-6 rounded-lg border shadow-sm">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
