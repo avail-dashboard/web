@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { StagewiseToolbar } from '@/components/StagewiseToolbar'
 
 export const metadata: Metadata = {
   title: 'Avail Explorer - Blockchain Dashboard',
@@ -18,6 +19,7 @@ export default function RootLayout({
         <div className="relative flex min-h-screen flex-col">
           <div className="flex-1">{children}</div>
         </div>
+        <StagewiseToolbar />
       </body>
     </html>
   )
