@@ -35,6 +35,9 @@ export interface Extrinsic {
   call: string
   success: boolean
   timestamp: number
+  signer: string
+  fee?: number
+  extrinsicIndex?: number
 }
 
 export interface Validator {
