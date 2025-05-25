@@ -32,45 +32,11 @@ export function ExtrinsicList({
   const [moduleFilter, setModuleFilter] = useState<string>('all')
   const [copied, setCopied] = useState<string | null>(null)
 
-  // Debug: Log the extrinsics data to see its structure
-  console.log('ExtrinsicList received extrinsics:', extrinsics)
-
   // Get unique modules for filtering
   const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.module)))
 
-  // Validate and filter extrinsics
+  // Filter extrinsics
   const filteredExtrinsics = extrinsics.filter(extrinsic => {
-    // Ensure all required properties exist
-    if (!extrinsic || typeof extrinsic !== 'object') {
-      console.error('Invalid extrinsic:', extrinsic)
-      return false
-    }
-
-    // Check for required properties and their types
-    const requiredProps = {
-      hash: 'string',
-      blockNumber: 'number',
-      module: 'string',
-      call: 'string',
-      success: 'boolean',
-      timestamp: 'number',
-      signer: 'string',
-    }
-
-    for (const [prop, expectedType] of Object.entries(requiredProps)) {
-      if (!(prop in extrinsic)) {
-        console.error(`Extrinsic missing required property: ${prop}`, extrinsic)
-        return false
-      }
-      if (typeof extrinsic[prop as keyof Extrinsic] !== expectedType) {
-        console.error(
-          `Extrinsic property ${prop} has wrong type. Expected ${expectedType}, got ${typeof extrinsic[prop as keyof Extrinsic]}`,
-          extrinsic
-        )
-        return false
-      }
-    }
-
     const statusMatch =
       filter === 'all' ||
       (filter === 'success' && extrinsic.success) ||

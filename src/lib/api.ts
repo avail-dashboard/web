@@ -192,13 +192,21 @@ class BackendAPIClient {
   async getBlocks(page = 0, limit = 10): Promise<Block[]> {
     return requestThrottler.throttle(async () => {
       try {
-        const response = await this.client.get<APIResponse<Block[]>>(
-          '/blocks',
-          {
-            params: { page, limit },
-          }
-        )
-        return response.data.data
+        const response = await this.client.get<APIResponse<any[]>>('/blocks', {
+          params: { page, limit },
+        })
+
+        // Transform snake_case to camelCase
+        const blocks: Block[] = response.data.data.map((rawBlock: any) => ({
+          number: rawBlock.number,
+          hash: rawBlock.hash,
+          time: rawBlock.timestamp || rawBlock.time,
+          extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics,
+          parentHash: rawBlock.parent_hash || rawBlock.parentHash,
+          stateRoot: rawBlock.state_root || rawBlock.stateRoot,
+        }))
+
+        return blocks
       } catch (error) {
         console.error('Failed to fetch blocks from backend:', error)
         throw error
@@ -208,10 +216,22 @@ class BackendAPIClient {
 
   async getBlock(numberOrHash: string | number): Promise<Block> {
     try {
-      const response = await this.client.get<APIResponse<Block>>(
+      const response = await this.client.get<APIResponse<any>>(
         `/blocks/${numberOrHash}`
       )
-      return response.data.data
+      const rawBlock = response.data.data
+
+      // Transform snake_case to camelCase
+      const block: Block = {
+        number: rawBlock.number,
+        hash: rawBlock.hash,
+        time: rawBlock.timestamp || rawBlock.time,
+        extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics,
+        parentHash: rawBlock.parent_hash || rawBlock.parentHash,
+        stateRoot: rawBlock.state_root || rawBlock.stateRoot,
+      }
+
+      return block
     } catch (error) {
       console.error(`Failed to fetch block ${numberOrHash}:`, error)
       throw error
@@ -229,11 +249,28 @@ class BackendAPIClient {
         params.block = blockNumber
       }
 
-      const response = await this.client.get<APIResponse<Extrinsic[]>>(
+      const response = await this.client.get<APIResponse<any[]>>(
         '/extrinsics',
         { params }
       )
-      return response.data.data
+
+      // Transform snake_case to camelCase and remove id field
+      const extrinsics: Extrinsic[] = response.data.data.map(
+        (rawExtrinsic: any) => ({
+          hash: rawExtrinsic.hash,
+          blockNumber: rawExtrinsic.block_number || rawExtrinsic.blockNumber,
+          module: rawExtrinsic.module,
+          call: rawExtrinsic.call,
+          success: rawExtrinsic.success,
+          timestamp: rawExtrinsic.timestamp,
+          signer: rawExtrinsic.signer,
+          fee: rawExtrinsic.fee,
+          extrinsicIndex:
+            rawExtrinsic.extrinsic_index || rawExtrinsic.extrinsicIndex,
+        })
+      )
+
+      return extrinsics
     } catch (error) {
       console.error('Failed to fetch extrinsics from backend:', error)
       throw error
@@ -334,6 +371,22 @@ class FrontendAPIClient {
     }
   }
 
+  async getBlock(numberOrHash: string | number): Promise<Block | null> {
+    try {
+      const response = await fetch(`/api/blocks/${numberOrHash}`)
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch block')
+      }
+
+      return data.data
+    } catch (error) {
+      console.error('Frontend API - Failed to fetch block:', error)
+      return null
+    }
+  }
+
   async getChainData(): Promise<Partial<ChainData>> {
     try {
       const response = await fetch('/api/chain')
@@ -400,11 +453,12 @@ export class AvailAPI {
   private backend: BackendAPIClient
   private frontend: FrontendAPIClient
   private useBackend: boolean = true
+  private healthCheckPromise: Promise<void>
 
   constructor() {
     this.backend = new BackendAPIClient()
     this.frontend = new FrontendAPIClient()
-    this.checkBackendHealth()
+    this.healthCheckPromise = this.checkBackendHealth()
   }
 
   private async checkBackendHealth() {
@@ -446,14 +500,23 @@ export class AvailAPI {
 
   async getBlock(numberOrHash: string | number): Promise<Block | null> {
     try {
+      // Wait for health check to complete
+      await this.healthCheckPromise
+
       if (this.useBackend) {
         return await this.backend.getBlock(numberOrHash)
+      } else {
+        return await this.frontend.getBlock(numberOrHash)
       }
-      // Frontend API doesn't support single block fetch yet
-      console.warn('Single block fetch not available without backend')
-      return null
     } catch (error) {
-      console.error('Failed to fetch block:', error)
+      console.error(
+        'Failed to fetch block from backend, trying frontend API...',
+        error
+      )
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.frontend.getBlock(numberOrHash)
+      }
       return null
     }
   }
