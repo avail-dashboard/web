@@ -19,6 +19,10 @@
     "format:check": "prettier --check .",
     "format:staged": "prettier --write $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.(js|jsx|ts|tsx|json|css|md)$' | xargs)",
     "pre-commit-check": "npm run format && npm run lint && npm run type-check",
+    "pre-commit-quick": "lint-staged && npm run type-check",
+    "pre-commit-full": "npm run format && npm run lint && npm run type-check && npm run test:ci",
+    "commitlint": "commitlint --edit",
+    "commitlint-check": "commitlint --from HEAD~1 --to HEAD --verbose",
     "prepare": "husky"
   },
   "dependencies": {
@@ -56,6 +60,8 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.27.0",
     "@playwright/test": "^1.52.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -73,5 +79,14 @@
     "msw": "^2.8.4",
     "prettier": "^3.5.3",
     "typescript-eslint": "^8.32.1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
   }
 }
