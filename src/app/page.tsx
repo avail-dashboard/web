@@ -7,15 +7,16 @@ import { formatTimeAgo } from '@/lib/utils'
 import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
+import { APICallMonitor } from '@/components/APICallMonitor'
 
 export default function Dashboard() {
   // Using the new API hooks
   const { data: chainData, loading: chainLoading, error: chainError, refetch: refetchChain } = useChainData({
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 60000 // Refresh every 60 seconds
   })
   
   const { data: latestBlocks, loading: blocksLoading, error: blocksError, refetch: refetchBlocks } = useBlocks(5, {
-    refetchInterval: 6000 // Refresh every 6 seconds
+    refetchInterval: 15000 // Refresh every 15 seconds
   })
   
   const { isConnected } = useBackendStatus()
@@ -59,6 +60,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
+      {/* API Call Monitor for debugging */}
+      {/* {process.env.NODE_ENV === 'development' && <APICallMonitor />} */}
+      
       {/* Header */}
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex h-16 items-center justify-between px-4">

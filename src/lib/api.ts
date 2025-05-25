@@ -74,7 +74,54 @@ const getConfig = () => ({
   wsURL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001',
   isDev: process.env.NEXT_PUBLIC_NODE_ENV === 'development',
   timeout: 10000,
+  maxConcurrentRequests: 5, // Limit concurrent requests
+  requestQueue: [] as Array<() => Promise<any>>,
+  activeRequests: 0
 })
+
+// Request throttling utility
+class RequestThrottler {
+  private maxConcurrent: number
+  private activeRequests: number = 0
+  private queue: Array<() => Promise<any>> = []
+
+  constructor(maxConcurrent: number = 5) {
+    this.maxConcurrent = maxConcurrent
+  }
+
+  async throttle<T>(request: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const execute = async () => {
+        if (this.activeRequests >= this.maxConcurrent) {
+          // Add to queue if too many active requests
+          this.queue.push(execute)
+          return
+        }
+
+        this.activeRequests++
+        try {
+          const result = await request()
+          resolve(result)
+        } catch (error) {
+          reject(error)
+        } finally {
+          this.activeRequests--
+          // Process next request in queue
+          if (this.queue.length > 0) {
+            const nextRequest = this.queue.shift()
+            if (nextRequest) {
+              setTimeout(nextRequest, 100) // Small delay between requests
+            }
+          }
+        }
+      }
+
+      execute()
+    })
+  }
+}
+
+const requestThrottler = new RequestThrottler(5)
 
 // ==== BACKEND API CLIENT ====
 class BackendAPIClient {
@@ -132,15 +179,17 @@ class BackendAPIClient {
   }
 
   async getBlocks(page = 0, limit = 10): Promise<Block[]> {
-    try {
-      const response = await this.client.get<APIResponse<Block[]>>('/blocks', {
-        params: { page, limit }
-      })
-      return response.data.data
-    } catch (error) {
-      console.error('Failed to fetch blocks from backend:', error)
-      throw error
-    }
+    return requestThrottler.throttle(async () => {
+      try {
+        const response = await this.client.get<APIResponse<Block[]>>('/blocks', {
+          params: { page, limit }
+        })
+        return response.data.data
+      } catch (error) {
+        console.error('Failed to fetch blocks from backend:', error)
+        throw error
+      }
+    })
   }
 
   async getBlock(numberOrHash: string | number): Promise<Block> {
@@ -169,13 +218,15 @@ class BackendAPIClient {
   }
 
   async getChainStats(): Promise<ChainData> {
-    try {
-      const response = await this.client.get<APIResponse<ChainData>>('/chain/stats')
-      return response.data.data
-    } catch (error) {
-      console.error('Failed to fetch chain stats from backend:', error)
-      throw error
-    }
+    return requestThrottler.throttle(async () => {
+      try {
+        const response = await this.client.get<APIResponse<ChainData>>('/chain/stats')
+        return response.data.data
+      } catch (error) {
+        console.error('Failed to fetch chain stats from backend:', error)
+        throw error
+      }
+    })
   }
 
   async getValidators(): Promise<Validator[]> {

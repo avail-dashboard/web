@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { availAPI, availWS, Block, ChainData, Extrinsic, Validator, Account, SearchResult } from '../api'
 
 // Generic hook for API requests with loading and error states
@@ -18,6 +18,9 @@ export function useAPIRequest<T>(
 
   const { enabled = true, refetchInterval, onSuccess, onError } = options
 
+  // Memoize the API call to prevent infinite loops
+  const memoizedApiCall = useCallback(apiCall, dependencies)
+
   const fetchData = useCallback(async () => {
     if (!enabled) return
 
@@ -25,7 +28,7 @@ export function useAPIRequest<T>(
     setError(null)
 
     try {
-      const result = await apiCall()
+      const result = await memoizedApiCall()
       setData(result)
       onSuccess?.(result)
     } catch (err) {
@@ -35,11 +38,12 @@ export function useAPIRequest<T>(
     } finally {
       setLoading(false)
     }
-  }, [apiCall, enabled, onSuccess, onError])
+  }, [memoizedApiCall, enabled, onSuccess, onError])
 
+  // Fetch data on mount and when dependencies change
   useEffect(() => {
     fetchData()
-  }, [fetchData, ...dependencies])
+  }, [fetchData])
 
   // Set up interval if specified
   useEffect(() => {
@@ -62,18 +66,24 @@ export function useBlocks(count: number = 10, options?: {
   refetchInterval?: number
   onNewBlock?: (block: Block) => void
 }) {
-  const { refetchInterval = 6000, onNewBlock } = options || {}
+  const { refetchInterval = 15000, onNewBlock } = options || {} // Increased from 6s to 15s
+
+  // Memoize the API call function
+  const apiCall = useCallback(() => availAPI.getLatestBlocks(count), [count])
+
+  // Memoize the onSuccess callback
+  const onSuccess = useCallback((blocks: Block[]) => {
+    if (onNewBlock && blocks.length > 0) {
+      onNewBlock(blocks[0])
+    }
+  }, [onNewBlock])
 
   const result = useAPIRequest(
-    () => availAPI.getLatestBlocks(count),
-    [count],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { 
       refetchInterval,
-      onSuccess: (blocks) => {
-        if (onNewBlock && blocks.length > 0) {
-          onNewBlock(blocks[0])
-        }
-      }
+      onSuccess
     }
   )
 
@@ -83,42 +93,66 @@ export function useBlocks(count: number = 10, options?: {
 export function useChainData(options?: {
   refetchInterval?: number
 }) {
-  const { refetchInterval = 30000 } = options || {}
+  const { refetchInterval = 60000 } = options || {} // Increased from 30s to 60s
+
+  // Memoize the API call function
+  const apiCall = useCallback(() => availAPI.getChainData(), [])
 
   return useAPIRequest(
-    () => availAPI.getChainData(),
-    [],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { refetchInterval }
   )
 }
 
 export function useBlock(numberOrHash: string | number | null) {
+  // Memoize the API call function
+  const apiCall = useCallback(() => 
+    numberOrHash ? availAPI.getBlock(numberOrHash) : Promise.resolve(null),
+    [numberOrHash]
+  )
+
   return useAPIRequest(
-    () => numberOrHash ? availAPI.getBlock(numberOrHash) : Promise.resolve(null),
-    [numberOrHash],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { enabled: !!numberOrHash }
   )
 }
 
 export function useExtrinsics(blockNumber?: number, page: number = 0, limit: number = 10) {
-  return useAPIRequest(
-    () => availAPI.getExtrinsics(blockNumber, page, limit),
+  // Memoize the API call function
+  const apiCall = useCallback(() => 
+    availAPI.getExtrinsics(blockNumber, page, limit),
     [blockNumber, page, limit]
+  )
+
+  return useAPIRequest(
+    apiCall,
+    [] // Empty dependency array since apiCall is already memoized
   )
 }
 
 export function useValidators() {
+  // Memoize the API call function
+  const apiCall = useCallback(() => availAPI.getValidators(), [])
+
   return useAPIRequest(
-    () => availAPI.getValidators(),
-    [],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { refetchInterval: 300000 } // 5 minutes
   )
 }
 
 export function useAccount(address: string | null) {
+  // Memoize the API call function
+  const apiCall = useCallback(() => 
+    address ? availAPI.getAccount(address) : Promise.resolve(null),
+    [address]
+  )
+
   return useAPIRequest(
-    () => address ? availAPI.getAccount(address) : Promise.resolve(null),
-    [address],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { enabled: !!address }
   )
 }
@@ -139,17 +173,26 @@ export function useSearch(query: string, options?: {
     return () => clearTimeout(timer)
   }, [query, debounceMs])
 
+  // Memoize the API call function
+  const apiCall = useCallback(() => 
+    availAPI.search(debouncedQuery),
+    [debouncedQuery]
+  )
+
   return useAPIRequest(
-    () => availAPI.search(debouncedQuery),
-    [debouncedQuery],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { enabled: enabled && debouncedQuery.trim().length > 0 }
   )
 }
 
 export function useAnalytics(period: '24h' | '7d' | '30d' = '24h') {
+  // Memoize the API call function
+  const apiCall = useCallback(() => availAPI.getAnalytics(period), [period])
+
   return useAPIRequest(
-    () => availAPI.getAnalytics(period),
-    [period],
+    apiCall,
+    [], // Empty dependency array since apiCall is already memoized
     { refetchInterval: 60000 } // 1 minute
   )
 }
@@ -174,8 +217,8 @@ export function useBackendStatus() {
     // Check status on mount
     checkStatus()
 
-    // Check status every 30 seconds
-    const interval = setInterval(checkStatus, 30000)
+    // Check status every 60 seconds
+    const interval = setInterval(checkStatus, 60000)
     return () => clearInterval(interval)
   }, [checkStatus])
 
