@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
-const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1'
+const BACKEND_API_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 export async function GET(request: Request) {
   try {
@@ -19,18 +20,22 @@ export async function GET(request: Request) {
     }
 
     // If backend fails, fall back to Subscan API
-    console.warn('Backend not available, falling back to Subscan API for chain stats')
-    
+    console.warn(
+      'Backend not available, falling back to Subscan API for chain stats'
+    )
+
     const [statsResponse, priceResponse] = await Promise.allSettled([
       fetch('https://avail.api.subscan.io/api/scan/metadata', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': process.env.SUBSCAN_API_KEY || ''
+          'X-API-Key': process.env.SUBSCAN_API_KEY || '',
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({}),
       }),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=avail&vs_currencies=usd&include_24hr_change=true')
+      fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=avail&vs_currencies=usd&include_24hr_change=true'
+      ),
     ])
 
     let chainData: any = {
@@ -39,7 +44,7 @@ export async function GET(request: Request) {
       totalAccounts: 0,
       transfers: 0,
       tokenPrice: 0,
-      priceChange: 0
+      priceChange: 0,
     }
 
     // Process stats response
@@ -50,7 +55,7 @@ export async function GET(request: Request) {
         finalizedBlocks: stats.data?.blockNum || 0,
         signedExtrinsics: stats.data?.extrinsicsCount || 0,
         totalAccounts: stats.data?.accountsCount || 0,
-        transfers: stats.data?.transfersCount || 0
+        transfers: stats.data?.transfersCount || 0,
       }
     }
 
@@ -61,31 +66,36 @@ export async function GET(request: Request) {
       chainData = {
         ...chainData,
         tokenPrice: avail?.usd || 0,
-        priceChange: avail?.usd_24h_change || 0
+        priceChange: avail?.usd_24h_change || 0,
       }
     }
 
     return NextResponse.json({
       success: true,
       data: chainData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
-
   } catch (error) {
     console.error('Chain stats API error:', error)
-    
+
     if (error instanceof Error) {
       if (error.name === 'TimeoutError') {
-        return NextResponse.json({ 
-          success: false,
-          error: 'Request timeout - backend server may be unavailable' 
-        }, { status: 503 })
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Request timeout - backend server may be unavailable',
+          },
+          { status: 503 }
+        )
       }
     }
 
-    return NextResponse.json({ 
-      success: false,
-      error: 'Failed to fetch chain statistics' 
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch chain statistics',
+      },
+      { status: 500 }
+    )
   }
-} 
+}

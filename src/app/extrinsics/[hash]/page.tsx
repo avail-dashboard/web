@@ -24,10 +24,10 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
     const fetchExtrinsic = async () => {
       try {
         setLoading(true)
-        
+
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000))
-        
+
         // Mock extrinsic data
         const mockExtrinsic: Extrinsic = {
           hash: extrinsicHash,
@@ -38,9 +38,9 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
           timestamp: Date.now() - 300000, // 5 minutes ago
           signer: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
           fee: 1000000000000000, // 0.001 AVAIL
-          extrinsicIndex: 2
+          extrinsicIndex: 2,
         }
-        
+
         setExtrinsic(mockExtrinsic)
       } catch (err) {
         setError('Failed to load extrinsic details')
@@ -62,7 +62,9 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="container flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+              <h1 className="text-2xl font-bold text-avail-600">
+                Avail Explorer
+              </h1>
               <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
                 <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span>Mainnet</span>
@@ -70,7 +72,7 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
             </div>
           </div>
         </header>
-        
+
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="loading-dots">
@@ -79,7 +81,9 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
               <div></div>
               <div></div>
             </div>
-            <p className="mt-4 text-muted-foreground">Loading extrinsic details...</p>
+            <p className="mt-4 text-muted-foreground">
+              Loading extrinsic details...
+            </p>
           </div>
         </div>
       </div>
@@ -92,11 +96,13 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="container flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+              <h1 className="text-2xl font-bold text-avail-600">
+                Avail Explorer
+              </h1>
             </div>
           </div>
         </header>
-        
+
         <div className="text-center py-12">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h3 className="text-xl font-semibold mb-2">Extrinsic Not Found</h3>
@@ -120,7 +126,9 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+            <h1 className="text-2xl font-bold text-avail-600">
+              Avail Explorer
+            </h1>
             <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
@@ -130,11 +138,8 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
       </header>
 
       <main>
-        <ExtrinsicDetails 
-          extrinsic={extrinsic}
-          onBack={handleBack}
-        />
+        <ExtrinsicDetails extrinsic={extrinsic} onBack={handleBack} />
       </main>
     </div>
   )
-} 
+}

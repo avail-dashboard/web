@@ -73,13 +73,14 @@ export interface APIResponse<T> {
 
 // Configuration
 const getConfig = () => ({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1',
+  baseURL:
+    process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1',
   wsURL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001',
   isDev: process.env.NEXT_PUBLIC_NODE_ENV === 'development',
   timeout: 10000,
   maxConcurrentRequests: 5, // Limit concurrent requests
   requestQueue: [] as Array<() => Promise<any>>,
-  activeRequests: 0
+  activeRequests: 0,
 })
 
 // Request throttling utility
@@ -142,13 +143,15 @@ class BackendAPIClient {
 
     // Add request interceptor for logging
     this.client.interceptors.request.use(
-      (config) => {
+      config => {
         if (this.config.isDev) {
-          console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+          console.log(
+            `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`
+          )
         }
         return config
       },
-      (error) => {
+      error => {
         console.error('API Request Error:', error)
         return Promise.reject(error)
       }
@@ -156,15 +159,20 @@ class BackendAPIClient {
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => {
+      response => {
         if (this.config.isDev) {
-          console.log(`✅ API Response: ${response.status} ${response.config.url}`)
+          console.log(
+            `✅ API Response: ${response.status} ${response.config.url}`
+          )
         }
         return response
       },
-      (error) => {
-        console.error('API Response Error:', error.response?.data || error.message)
-        
+      error => {
+        console.error(
+          'API Response Error:',
+          error.response?.data || error.message
+        )
+
         // Handle common error cases
         if (error.response?.status === 404) {
           throw new Error('Resource not found')
@@ -175,7 +183,7 @@ class BackendAPIClient {
         if (error.code === 'ECONNREFUSED') {
           throw new Error('Backend server is not running')
         }
-        
+
         throw error
       }
     )
@@ -184,9 +192,12 @@ class BackendAPIClient {
   async getBlocks(page = 0, limit = 10): Promise<Block[]> {
     return requestThrottler.throttle(async () => {
       try {
-        const response = await this.client.get<APIResponse<Block[]>>('/blocks', {
-          params: { page, limit }
-        })
+        const response = await this.client.get<APIResponse<Block[]>>(
+          '/blocks',
+          {
+            params: { page, limit },
+          }
+        )
         return response.data.data
       } catch (error) {
         console.error('Failed to fetch blocks from backend:', error)
@@ -197,7 +208,9 @@ class BackendAPIClient {
 
   async getBlock(numberOrHash: string | number): Promise<Block> {
     try {
-      const response = await this.client.get<APIResponse<Block>>(`/blocks/${numberOrHash}`)
+      const response = await this.client.get<APIResponse<Block>>(
+        `/blocks/${numberOrHash}`
+      )
       return response.data.data
     } catch (error) {
       console.error(`Failed to fetch block ${numberOrHash}:`, error)
@@ -205,14 +218,21 @@ class BackendAPIClient {
     }
   }
 
-  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+  async getExtrinsics(
+    blockNumber?: number,
+    page = 0,
+    limit = 10
+  ): Promise<Extrinsic[]> {
     try {
       const params: any = { page, limit }
       if (blockNumber !== undefined) {
         params.block = blockNumber
       }
-      
-      const response = await this.client.get<APIResponse<Extrinsic[]>>('/extrinsics', { params })
+
+      const response = await this.client.get<APIResponse<Extrinsic[]>>(
+        '/extrinsics',
+        { params }
+      )
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch extrinsics from backend:', error)
@@ -223,7 +243,8 @@ class BackendAPIClient {
   async getChainStats(): Promise<ChainData> {
     return requestThrottler.throttle(async () => {
       try {
-        const response = await this.client.get<APIResponse<ChainData>>('/chain/stats')
+        const response =
+          await this.client.get<APIResponse<ChainData>>('/chain/stats')
         return response.data.data
       } catch (error) {
         console.error('Failed to fetch chain stats from backend:', error)
@@ -234,7 +255,8 @@ class BackendAPIClient {
 
   async getValidators(): Promise<Validator[]> {
     try {
-      const response = await this.client.get<APIResponse<Validator[]>>('/validators')
+      const response =
+        await this.client.get<APIResponse<Validator[]>>('/validators')
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch validators from backend:', error)
@@ -244,7 +266,9 @@ class BackendAPIClient {
 
   async getAccount(address: string): Promise<Account> {
     try {
-      const response = await this.client.get<APIResponse<Account>>(`/accounts/${address}`)
+      const response = await this.client.get<APIResponse<Account>>(
+        `/accounts/${address}`
+      )
       return response.data.data
     } catch (error) {
       console.error(`Failed to fetch account ${address}:`, error)
@@ -254,9 +278,12 @@ class BackendAPIClient {
 
   async search(query: string): Promise<SearchResult[]> {
     try {
-      const response = await this.client.get<APIResponse<SearchResult[]>>('/search', {
-        params: { q: query }
-      })
+      const response = await this.client.get<APIResponse<SearchResult[]>>(
+        '/search',
+        {
+          params: { q: query },
+        }
+      )
       return response.data.data
     } catch (error) {
       console.error(`Failed to search for "${query}":`, error)
@@ -267,7 +294,7 @@ class BackendAPIClient {
   async getAnalytics(period: '24h' | '7d' | '30d' = '24h'): Promise<any> {
     try {
       const response = await this.client.get<APIResponse<any>>('/analytics', {
-        params: { period }
+        params: { period },
       })
       return response.data.data
     } catch (error) {
@@ -295,11 +322,11 @@ class FrontendAPIClient {
     try {
       const response = await fetch(`/api/blocks?page=${page}&limit=${limit}`)
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch blocks')
       }
-      
+
       return data.data
     } catch (error) {
       console.error('Frontend API - Failed to fetch blocks:', error)
@@ -311,11 +338,11 @@ class FrontendAPIClient {
     try {
       const response = await fetch('/api/chain')
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch chain data')
       }
-      
+
       return data.data
     } catch (error) {
       console.error('Frontend API - Failed to fetch chain data:', error)
@@ -323,20 +350,27 @@ class FrontendAPIClient {
     }
   }
 
-  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+  async getExtrinsics(
+    blockNumber?: number,
+    page = 0,
+    limit = 10
+  ): Promise<Extrinsic[]> {
     try {
-      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      })
       if (blockNumber !== undefined) {
         params.append('block', blockNumber.toString())
       }
-      
+
       const response = await fetch(`/api/extrinsics?${params}`)
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch extrinsics')
       }
-      
+
       return data.data
     } catch (error) {
       console.error('Frontend API - Failed to fetch extrinsics:', error)
@@ -348,11 +382,11 @@ class FrontendAPIClient {
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
       const data = await response.json()
-      
+
       if (!data.success) {
         throw new Error(data.error || 'Failed to search')
       }
-      
+
       return data.data
     } catch (error) {
       console.error('Frontend API - Failed to search:', error)
@@ -377,12 +411,16 @@ export class AvailAPI {
     try {
       this.useBackend = await this.backend.healthCheck()
       if (!this.useBackend) {
-        console.warn('⚠️  Backend is not available, using Next.js API routes as fallback')
+        console.warn(
+          '⚠️  Backend is not available, using Next.js API routes as fallback'
+        )
       } else {
         console.log('✅ Backend is available')
       }
     } catch (error) {
-      console.warn('⚠️  Backend health check failed, using Next.js API routes as fallback')
+      console.warn(
+        '⚠️  Backend health check failed, using Next.js API routes as fallback'
+      )
       this.useBackend = false
     }
   }
@@ -395,7 +433,9 @@ export class AvailAPI {
         return await this.frontend.getBlocks(0, count)
       }
     } catch (error) {
-      console.error('Failed to fetch blocks from backend, trying frontend API...')
+      console.error(
+        'Failed to fetch blocks from backend, trying frontend API...'
+      )
       if (this.useBackend) {
         this.useBackend = false
         return await this.frontend.getBlocks(0, count)
@@ -418,7 +458,11 @@ export class AvailAPI {
     }
   }
 
-  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+  async getExtrinsics(
+    blockNumber?: number,
+    page = 0,
+    limit = 10
+  ): Promise<Extrinsic[]> {
     try {
       if (this.useBackend) {
         return await this.backend.getExtrinsics(blockNumber, page, limit)
@@ -450,13 +494,13 @@ export class AvailAPI {
       totalIssuance: '10.442B',
       circulating: { amount: '4.819B', percentage: 46.14 },
       staking: { amount: '5.386B', percentage: 51.57 },
-      treasury: { amount: '230.471M', percentage: 2.20 },
-      others: { amount: '7.209M', percentage: 0.06 }
+      treasury: { amount: '230.471M', percentage: 2.2 },
+      others: { amount: '7.209M', percentage: 0.06 },
     }
 
     try {
       let data: Partial<ChainData>
-      
+
       if (this.useBackend) {
         data = await this.backend.getChainStats()
       } else {
@@ -465,14 +509,19 @@ export class AvailAPI {
 
       return { ...mockData, ...data }
     } catch (error) {
-      console.error('Failed to fetch chain data from backend, trying frontend API...')
+      console.error(
+        'Failed to fetch chain data from backend, trying frontend API...'
+      )
       if (this.useBackend) {
         this.useBackend = false
         try {
           const data = await this.frontend.getChainData()
           return { ...mockData, ...data }
         } catch (frontendError) {
-          console.error('Frontend API also failed, using mock data:', frontendError)
+          console.error(
+            'Frontend API also failed, using mock data:',
+            frontendError
+          )
           return mockData
         }
       }
@@ -566,7 +615,7 @@ export class AvailWebSocket {
         this.reconnectAttempts = 0
       }
 
-      this.ws.onmessage = (event) => {
+      this.ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data)
           onMessage?.(data)
@@ -575,12 +624,12 @@ export class AvailWebSocket {
         }
       }
 
-      this.ws.onerror = (error) => {
+      this.ws.onerror = error => {
         console.error('WebSocket error:', error)
         onError?.(error)
       }
 
-      this.ws.onclose = (event) => {
+      this.ws.onclose = event => {
         console.log('🔌 WebSocket disconnected:', event.code, event.reason)
         this.attemptReconnect(onMessage, onError)
       }
@@ -590,11 +639,16 @@ export class AvailWebSocket {
     }
   }
 
-  private attemptReconnect(onMessage?: (data: any) => void, onError?: (error: Event) => void) {
+  private attemptReconnect(
+    onMessage?: (data: any) => void,
+    onError?: (error: Event) => void
+  ) {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++
-      console.log(`🔄 Attempting to reconnect WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
-      
+      console.log(
+        `🔄 Attempting to reconnect WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      )
+
       setTimeout(() => {
         this.connect(onMessage, onError)
       }, this.reconnectDelay * this.reconnectAttempts)
@@ -624,4 +678,4 @@ export class AvailWebSocket {
 }
 
 // Export WebSocket instance
-export const availWS = new AvailWebSocket() 
+export const availWS = new AvailWebSocket()

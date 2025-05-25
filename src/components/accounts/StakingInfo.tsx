@@ -40,7 +40,7 @@ export function StakingInfo({ address }: StakingInfoProps) {
     // Mock staking data
     const generateMockData = (): StakingData => {
       const isStaking = Math.random() > 0.3 // 70% chance of staking
-      
+
       if (!isStaking) {
         return {
           isStaking: false,
@@ -48,7 +48,7 @@ export function StakingInfo({ address }: StakingInfoProps) {
           nominations: [],
           rewards: [],
           totalRewards: '0',
-          unbondingPeriod: 28
+          unbondingPeriod: 28,
         }
       }
 
@@ -58,29 +58,33 @@ export function StakingInfo({ address }: StakingInfoProps) {
           validatorName: 'Validator Alpha',
           stakedAmount: '1000.5',
           isActive: true,
-          commission: 5
+          commission: 5,
         },
         {
           validatorAddress: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
           validatorName: 'Validator Beta',
           stakedAmount: '750.25',
           isActive: true,
-          commission: 3
+          commission: 3,
         },
         {
           validatorAddress: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
           validatorName: 'Validator Gamma',
           stakedAmount: '500.0',
           isActive: false,
-          commission: 7
-        }
+          commission: 7,
+        },
       ]
 
       const rewards: StakingReward[] = Array.from({ length: 10 }, (_, i) => ({
-        date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        date: new Date(
+          Date.now() - i * 24 * 60 * 60 * 1000
+        ).toLocaleDateString(),
         amount: (Math.random() * 10 + 1).toFixed(6),
-        validator: nominations[Math.floor(Math.random() * nominations.length)].validatorName || 'Unknown',
-        era: 1000 - i
+        validator:
+          nominations[Math.floor(Math.random() * nominations.length)]
+            .validatorName || 'Unknown',
+        era: 1000 - i,
       }))
 
       return {
@@ -89,7 +93,7 @@ export function StakingInfo({ address }: StakingInfoProps) {
         nominations,
         rewards,
         totalRewards: '125.456789',
-        unbondingPeriod: 28
+        unbondingPeriod: 28,
       }
     }
 
@@ -110,7 +114,9 @@ export function StakingInfo({ address }: StakingInfoProps) {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground">Loading staking information...</p>
+          <p className="mt-4 text-muted-foreground">
+            Loading staking information...
+          </p>
         </div>
       </div>
     )
@@ -120,8 +126,12 @@ export function StakingInfo({ address }: StakingInfoProps) {
     return (
       <div className="text-center py-8">
         <div className="text-red-500 text-4xl mb-4">⚠️</div>
-        <h3 className="text-lg font-semibold mb-2">Failed to Load Staking Data</h3>
-        <p className="text-muted-foreground">Unable to fetch staking information for this account.</p>
+        <h3 className="text-lg font-semibold mb-2">
+          Failed to Load Staking Data
+        </h3>
+        <p className="text-muted-foreground">
+          Unable to fetch staking information for this account.
+        </p>
       </div>
     )
   }
@@ -144,7 +154,7 @@ export function StakingInfo({ address }: StakingInfoProps) {
   const formatAmount = (amount: string) => {
     return parseFloat(amount).toLocaleString(undefined, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6
+      maximumFractionDigits: 6,
     })
   }
 
@@ -193,24 +203,27 @@ export function StakingInfo({ address }: StakingInfoProps) {
           <Users className="h-5 w-5 mr-2 text-avail-600" />
           Nominations
         </h4>
-        
+
         {stakingData.nominations.length > 0 ? (
           <div className="space-y-3">
             {stakingData.nominations.map((nomination, index) => (
               <div key={index} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${nomination.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
+                    <div
+                      className={`w-3 h-3 rounded-full ${nomination.isActive ? 'bg-green-500' : 'bg-gray-400'}`}
+                    />
                     <div>
                       <div className="font-medium">
-                        {nomination.validatorName || formatAddress(nomination.validatorAddress)}
+                        {nomination.validatorName ||
+                          formatAddress(nomination.validatorAddress)}
                       </div>
                       <div className="text-sm text-muted-foreground font-mono">
                         {formatAddress(nomination.validatorAddress)}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
                     <div className="font-semibold">
                       {formatAmount(nomination.stakedAmount)} AVAIL
@@ -220,16 +233,18 @@ export function StakingInfo({ address }: StakingInfoProps) {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-sm">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    nomination.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      nomination.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
                     {nomination.isActive ? 'Active' : 'Inactive'}
                   </span>
-                  
+
                   <Link
                     href={`/validators/${nomination.validatorAddress}`}
                     className="text-avail-600 hover:text-avail-700 flex items-center space-x-1"
@@ -254,18 +269,21 @@ export function StakingInfo({ address }: StakingInfoProps) {
           <Award className="h-5 w-5 mr-2 text-avail-600" />
           Recent Rewards
         </h4>
-        
+
         {stakingData.rewards.length > 0 ? (
           <div className="space-y-2">
             {stakingData.rewards.slice(0, 5).map((reward, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
+              <div
+                key={index}
+                className="flex items-center justify-between py-2 border-b last:border-b-0"
+              >
                 <div className="flex items-center space-x-3">
                   <div className="text-sm">
                     <div className="font-medium">Era {reward.era}</div>
                     <div className="text-muted-foreground">{reward.date}</div>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   <div className="font-semibold text-green-600">
                     +{formatAmount(reward.amount)} AVAIL
@@ -276,7 +294,7 @@ export function StakingInfo({ address }: StakingInfoProps) {
                 </div>
               </div>
             ))}
-            
+
             {stakingData.rewards.length > 5 && (
               <div className="text-center pt-2">
                 <button className="text-sm text-avail-600 hover:text-avail-700">
@@ -296,13 +314,15 @@ export function StakingInfo({ address }: StakingInfoProps) {
       <div className="bg-muted/30 p-4 rounded-lg">
         <div className="text-sm text-muted-foreground">
           <div className="mb-2">
-            <strong>Unbonding Period:</strong> {stakingData.unbondingPeriod} days
+            <strong>Unbonding Period:</strong> {stakingData.unbondingPeriod}{' '}
+            days
           </div>
           <div>
-            Staked tokens are locked and require an unbonding period before they can be transferred.
+            Staked tokens are locked and require an unbonding period before they
+            can be transferred.
           </div>
         </div>
       </div>
     </div>
   )
-} 
+}

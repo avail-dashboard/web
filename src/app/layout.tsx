@@ -4,8 +4,15 @@ import { StagewiseToolbar } from '@/components/StagewiseToolbar'
 
 export const metadata: Metadata = {
   title: 'Avail Explorer - Blockchain Dashboard',
-  description: 'A comprehensive blockchain explorer dashboard for the Avail network',
-  keywords: ['blockchain', 'avail', 'explorer', 'dashboard', 'data availability'],
+  description:
+    'A comprehensive blockchain explorer dashboard for the Avail network',
+  keywords: [
+    'blockchain',
+    'avail',
+    'explorer',
+    'dashboard',
+    'data availability',
+  ],
 }
 
 export default function RootLayout({
@@ -23,4 +30,4 @@ export default function RootLayout({
       </body>
     </html>
   )
-} 
+}

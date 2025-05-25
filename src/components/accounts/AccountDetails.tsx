@@ -6,7 +6,15 @@ import { formatTimeAgo } from '@/lib/utils'
 import { TransactionHistory } from './TransactionHistory'
 import { BalanceChart } from './BalanceChart'
 import { StakingInfo } from './StakingInfo'
-import { Copy, ExternalLink, Wallet, TrendingUp, Shield, Activity, RefreshCw } from 'lucide-react'
+import {
+  Copy,
+  ExternalLink,
+  Wallet,
+  TrendingUp,
+  Shield,
+  Activity,
+  RefreshCw,
+} from 'lucide-react'
 
 interface AccountDetailsProps {
   address: string
@@ -15,7 +23,9 @@ interface AccountDetailsProps {
 export function AccountDetails({ address }: AccountDetailsProps) {
   const { data: account, loading, error, refetch } = useAccount(address)
   const [copied, setCopied] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'staking'>('overview')
+  const [activeTab, setActiveTab] = useState<
+    'overview' | 'transactions' | 'staking'
+  >('overview')
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
@@ -30,9 +40,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
   const formatBalance = (balance: string) => {
     // Convert from smallest unit to AVAIL (assuming 18 decimals)
     const avail = parseFloat(balance) / Math.pow(10, 18)
-    return avail.toLocaleString(undefined, { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 6 
+    return avail.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
     })
   }
 
@@ -47,7 +57,7 @@ export function AccountDetails({ address }: AccountDetailsProps) {
     lastActivity: Date.now() - 3600000, // 1 hour ago
     stakingRewards: '125.456789',
     isValidator: false,
-    nominations: 3
+    nominations: 3,
   }
 
   if (loading && !account) {
@@ -60,7 +70,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground">Loading account details...</p>
+          <p className="mt-4 text-muted-foreground">
+            Loading account details...
+          </p>
         </div>
       </div>
     )
@@ -93,7 +105,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
         <div>
           <h1 className="text-3xl font-bold">Account Details</h1>
           <div className="flex items-center space-x-2 mt-2">
-            <span className="font-mono text-lg text-muted-foreground">{address}</span>
+            <span className="font-mono text-lg text-muted-foreground">
+              {address}
+            </span>
             <button
               onClick={() => copyToClipboard(address, 'address')}
               className="p-1 hover:bg-muted rounded"
@@ -106,7 +120,7 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             )}
           </div>
         </div>
-        
+
         <button
           onClick={() => refetch()}
           disabled={loading}
@@ -122,21 +136,26 @@ export function AccountDetails({ address }: AccountDetailsProps) {
         {/* Balance */}
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Total Balance</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Total Balance
+            </h3>
             <Wallet className="h-4 w-4 text-avail-600" />
           </div>
           <div className="text-2xl font-bold text-avail-600">
             {formatBalance(account.balance)} AVAIL
           </div>
           <div className="text-sm text-muted-foreground mt-1">
-            ≈ ${(parseFloat(formatBalance(account.balance)) * 0.15).toFixed(2)} USD
+            ≈ ${(parseFloat(formatBalance(account.balance)) * 0.15).toFixed(2)}{' '}
+            USD
           </div>
         </div>
 
         {/* Reserved Balance */}
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Reserved</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Reserved
+            </h3>
             <Shield className="h-4 w-4 text-orange-600" />
           </div>
           <div className="text-2xl font-bold text-orange-600">
@@ -150,7 +169,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
         {/* Transactions */}
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Transactions</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Transactions
+            </h3>
             <Activity className="h-4 w-4 text-blue-600" />
           </div>
           <div className="text-2xl font-bold text-blue-600">
@@ -164,15 +185,15 @@ export function AccountDetails({ address }: AccountDetailsProps) {
         {/* Staking Rewards */}
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-muted-foreground">Staking Rewards</h3>
+            <h3 className="text-sm font-medium text-muted-foreground">
+              Staking Rewards
+            </h3>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </div>
           <div className="text-2xl font-bold text-green-600">
             {mockAccountData.stakingRewards} AVAIL
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            Total earned
-          </div>
+          <div className="text-sm text-muted-foreground mt-1">Total earned</div>
         </div>
       </div>
 
@@ -220,11 +241,15 @@ export function AccountDetails({ address }: AccountDetailsProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Account Information */}
             <div className="bg-card p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                Account Information
+              </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Address:</span>
-                  <span className="font-mono text-sm">{formatAddress(address)}</span>
+                  <span className="font-mono text-sm">
+                    {formatAddress(address)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Nonce:</span>
@@ -232,7 +257,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">First Seen:</span>
-                  <span>{new Date(mockAccountData.firstSeen).toLocaleDateString()}</span>
+                  <span>
+                    {new Date(mockAccountData.firstSeen).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last Activity:</span>
@@ -271,4 +298,4 @@ export function AccountDetails({ address }: AccountDetailsProps) {
       </div>
     </div>
   )
-} 
+}

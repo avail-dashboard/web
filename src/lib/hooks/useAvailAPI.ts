@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { availAPI, availWS, Block, ChainData, Extrinsic, Validator, Account, SearchResult } from '../api'
+import {
+  availAPI,
+  availWS,
+  Block,
+  ChainData,
+  Extrinsic,
+  Validator,
+  Account,
+  SearchResult,
+} from '../api'
 
 // Generic hook for API requests with loading and error states
 export function useAPIRequest<T>(
@@ -57,42 +66,46 @@ export function useAPIRequest<T>(
     data,
     loading,
     error,
-    refetch: fetchData
+    refetch: fetchData,
   }
 }
 
 // Specific hooks for different data types
-export function useBlocks(count: number = 10, options?: {
-  refetchInterval?: number
-  onNewBlock?: (block: Block) => void
-}) {
+export function useBlocks(
+  count: number = 10,
+  options?: {
+    refetchInterval?: number
+    onNewBlock?: (block: Block) => void
+  }
+) {
   const { refetchInterval = 15000, onNewBlock } = options || {} // Increased from 6s to 15s
 
   // Memoize the API call function
   const apiCall = useCallback(() => availAPI.getLatestBlocks(count), [count])
 
   // Memoize the onSuccess callback
-  const onSuccess = useCallback((blocks: Block[]) => {
-    if (onNewBlock && blocks.length > 0) {
-      onNewBlock(blocks[0])
-    }
-  }, [onNewBlock])
+  const onSuccess = useCallback(
+    (blocks: Block[]) => {
+      if (onNewBlock && blocks.length > 0) {
+        onNewBlock(blocks[0])
+      }
+    },
+    [onNewBlock]
+  )
 
   const result = useAPIRequest(
     apiCall,
     [], // Empty dependency array since apiCall is already memoized
-    { 
+    {
       refetchInterval,
-      onSuccess
+      onSuccess,
     }
   )
 
   return result
 }
 
-export function useChainData(options?: {
-  refetchInterval?: number
-}) {
+export function useChainData(options?: { refetchInterval?: number }) {
   const { refetchInterval = 60000 } = options || {} // Increased from 30s to 60s
 
   // Memoize the API call function
@@ -107,8 +120,9 @@ export function useChainData(options?: {
 
 export function useBlock(numberOrHash: string | number | null) {
   // Memoize the API call function
-  const apiCall = useCallback(() => 
-    numberOrHash ? availAPI.getBlock(numberOrHash) : Promise.resolve(null),
+  const apiCall = useCallback(
+    () =>
+      numberOrHash ? availAPI.getBlock(numberOrHash) : Promise.resolve(null),
     [numberOrHash]
   )
 
@@ -119,10 +133,14 @@ export function useBlock(numberOrHash: string | number | null) {
   )
 }
 
-export function useExtrinsics(blockNumber?: number, page: number = 0, limit: number = 10) {
+export function useExtrinsics(
+  blockNumber?: number,
+  page: number = 0,
+  limit: number = 10
+) {
   // Memoize the API call function
-  const apiCall = useCallback(() => 
-    availAPI.getExtrinsics(blockNumber, page, limit),
+  const apiCall = useCallback(
+    () => availAPI.getExtrinsics(blockNumber, page, limit),
     [blockNumber, page, limit]
   )
 
@@ -145,8 +163,8 @@ export function useValidators() {
 
 export function useAccount(address: string | null) {
   // Memoize the API call function
-  const apiCall = useCallback(() => 
-    address ? availAPI.getAccount(address) : Promise.resolve(null),
+  const apiCall = useCallback(
+    () => (address ? availAPI.getAccount(address) : Promise.resolve(null)),
     [address]
   )
 
@@ -157,10 +175,13 @@ export function useAccount(address: string | null) {
   )
 }
 
-export function useSearch(query: string, options?: {
-  enabled?: boolean
-  debounceMs?: number
-}) {
+export function useSearch(
+  query: string,
+  options?: {
+    enabled?: boolean
+    debounceMs?: number
+  }
+) {
   const { enabled = true, debounceMs = 300 } = options || {}
   const [debouncedQuery, setDebouncedQuery] = useState(query)
 
@@ -174,8 +195,8 @@ export function useSearch(query: string, options?: {
   }, [query, debounceMs])
 
   // Memoize the API call function
-  const apiCall = useCallback(() => 
-    availAPI.search(debouncedQuery),
+  const apiCall = useCallback(
+    () => availAPI.search(debouncedQuery),
     [debouncedQuery]
   )
 
@@ -225,7 +246,7 @@ export function useBackendStatus() {
   return {
     isConnected,
     lastChecked,
-    checkStatus
+    checkStatus,
   }
 }
 
@@ -238,12 +259,12 @@ export function useWebSocket(options?: {
 }) {
   const [connected, setConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const {
     onBlockUpdate,
     onExtrinsicUpdate,
     onChainStatsUpdate,
-    autoConnect = true
+    autoConnect = true,
   } = options || {}
 
   useEffect(() => {
@@ -296,6 +317,6 @@ export function useWebSocket(options?: {
     connected,
     error,
     subscribe,
-    unsubscribe
+    unsubscribe,
   }
-} 
+}

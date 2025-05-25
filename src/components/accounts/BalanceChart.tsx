@@ -23,24 +23,24 @@ export function BalanceChart({ address }: BalanceChartProps) {
       const data: BalanceDataPoint[] = []
       const now = Date.now()
       const daysBack = 30
-      
+
       let currentBalance = 1000 + Math.random() * 5000 // Starting balance
-      
+
       for (let i = daysBack; i >= 0; i--) {
-        const timestamp = now - (i * 24 * 60 * 60 * 1000)
+        const timestamp = now - i * 24 * 60 * 60 * 1000
         const date = new Date(timestamp).toLocaleDateString()
-        
+
         // Add some random variation
         const change = (Math.random() - 0.5) * 200
         currentBalance = Math.max(0, currentBalance + change)
-        
+
         data.push({
           date,
           balance: currentBalance,
-          timestamp
+          timestamp,
         })
       }
-      
+
       return data
     }
 
@@ -61,7 +61,9 @@ export function BalanceChart({ address }: BalanceChartProps) {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground text-sm">Loading balance history...</p>
+          <p className="mt-4 text-muted-foreground text-sm">
+            Loading balance history...
+          </p>
         </div>
       </div>
     )
@@ -87,7 +89,8 @@ export function BalanceChart({ address }: BalanceChartProps) {
   // Calculate percentage change
   const firstBalance = balanceData[0]?.balance || 0
   const lastBalance = balanceData[balanceData.length - 1]?.balance || 0
-  const percentageChange = firstBalance > 0 ? ((lastBalance - firstBalance) / firstBalance) * 100 : 0
+  const percentageChange =
+    firstBalance > 0 ? ((lastBalance - firstBalance) / firstBalance) * 100 : 0
   const isPositive = percentageChange >= 0
 
   // Generate SVG path
@@ -95,11 +98,17 @@ export function BalanceChart({ address }: BalanceChartProps) {
   const height = 200
   const padding = 20
 
-  const points = balanceData.map((point, index) => {
-    const x = padding + (index / (balanceData.length - 1)) * (width - 2 * padding)
-    const y = height - padding - ((point.balance - minBalance) / range) * (height - 2 * padding)
-    return `${x},${y}`
-  }).join(' ')
+  const points = balanceData
+    .map((point, index) => {
+      const x =
+        padding + (index / (balanceData.length - 1)) * (width - 2 * padding)
+      const y =
+        height -
+        padding -
+        ((point.balance - minBalance) / range) * (height - 2 * padding)
+      return `${x},${y}`
+    })
+    .join(' ')
 
   const pathData = `M ${points.split(' ').join(' L ')}`
 
@@ -109,22 +118,26 @@ export function BalanceChart({ address }: BalanceChartProps) {
       <div className="flex items-center justify-between">
         <div>
           <div className="text-2xl font-bold">
-            {lastBalance.toLocaleString(undefined, { 
-              minimumFractionDigits: 2, 
-              maximumFractionDigits: 2 
-            })} AVAIL
+            {lastBalance.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{' '}
+            AVAIL
           </div>
           <div className="text-sm text-muted-foreground">Current Balance</div>
         </div>
-        
-        <div className={`flex items-center space-x-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+
+        <div
+          className={`flex items-center space-x-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}
+        >
           {isPositive ? (
             <TrendingUp className="h-4 w-4" />
           ) : (
             <TrendingDown className="h-4 w-4" />
           )}
           <span className="font-medium">
-            {isPositive ? '+' : ''}{percentageChange.toFixed(2)}%
+            {isPositive ? '+' : ''}
+            {percentageChange.toFixed(2)}%
           </span>
           <span className="text-sm text-muted-foreground">30d</span>
         </div>
@@ -132,15 +145,31 @@ export function BalanceChart({ address }: BalanceChartProps) {
 
       {/* Chart */}
       <div className="bg-muted/30 rounded-lg p-4">
-        <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          className="overflow-visible"
+        >
           {/* Grid lines */}
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.1"/>
+            <pattern
+              id="grid"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 40 0 L 0 0 0 40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.5"
+                opacity="0.1"
+              />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
-          
+
           {/* Area under the curve */}
           <path
             d={`${pathData} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`}
@@ -148,7 +177,7 @@ export function BalanceChart({ address }: BalanceChartProps) {
             fillOpacity="0.1"
             className="text-avail-600"
           />
-          
+
           {/* Main line */}
           <path
             d={pathData}
@@ -157,12 +186,17 @@ export function BalanceChart({ address }: BalanceChartProps) {
             strokeWidth="2"
             className="text-avail-600"
           />
-          
+
           {/* Data points */}
           {balanceData.map((point, index) => {
-            const x = padding + (index / (balanceData.length - 1)) * (width - 2 * padding)
-            const y = height - padding - ((point.balance - minBalance) / range) * (height - 2 * padding)
-            
+            const x =
+              padding +
+              (index / (balanceData.length - 1)) * (width - 2 * padding)
+            const y =
+              height -
+              padding -
+              ((point.balance - minBalance) / range) * (height - 2 * padding)
+
             return (
               <circle
                 key={index}
@@ -187,4 +221,4 @@ export function BalanceChart({ address }: BalanceChartProps) {
       </div>
     </div>
   )
-} 
+}

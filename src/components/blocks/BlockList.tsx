@@ -3,7 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useBlocks } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, RefreshCw, Clock, Hash, Activity, Users } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Clock,
+  Hash,
+  Activity,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface BlockListProps {
@@ -13,17 +21,22 @@ interface BlockListProps {
   compact?: boolean
 }
 
-export function BlockList({ 
-  initialPage = 1, 
-  pageSize = 20, 
+export function BlockList({
+  initialPage = 1,
+  pageSize = 20,
   showHeader = true,
-  compact = false 
+  compact = false,
 }: BlockListProps) {
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [autoRefresh, setAutoRefresh] = useState(true)
-  
-  const { data: blocks, loading, error, refetch } = useBlocks(pageSize, {
-    refetchInterval: autoRefresh ? 15000 : undefined // Auto-refresh every 15 seconds
+
+  const {
+    data: blocks,
+    loading,
+    error,
+    refetch,
+  } = useBlocks(pageSize, {
+    refetchInterval: autoRefresh ? 15000 : undefined, // Auto-refresh every 15 seconds
   })
 
   // Auto-refresh toggle
@@ -90,7 +103,9 @@ export function BlockList({
       <div className="text-center py-12">
         <div className="text-muted-foreground text-6xl mb-4">📦</div>
         <h3 className="text-xl font-semibold mb-2">No Blocks Found</h3>
-        <p className="text-muted-foreground">No block data is currently available.</p>
+        <p className="text-muted-foreground">
+          No block data is currently available.
+        </p>
       </div>
     )
   }
@@ -106,26 +121,28 @@ export function BlockList({
               Real-time view of the latest blocks on the Avail network
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             {/* Auto-refresh toggle */}
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
                 checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
+                onChange={e => setAutoRefresh(e.target.checked)}
                 className="rounded"
               />
               <span>Auto-refresh</span>
             </label>
-            
+
             {/* Manual refresh */}
             <button
               onClick={() => refetch()}
               disabled={loading}
               className="flex items-center space-x-2 px-3 py-2 bg-avail-600 text-white rounded hover:bg-avail-700 disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+              />
               <span>Refresh</span>
             </button>
           </div>
@@ -164,10 +181,9 @@ export function BlockList({
                       href={`/blocks/${block.number}`}
                       className="font-mono text-sm text-avail-600 hover:text-avail-700"
                     >
-                      {compact 
+                      {compact
                         ? `${block.hash.slice(0, 10)}...${block.hash.slice(-8)}`
-                        : block.hash
-                      }
+                        : block.hash}
                     </Link>
                   </div>
 
@@ -175,7 +191,8 @@ export function BlockList({
                   <div className="flex items-center space-x-2">
                     <Activity className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {block.extrinsics} extrinsic{block.extrinsics !== 1 ? 's' : ''}
+                      {block.extrinsics} extrinsic
+                      {block.extrinsics !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -195,7 +212,7 @@ export function BlockList({
                   <Clock className="h-3 w-3" />
                   <span>{formatTimeAgo(block.time)}</span>
                 </div>
-                
+
                 {!compact && (
                   <div className="text-xs text-muted-foreground">
                     {new Date(block.time).toLocaleString()}
@@ -227,7 +244,7 @@ export function BlockList({
         <div className="text-sm text-muted-foreground">
           Showing latest {blocks.length} blocks
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -237,11 +254,9 @@ export function BlockList({
             <ChevronLeft className="h-4 w-4" />
             <span>Previous</span>
           </button>
-          
-          <span className="px-3 py-2 text-sm">
-            Page {currentPage}
-          </span>
-          
+
+          <span className="px-3 py-2 text-sm">Page {currentPage}</span>
+
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             className="flex items-center space-x-1 px-3 py-2 border rounded hover:bg-muted"
@@ -263,4 +278,4 @@ export function BlockList({
       )}
     </div>
   )
-} 
+}
