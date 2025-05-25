@@ -233,70 +233,89 @@ class BackendAPIClient {
   }
 }
 
-// ==== FALLBACK API CLIENTS (for when backend is not available) ====
-class SubscanFallbackAPI {
-  private baseURL = 'https://avail.api.subscan.io'
-  private headers = {
-    'Content-Type': 'application/json',
-    'X-API-Key': process.env.SUBSCAN_API_KEY || ''
-  }
+// ==== FRONTEND API ROUTES CLIENT (for fallback) ====
+class FrontendAPIClient {
+  private baseURL = '' // Use relative URLs for same-origin requests
 
   async getBlocks(page = 0, limit = 10): Promise<Block[]> {
     try {
-      const response = await axios.post(`${this.baseURL}/api/scan/blocks`, {
-        row: limit,
-        page: page
-      }, { headers: this.headers })
-
-      return response.data.data?.blocks?.map((block: any) => ({
-        number: block.block_num,
-        hash: block.hash,
-        time: block.block_timestamp * 1000,
-        extrinsics: block.extrinsics_count || 0,
-        parentHash: block.parent_hash,
-        stateRoot: block.state_root
-      })) || []
+      const response = await fetch(`/api/blocks?page=${page}&limit=${limit}`)
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch blocks')
+      }
+      
+      return data.data
     } catch (error) {
-      console.error('Subscan API error:', error)
+      console.error('Frontend API - Failed to fetch blocks:', error)
       return []
     }
   }
 
   async getChainData(): Promise<Partial<ChainData>> {
     try {
-      const statsResponse = await axios.post(`${this.baseURL}/api/scan/metadata`, {}, { headers: this.headers })
-      const stats = statsResponse.data.data
-
-      // Get token price from CoinGecko
-      const priceResponse = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=avail&vs_currencies=usd&include_24hr_change=true'
-      )
-      const priceData = priceResponse.data.avail
-
-      return {
-        finalizedBlocks: stats?.blockNum || 0,
-        signedExtrinsics: stats?.extrinsicsCount || 0,
-        totalAccounts: stats?.accountsCount || 0,
-        transfers: stats?.transfersCount || 0,
-        tokenPrice: priceData?.usd || 0,
-        priceChange: priceData?.usd_24h_change || 0
+      const response = await fetch('/api/chain')
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch chain data')
       }
+      
+      return data.data
     } catch (error) {
-      console.error('Subscan fallback API error:', error)
+      console.error('Frontend API - Failed to fetch chain data:', error)
       return {}
+    }
+  }
+
+  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+    try {
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
+      if (blockNumber !== undefined) {
+        params.append('block', blockNumber.toString())
+      }
+      
+      const response = await fetch(`/api/extrinsics?${params}`)
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch extrinsics')
+      }
+      
+      return data.data
+    } catch (error) {
+      console.error('Frontend API - Failed to fetch extrinsics:', error)
+      return []
+    }
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to search')
+      }
+      
+      return data.data
+    } catch (error) {
+      console.error('Frontend API - Failed to search:', error)
+      return []
     }
   }
 }
 
-// ==== UNIFIED API CLIENT WITH FALLBACK ====
+// ==== UNIFIED API CLIENT WITH PROPER FALLBACK ====
 export class AvailAPI {
   private backend: BackendAPIClient
-  private fallback: SubscanFallbackAPI
+  private frontend: FrontendAPIClient
   private useBackend: boolean = true
 
   constructor() {
     this.backend = new BackendAPIClient()
-    this.fallback = new SubscanFallbackAPI()
+    this.frontend = new FrontendAPIClient()
     this.checkBackendHealth()
   }
 
@@ -304,12 +323,12 @@ export class AvailAPI {
     try {
       this.useBackend = await this.backend.healthCheck()
       if (!this.useBackend) {
-        console.warn('⚠️  Backend is not available, using fallback APIs')
+        console.warn('⚠️  Backend is not available, using Next.js API routes as fallback')
       } else {
         console.log('✅ Backend is available')
       }
     } catch (error) {
-      console.warn('⚠️  Backend health check failed, using fallback APIs')
+      console.warn('⚠️  Backend health check failed, using Next.js API routes as fallback')
       this.useBackend = false
     }
   }
@@ -319,13 +338,13 @@ export class AvailAPI {
       if (this.useBackend) {
         return await this.backend.getBlocks(0, count)
       } else {
-        return await this.fallback.getBlocks(0, count)
+        return await this.frontend.getBlocks(0, count)
       }
     } catch (error) {
-      console.error('Failed to fetch blocks, trying fallback...')
+      console.error('Failed to fetch blocks from backend, trying frontend API...')
       if (this.useBackend) {
         this.useBackend = false
-        return await this.fallback.getBlocks(0, count)
+        return await this.frontend.getBlocks(0, count)
       }
       throw error
     }
@@ -336,8 +355,9 @@ export class AvailAPI {
       if (this.useBackend) {
         return await this.backend.getBlock(numberOrHash)
       }
-      // Fallback doesn't support single block fetch easily
-      throw new Error('Block detail not available without backend')
+      // Frontend API doesn't support single block fetch yet
+      console.warn('Single block fetch not available without backend')
+      return null
     } catch (error) {
       console.error('Failed to fetch block:', error)
       return null
@@ -348,11 +368,15 @@ export class AvailAPI {
     try {
       if (this.useBackend) {
         return await this.backend.getExtrinsics(blockNumber, page, limit)
+      } else {
+        return await this.frontend.getExtrinsics(blockNumber, page, limit)
       }
-      // Fallback implementation would need to be added
-      return []
     } catch (error) {
       console.error('Failed to fetch extrinsics:', error)
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.frontend.getExtrinsics(blockNumber, page, limit)
+      }
       return []
     }
   }
@@ -382,12 +406,23 @@ export class AvailAPI {
       if (this.useBackend) {
         data = await this.backend.getChainStats()
       } else {
-        data = await this.fallback.getChainData()
+        data = await this.frontend.getChainData()
       }
 
       return { ...mockData, ...data }
     } catch (error) {
-      console.error('Failed to fetch chain data, using mock data:', error)
+      console.error('Failed to fetch chain data from backend, trying frontend API...')
+      if (this.useBackend) {
+        this.useBackend = false
+        try {
+          const data = await this.frontend.getChainData()
+          return { ...mockData, ...data }
+        } catch (frontendError) {
+          console.error('Frontend API also failed, using mock data:', frontendError)
+          return mockData
+        }
+      }
+      console.error('All API sources failed, using mock data:', error)
       return mockData
     }
   }
@@ -420,10 +455,15 @@ export class AvailAPI {
     try {
       if (this.useBackend) {
         return await this.backend.search(query)
+      } else {
+        return await this.frontend.search(query)
       }
-      return []
     } catch (error) {
       console.error('Failed to search:', error)
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.frontend.search(query)
+      }
       return []
     }
   }
