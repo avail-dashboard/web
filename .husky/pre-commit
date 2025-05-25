@@ -1,5 +1,16 @@
 #!/bin/sh
-npm run format:check
+# Auto-fix formatting issues
+npm run format
+
+# Check if there are any changes after formatting
+if ! git diff --quiet; then
+  echo "⚠️  Code was auto-formatted. Please review and add the changes:"
+  git diff --name-only
+  echo "Run: git add . && git commit --amend --no-edit"
+  exit 1
+fi
+
+# Run other checks
 npm run lint
 npm run type-check
 npm run test:ci
