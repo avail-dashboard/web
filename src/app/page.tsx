@@ -6,12 +6,13 @@ import {
   useChainData,
   useBackendStatus,
 } from '@/lib/hooks/useAvailAPI'
-import { BackendStatus, StatusBadge } from '@/components/BackendStatus'
+import { StatusBadge } from '@/components/BackendStatus'
 import { formatTimeAgo } from '@/lib/utils'
 import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { APICallMonitor } from '@/components/APICallMonitor'
+import { TransfersTable } from '@/components/transfers/TransfersTable'
 import Link from 'next/link'
 import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
 
@@ -130,11 +131,6 @@ export default function Dashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Backend Status Section */}
-        <section className="mb-8">
-          <BackendStatus showDetails={false} />
-        </section>
-
         {/* Search Section */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Search</h2>
@@ -256,46 +252,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
-          {/* Quick Links */}
-          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-            <h3 className="font-medium mb-3">Quick Examples</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Latest Block:</span>
-                <Link
-                  href={
-                    chainData
-                      ? `/blocks/${chainData.finalizedBlocks}`
-                      : '/blocks'
-                  }
-                  className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
-                >
-                  {chainData
-                    ? `#${formatNumber(chainData.finalizedBlocks)}`
-                    : 'View Latest'}
-                </Link>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Sample Account:</span>
-                <Link
-                  href="/accounts/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-                  className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
-                >
-                  5GrwvaEF...
-                </Link>
-              </div>
-              <div>
-                <span className="text-muted-foreground">All Transactions:</span>
-                <Link
-                  href="/extrinsics"
-                  className="ml-2 text-avail-600 hover:text-avail-700"
-                >
-                  Browse All →
-                </Link>
-              </div>
-            </div>
-          </div>
         </section>
 
         {/* Chain Statistics */}
@@ -391,7 +347,7 @@ export default function Dashboard() {
         )}
 
         {/* Additional Dashboard Sections */}
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Latest Blocks */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -440,6 +396,22 @@ export default function Dashboard() {
                     : 'No block data available'}
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* Recent Transfers */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Recent Transfers</h2>
+              <Link
+                href="/extrinsics"
+                className="text-sm text-avail-600 hover:text-avail-700"
+              >
+                View All
+              </Link>
+            </div>
+            <div className="bg-card rounded-lg border shadow-sm p-6">
+              <TransfersTable limit={5} showHeader={false} compact={true} />
             </div>
           </section>
         </div>
