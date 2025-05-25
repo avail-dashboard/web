@@ -20,8 +20,16 @@ export function TokenDistributionChart({
   data,
   totalIssuance,
 }: TokenDistributionProps) {
+  // Create labels with both amounts and percentages
+  const labelsWithAmounts = [
+    `Circulating: ${data.circulating.amount} (${data.circulating.percentage.toFixed(2)}%)`,
+    `Staking: ${data.staking.amount} (${data.staking.percentage.toFixed(2)}%)`,
+    `Treasury: ${data.treasury.amount} (${data.treasury.percentage.toFixed(2)}%)`,
+    `Others: ${data.others.amount} (${data.others.percentage.toFixed(2)}%)`,
+  ]
+
   const chartData = {
-    labels: ['Circulating', 'Staking', 'Treasury', 'Others'],
+    labels: labelsWithAmounts,
     datasets: [
       {
         data: [
@@ -53,16 +61,46 @@ export function TokenDistributionChart({
           padding: 20,
           usePointStyle: true,
           font: {
-            size: 12,
+            size: 11,
+          },
+          // Custom label generation to handle long text
+          generateLabels: function (chart: any) {
+            const data = chart.data
+            if (data.labels.length && data.datasets.length) {
+              return data.labels.map((label: string, i: number) => {
+                const dataset = data.datasets[0]
+                const backgroundColor = dataset.backgroundColor[i]
+                const borderColor = dataset.borderColor[i]
+
+                return {
+                  text: label,
+                  fillStyle: backgroundColor,
+                  strokeStyle: borderColor,
+                  lineWidth: dataset.borderWidth,
+                  pointStyle: 'circle',
+                  hidden: false,
+                  index: i,
+                }
+              })
+            }
+            return []
           },
         },
       },
       tooltip: {
         callbacks: {
           label: function (context: any) {
-            const label = context.label || ''
-            const value = context.parsed
-            return `${label}: ${value.toFixed(2)}%`
+            const dataIndex = context.dataIndex
+            const categories = [
+              'circulating',
+              'staking',
+              'treasury',
+              'others',
+            ] as const
+            const category = categories[dataIndex]
+            const categoryData = data[category]
+
+            return `${context.label.split(':')[0]}: ${categoryData.amount} (${categoryData.percentage.toFixed(2)}%)`
           },
         },
       },
