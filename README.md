@@ -249,3 +249,5 @@ For questions and support:
 ---
 
 **Note**: This is a community project and not officially maintained by the Avail team. For production use, ensure proper security audits and testing.
+
+# Pre-commit Setup Complete
