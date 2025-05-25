@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 // Types for blockchain data
 export interface ChainData {
@@ -37,8 +37,204 @@ export interface Extrinsic {
   timestamp: number
 }
 
-// ==== OPTION 1: SUBSCAN API ====
-class SubscanAPI {
+export interface Validator {
+  address: string
+  name?: string
+  commission: number
+  stake: string
+  nominators: number
+  isActive: boolean
+}
+
+export interface Account {
+  address: string
+  balance: string
+  nonce: number
+  reserved: string
+  miscFrozen: string
+  feeFrozen: string
+}
+
+export interface SearchResult {
+  type: 'block' | 'extrinsic' | 'account'
+  data: Block | Extrinsic | Account
+}
+
+// API Response wrapper
+export interface APIResponse<T> {
+  success: boolean
+  data: T
+  error?: string
+  timestamp: string
+}
+
+// Configuration
+const getConfig = () => ({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1',
+  wsURL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001',
+  isDev: process.env.NEXT_PUBLIC_NODE_ENV === 'development',
+  timeout: 10000,
+})
+
+// ==== BACKEND API CLIENT ====
+class BackendAPIClient {
+  private client: AxiosInstance
+  private config = getConfig()
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: this.config.baseURL,
+      timeout: this.config.timeout,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    // Add request interceptor for logging
+    this.client.interceptors.request.use(
+      (config) => {
+        if (this.config.isDev) {
+          console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`)
+        }
+        return config
+      },
+      (error) => {
+        console.error('API Request Error:', error)
+        return Promise.reject(error)
+      }
+    )
+
+    // Add response interceptor for error handling
+    this.client.interceptors.response.use(
+      (response) => {
+        if (this.config.isDev) {
+          console.log(`✅ API Response: ${response.status} ${response.config.url}`)
+        }
+        return response
+      },
+      (error) => {
+        console.error('API Response Error:', error.response?.data || error.message)
+        
+        // Handle common error cases
+        if (error.response?.status === 404) {
+          throw new Error('Resource not found')
+        }
+        if (error.response?.status === 500) {
+          throw new Error('Server error')
+        }
+        if (error.code === 'ECONNREFUSED') {
+          throw new Error('Backend server is not running')
+        }
+        
+        throw error
+      }
+    )
+  }
+
+  async getBlocks(page = 0, limit = 10): Promise<Block[]> {
+    try {
+      const response = await this.client.get<APIResponse<Block[]>>('/blocks', {
+        params: { page, limit }
+      })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch blocks from backend:', error)
+      throw error
+    }
+  }
+
+  async getBlock(numberOrHash: string | number): Promise<Block> {
+    try {
+      const response = await this.client.get<APIResponse<Block>>(`/blocks/${numberOrHash}`)
+      return response.data.data
+    } catch (error) {
+      console.error(`Failed to fetch block ${numberOrHash}:`, error)
+      throw error
+    }
+  }
+
+  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+    try {
+      const params: any = { page, limit }
+      if (blockNumber !== undefined) {
+        params.block = blockNumber
+      }
+      
+      const response = await this.client.get<APIResponse<Extrinsic[]>>('/extrinsics', { params })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch extrinsics from backend:', error)
+      throw error
+    }
+  }
+
+  async getChainStats(): Promise<ChainData> {
+    try {
+      const response = await this.client.get<APIResponse<ChainData>>('/chain/stats')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch chain stats from backend:', error)
+      throw error
+    }
+  }
+
+  async getValidators(): Promise<Validator[]> {
+    try {
+      const response = await this.client.get<APIResponse<Validator[]>>('/validators')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch validators from backend:', error)
+      throw error
+    }
+  }
+
+  async getAccount(address: string): Promise<Account> {
+    try {
+      const response = await this.client.get<APIResponse<Account>>(`/accounts/${address}`)
+      return response.data.data
+    } catch (error) {
+      console.error(`Failed to fetch account ${address}:`, error)
+      throw error
+    }
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    try {
+      const response = await this.client.get<APIResponse<SearchResult[]>>('/search', {
+        params: { q: query }
+      })
+      return response.data.data
+    } catch (error) {
+      console.error(`Failed to search for "${query}":`, error)
+      throw error
+    }
+  }
+
+  async getAnalytics(period: '24h' | '7d' | '30d' = '24h'): Promise<any> {
+    try {
+      const response = await this.client.get<APIResponse<any>>('/analytics', {
+        params: { period }
+      })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error)
+      throw error
+    }
+  }
+
+  // Health check to verify backend connectivity
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.client.get('/health')
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+// ==== FALLBACK API CLIENTS (for when backend is not available) ====
+class SubscanFallbackAPI {
   private baseURL = 'https://avail.api.subscan.io'
   private headers = {
     'Content-Type': 'application/json',
@@ -68,219 +264,96 @@ class SubscanAPI {
 
   async getChainData(): Promise<Partial<ChainData>> {
     try {
-      // Get basic stats
       const statsResponse = await axios.post(`${this.baseURL}/api/scan/metadata`, {}, { headers: this.headers })
       const stats = statsResponse.data.data
+
+      // Get token price from CoinGecko
+      const priceResponse = await axios.get(
+        'https://api.coingecko.com/api/v3/simple/price?ids=avail&vs_currencies=usd&include_24hr_change=true'
+      )
+      const priceData = priceResponse.data.avail
 
       return {
         finalizedBlocks: stats?.blockNum || 0,
         signedExtrinsics: stats?.extrinsicsCount || 0,
         totalAccounts: stats?.accountsCount || 0,
-        transfers: stats?.transfersCount || 0
+        transfers: stats?.transfersCount || 0,
+        tokenPrice: priceData?.usd || 0,
+        priceChange: priceData?.usd_24h_change || 0
       }
     } catch (error) {
-      console.error('Subscan chain data error:', error)
-      return {}
-    }
-  }
-
-  async getTokenPrice(): Promise<{ price: number; change: number }> {
-    try {
-      // You can integrate with CoinGecko/CoinMarketCap here
-      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=avail&vs_currencies=usd&include_24hr_change=true')
-      const data = response.data.avail
-      
-      return {
-        price: data?.usd || 0,
-        change: data?.usd_24h_change || 0
-      }
-    } catch (error) {
-      console.error('Token price error:', error)
-      return { price: 0, change: 0 }
-    }
-  }
-}
-
-// ==== OPTION 2: DIRECT RPC ====
-class AvailRPC {
-  private endpoint = process.env.AVAIL_RPC_ENDPOINT || 'wss://mainnet-rpc.avail.so/ws'
-  private api: any = null
-
-  private async getAPI() {
-    if (!this.api) {
-      try {
-        // Dynamic import to avoid SSR issues
-        const { ApiPromise, WsProvider } = await import('@polkadot/api')
-        const provider = new WsProvider(this.endpoint)
-        this.api = await ApiPromise.create({ provider })
-        console.log('RPC: Connected to', this.endpoint)
-      } catch (error) {
-        console.error('RPC connection error:', error)
-        throw error
-      }
-    }
-    return this.api
-  }
-
-  async getLatestBlocks(count = 10): Promise<Block[]> {
-    try {
-      const api = await this.getAPI()
-      
-      // Get the latest block header
-      const latestHeader = await api.rpc.chain.getHeader()
-      const latestBlockNumber = latestHeader.number.toNumber()
-      
-      // Fetch the last 'count' blocks
-      const blocks: Block[] = []
-      for (let i = 0; i < count && (latestBlockNumber - i) > 0; i++) {
-        const blockNumber = latestBlockNumber - i
-        const blockHash = await api.rpc.chain.getBlockHash(blockNumber)
-        const block = await api.rpc.chain.getBlock(blockHash)
-        const header = block.block.header
-        
-        blocks.push({
-          number: blockNumber,
-          hash: blockHash.toString(),
-          time: Date.now() - (i * 6000), // Estimate: ~6 seconds per block
-          extrinsics: block.block.extrinsics.length,
-          parentHash: header.parentHash.toString(),
-          stateRoot: header.stateRoot.toString()
-        })
-      }
-      
-      return blocks
-    } catch (error) {
-      console.error('RPC error:', error)
-      return []
-    }
-  }
-
-  async getChainStats(): Promise<Partial<ChainData>> {
-    try {
-      const api = await this.getAPI()
-      
-      // Get latest block number
-      const latestHeader = await api.rpc.chain.getHeader()
-      const finalizedBlocks = latestHeader.number.toNumber()
-      
-      // Get total issuance
-      const totalIssuance = await api.query.balances.totalIssuance()
-      
-      // Note: Some data like extrinsics count would require indexing
-      // For now, we'll return basic data available from RPC
-      return {
-        finalizedBlocks,
-        totalIssuance: totalIssuance.toString()
-      }
-    } catch (error) {
-      console.error('RPC chain stats error:', error)
-      return {}
-    }
-  }
-
-  async disconnect() {
-    if (this.api) {
-      await this.api.disconnect()
-      this.api = null
-    }
-  }
-}
-
-// ==== OPTION 3: SUBQUERY GRAPHQL ====
-class SubQueryAPI {
-  private endpoint = 'https://your-subquery-endpoint.com/graphql'
-
-  async getBlocks(limit = 10): Promise<Block[]> {
-    try {
-      const query = `
-        query GetBlocks($limit: Int!) {
-          blocks(first: $limit, orderBy: TIMESTAMP_DESC) {
-            nodes {
-              number
-              hash
-              parentHash
-              timestamp
-              extrinsics {
-                totalCount
-              }
-            }
-          }
-        }
-      `
-
-      const response = await axios.post(this.endpoint, {
-        query,
-        variables: { limit }
-      })
-
-      return response.data.data?.blocks?.nodes?.map((block: any) => ({
-        number: block.number,
-        hash: block.hash,
-        time: new Date(block.timestamp).getTime(),
-        extrinsics: block.extrinsics?.totalCount || 0,
-        parentHash: block.parentHash
-      })) || []
-    } catch (error) {
-      console.error('SubQuery error:', error)
-      return []
-    }
-  }
-
-  async getChainData(): Promise<Partial<ChainData>> {
-    try {
-      const query = `
-        query GetChainStats {
-          blocks(first: 1, orderBy: NUMBER_DESC) {
-            totalCount
-          }
-          extrinsics {
-            totalCount
-          }
-          accounts {
-            totalCount
-          }
-        }
-      `
-
-      const response = await axios.post(this.endpoint, { query })
-      const data = response.data.data
-
-      return {
-        finalizedBlocks: data?.blocks?.totalCount || 0,
-        signedExtrinsics: data?.extrinsics?.totalCount || 0,
-        totalAccounts: data?.accounts?.totalCount || 0
-      }
-    } catch (error) {
-      console.error('SubQuery chain data error:', error)
+      console.error('Subscan fallback API error:', error)
       return {}
     }
   }
 }
 
-// ==== UNIFIED API CLIENT ====
+// ==== UNIFIED API CLIENT WITH FALLBACK ====
 export class AvailAPI {
-  private subscan: SubscanAPI
-  private rpc: AvailRPC
-  private subquery: SubQueryAPI
-  private preferredSource: 'subscan' | 'rpc' | 'subquery' = 'subscan'
+  private backend: BackendAPIClient
+  private fallback: SubscanFallbackAPI
+  private useBackend: boolean = true
 
-  constructor(preferredSource: 'subscan' | 'rpc' | 'subquery' = 'subscan') {
-    this.subscan = new SubscanAPI()
-    this.rpc = new AvailRPC()
-    this.subquery = new SubQueryAPI()
-    this.preferredSource = preferredSource
+  constructor() {
+    this.backend = new BackendAPIClient()
+    this.fallback = new SubscanFallbackAPI()
+    this.checkBackendHealth()
+  }
+
+  private async checkBackendHealth() {
+    try {
+      this.useBackend = await this.backend.healthCheck()
+      if (!this.useBackend) {
+        console.warn('⚠️  Backend is not available, using fallback APIs')
+      } else {
+        console.log('✅ Backend is available')
+      }
+    } catch (error) {
+      console.warn('⚠️  Backend health check failed, using fallback APIs')
+      this.useBackend = false
+    }
   }
 
   async getLatestBlocks(count = 10): Promise<Block[]> {
-    switch (this.preferredSource) {
-      case 'subscan':
-        return this.subscan.getBlocks(0, count)
-      case 'subquery':
-        return this.subquery.getBlocks(count)
-      case 'rpc':
-        return this.rpc.getLatestBlocks(count)
-      default:
-        return this.subscan.getBlocks(0, count)
+    try {
+      if (this.useBackend) {
+        return await this.backend.getBlocks(0, count)
+      } else {
+        return await this.fallback.getBlocks(0, count)
+      }
+    } catch (error) {
+      console.error('Failed to fetch blocks, trying fallback...')
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.fallback.getBlocks(0, count)
+      }
+      throw error
+    }
+  }
+
+  async getBlock(numberOrHash: string | number): Promise<Block | null> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getBlock(numberOrHash)
+      }
+      // Fallback doesn't support single block fetch easily
+      throw new Error('Block detail not available without backend')
+    } catch (error) {
+      console.error('Failed to fetch block:', error)
+      return null
+    }
+  }
+
+  async getExtrinsics(blockNumber?: number, page = 0, limit = 10): Promise<Extrinsic[]> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getExtrinsics(blockNumber, page, limit)
+      }
+      // Fallback implementation would need to be added
+      return []
+    } catch (error) {
+      console.error('Failed to fetch extrinsics:', error)
+      return []
     }
   }
 
@@ -304,42 +377,157 @@ export class AvailAPI {
     }
 
     try {
-      // Try to get real data from preferred source
-      let realData: Partial<ChainData> = {}
+      let data: Partial<ChainData>
       
-      switch (this.preferredSource) {
-        case 'subscan':
-          realData = await this.subscan.getChainData()
-          break
-        case 'subquery':
-          realData = await this.subquery.getChainData()
-          break
-        case 'rpc':
-          realData = await this.rpc.getChainStats()
-          break
+      if (this.useBackend) {
+        data = await this.backend.getChainStats()
+      } else {
+        data = await this.fallback.getChainData()
       }
 
-      // Get token price
-      const priceData = await this.subscan.getTokenPrice()
-
-      // Merge real data with mock data as fallback
-      return {
-        ...mockData,
-        ...realData,
-        tokenPrice: priceData.price || mockData.tokenPrice,
-        priceChange: priceData.change || mockData.priceChange
-      }
+      return { ...mockData, ...data }
     } catch (error) {
-      console.error('API error, falling back to mock data:', error)
+      console.error('Failed to fetch chain data, using mock data:', error)
       return mockData
     }
   }
 
-  // Switch data source dynamically
-  setDataSource(source: 'subscan' | 'rpc' | 'subquery') {
-    this.preferredSource = source
+  async getValidators(): Promise<Validator[]> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getValidators()
+      }
+      return []
+    } catch (error) {
+      console.error('Failed to fetch validators:', error)
+      return []
+    }
+  }
+
+  async getAccount(address: string): Promise<Account | null> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getAccount(address)
+      }
+      return null
+    } catch (error) {
+      console.error('Failed to fetch account:', error)
+      return null
+    }
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.search(query)
+      }
+      return []
+    } catch (error) {
+      console.error('Failed to search:', error)
+      return []
+    }
+  }
+
+  async getAnalytics(period: '24h' | '7d' | '30d' = '24h'): Promise<any> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getAnalytics(period)
+      }
+      return null
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error)
+      return null
+    }
+  }
+
+  // Force refresh backend health status
+  async refreshBackendStatus(): Promise<boolean> {
+    await this.checkBackendHealth()
+    return this.useBackend
+  }
+
+  // Get current backend status
+  isBackendAvailable(): boolean {
+    return this.useBackend
   }
 }
 
 // Export singleton instance
-export const availAPI = new AvailAPI('subscan') 
+export const availAPI = new AvailAPI()
+
+// WebSocket client for real-time updates
+export class AvailWebSocket {
+  private ws: WebSocket | null = null
+  private config = getConfig()
+  private reconnectAttempts = 0
+  private maxReconnectAttempts = 5
+  private reconnectDelay = 1000
+
+  connect(onMessage?: (data: any) => void, onError?: (error: Event) => void) {
+    try {
+      this.ws = new WebSocket(this.config.wsURL)
+
+      this.ws.onopen = () => {
+        console.log('🔌 WebSocket connected')
+        this.reconnectAttempts = 0
+      }
+
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          onMessage?.(data)
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error)
+        }
+      }
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error)
+        onError?.(error)
+      }
+
+      this.ws.onclose = (event) => {
+        console.log('🔌 WebSocket disconnected:', event.code, event.reason)
+        this.attemptReconnect(onMessage, onError)
+      }
+    } catch (error) {
+      console.error('Failed to connect WebSocket:', error)
+      onError?.(error as Event)
+    }
+  }
+
+  private attemptReconnect(onMessage?: (data: any) => void, onError?: (error: Event) => void) {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++
+      console.log(`🔄 Attempting to reconnect WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+      
+      setTimeout(() => {
+        this.connect(onMessage, onError)
+      }, this.reconnectDelay * this.reconnectAttempts)
+    } else {
+      console.error('❌ Max WebSocket reconnection attempts reached')
+    }
+  }
+
+  subscribe(topic: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'subscribe', topic }))
+    }
+  }
+
+  unsubscribe(topic: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'unsubscribe', topic }))
+    }
+  }
+
+  disconnect() {
+    if (this.ws) {
+      this.ws.close()
+      this.ws = null
+    }
+  }
+}
+
+// Export WebSocket instance
+export const availWS = new AvailWebSocket() 
