@@ -8,6 +8,8 @@ import { TokenDistributionChart } from '@/components/charts/TokenDistributionCha
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { APICallMonitor } from '@/components/APICallMonitor'
+import Link from 'next/link'
+import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
 
 export default function Dashboard() {
   // Using the new API hooks
@@ -119,6 +121,140 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold mb-4">Search</h2>
           <div className="bg-card p-6 rounded-lg border shadow-sm">
             <SearchComponent />
+          </div>
+        </section>
+
+        {/* Explorer Navigation */}
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">Explore the Network</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Blocks Explorer */}
+            <Link href="/blocks" className="group">
+              <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-avail-600/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-avail-100 rounded-lg group-hover:bg-avail-200 transition-colors">
+                      <Blocks className="h-6 w-6 text-avail-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Blocks</h3>
+                      <p className="text-sm text-muted-foreground">Explore blockchain blocks</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-avail-600 transition-colors" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Latest Block:</span>
+                    <span className="font-mono">
+                      {chainData ? `#${formatNumber(chainData.finalizedBlocks)}` : 'Loading...'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Block Time:</span>
+                    <span>~12 seconds</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Extrinsics Explorer */}
+            <Link href="/extrinsics" className="group">
+              <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-avail-600/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
+                      <Activity className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">Transactions</h3>
+                      <p className="text-sm text-muted-foreground">Browse all extrinsics</p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Extrinsics:</span>
+                    <span className="font-mono">
+                      {chainData ? formatNumber(chainData.signedExtrinsics) : 'Loading...'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Success Rate:</span>
+                    <span className="text-green-600">~98.5%</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Account Search */}
+            <div className="bg-card p-6 rounded-lg border shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <User className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Accounts</h3>
+                    <p className="text-sm text-muted-foreground">Search account details</p>
+                  </div>
+                </div>
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Enter account address..."
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-avail-600/20 focus:border-avail-600"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const address = (e.target as HTMLInputElement).value.trim()
+                      if (address) {
+                        window.location.href = `/accounts/${address}`
+                      }
+                    }
+                  }}
+                />
+                <div className="text-xs text-muted-foreground">
+                  Press Enter to search or try: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+            <h3 className="font-medium mb-3">Quick Examples</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Latest Block:</span>
+                <Link 
+                  href={chainData ? `/blocks/${chainData.finalizedBlocks}` : '/blocks'} 
+                  className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
+                >
+                  {chainData ? `#${formatNumber(chainData.finalizedBlocks)}` : 'View Latest'}
+                </Link>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Sample Account:</span>
+                <Link 
+                  href="/accounts/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" 
+                  className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
+                >
+                  5GrwvaEF...
+                </Link>
+              </div>
+              <div>
+                <span className="text-muted-foreground">All Transactions:</span>
+                <Link 
+                  href="/extrinsics" 
+                  className="ml-2 text-avail-600 hover:text-avail-700"
+                >
+                  Browse All →
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -246,7 +382,9 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Latest Blocks</h2>
-              <button className="text-sm text-avail-600 hover:text-avail-700">View All</button>
+              <Link href="/blocks" className="text-sm text-avail-600 hover:text-avail-700">
+                View All
+              </Link>
             </div>
             <div className="bg-card rounded-lg border shadow-sm">
               {blocksLoading && !latestBlocks ? (
@@ -256,18 +394,22 @@ export default function Dashboard() {
               ) : latestBlocks && latestBlocks.length > 0 ? (
                 <div className="divide-y">
                   {latestBlocks.map((block) => (
-                    <div key={block.number} className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold text-avail-600">#{block.number.toLocaleString()}</div>
-                          <div className="text-xs text-muted-foreground font-mono">{block.hash}</div>
-                        </div>
-                        <div className="text-right text-sm">
-                          <div>{formatTimeAgo(block.time)}</div>
-                          <div className="text-xs text-muted-foreground">{block.extrinsics} extrinsics</div>
+                    <Link key={block.number} href={`/blocks/${block.number}`}>
+                      <div className="p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-avail-600">#{block.number.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {block.hash.slice(0, 20)}...{block.hash.slice(-8)}
+                            </div>
+                          </div>
+                          <div className="text-right text-sm">
+                            <div>{formatTimeAgo(block.time)}</div>
+                            <div className="text-xs text-muted-foreground">{block.extrinsics} extrinsics</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (
