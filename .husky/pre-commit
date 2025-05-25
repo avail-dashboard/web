@@ -1,16 +1,9 @@
 #!/bin/sh
-# Auto-fix formatting issues
-npm run format
+# Run lint-staged to format and lint only staged files
+npx lint-staged
 
-# Check if there are any changes after formatting
-if ! git diff --quiet; then
-  echo "⚠️  Code was auto-formatted. Please review and add the changes:"
-  git diff --name-only
-  echo "Run: git add . && git commit --amend --no-edit"
-  exit 1
-fi
-
-# Run other checks
-npm run lint
+# Run type checking on the entire project
 npm run type-check
+
+# Run tests to ensure nothing is broken
 npm run test:ci
