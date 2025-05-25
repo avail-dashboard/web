@@ -17,6 +17,8 @@
     "test:e2e:headed": "playwright test --headed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "format:staged": "prettier --write $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\\.(js|jsx|ts|tsx|json|css|md)$' | xargs)",
+    "pre-commit-check": "npm run format && npm run lint && npm run type-check",
     "prepare": "husky"
   },
   "dependencies": {
