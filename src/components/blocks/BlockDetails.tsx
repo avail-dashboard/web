@@ -34,9 +34,6 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       : parseInt(blockNumber.toString())
   )
 
-  // Debug: Log the extrinsics data to see its structure
-  console.log('BlockDetails received extrinsics:', extrinsics)
-
   const [copied, setCopied] = useState<string | null>(null)
 
   // Auto-refresh every 30 seconds for latest blocks
