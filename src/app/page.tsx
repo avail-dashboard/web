@@ -391,76 +391,7 @@ export default function Dashboard() {
         )}
 
         {/* Additional Dashboard Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Token Distribution Details */}
-          {chainData && (
-            <section>
-              <h2 className="text-xl font-semibold mb-4">
-                Distribution Details
-              </h2>
-              <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-3 w-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm">Circulating</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {chainData.circulating.amount}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        ({chainData.circulating.percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-3 w-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">Staking</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {chainData.staking.amount}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        ({chainData.staking.percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-3 w-3 bg-yellow-500 rounded-full"></div>
-                      <span className="text-sm">Treasury</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {chainData.treasury.amount}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        ({chainData.treasury.percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="h-3 w-3 bg-gray-500 rounded-full"></div>
-                      <span className="text-sm">Others</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {chainData.others.amount}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        ({chainData.others.percentage}%)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
+        <div className="grid grid-cols-1 gap-8">
           {/* Latest Blocks */}
           <section>
             <div className="flex items-center justify-between mb-4">
