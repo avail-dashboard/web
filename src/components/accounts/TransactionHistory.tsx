@@ -16,7 +16,11 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
   const [filter, setFilter] = useState<'all' | 'sent' | 'received'>('all')
 
   // Get all extrinsics and filter by address
-  const { data: allExtrinsics, loading: extrinsicsLoading, refetch } = useExtrinsics(undefined, 0, 50)
+  const {
+    data: allExtrinsics,
+    loading: extrinsicsLoading,
+    refetch,
+  } = useExtrinsics(undefined, 0, 50)
 
   useEffect(() => {
     if (allExtrinsics) {
@@ -50,7 +54,9 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground">Loading transaction history...</p>
+          <p className="mt-4 text-muted-foreground">
+            Loading transaction history...
+          </p>
         </div>
       </div>
     )
@@ -65,10 +71,12 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filter:</span>
           </div>
-          
+
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as 'all' | 'sent' | 'received')}
+            onChange={e =>
+              setFilter(e.target.value as 'all' | 'sent' | 'received')
+            }
             className="text-sm border rounded px-3 py-1 bg-background"
           >
             <option value="all">All Transactions</option>
@@ -89,7 +97,7 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
 
       {/* Transaction List */}
       {filteredExtrinsics.length > 0 ? (
-        <ExtrinsicList 
+        <ExtrinsicList
           extrinsics={filteredExtrinsics}
           showBlockNumber={true}
           compact={true}
@@ -100,10 +108,9 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
           <div className="text-muted-foreground text-4xl mb-4">📄</div>
           <h3 className="text-lg font-semibold mb-2">No Transactions Found</h3>
           <p className="text-muted-foreground">
-            {filter === 'all' 
+            {filter === 'all'
               ? 'This account has no transaction history yet.'
-              : `No ${filter} transactions found for this account.`
-            }
+              : `No ${filter} transactions found for this account.`}
           </p>
         </div>
       )}
@@ -111,10 +118,11 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
       {/* Summary */}
       {filteredExtrinsics.length > 0 && (
         <div className="text-sm text-muted-foreground text-center pt-4 border-t">
-          Showing {filteredExtrinsics.length} transaction{filteredExtrinsics.length !== 1 ? 's' : ''}
+          Showing {filteredExtrinsics.length} transaction
+          {filteredExtrinsics.length !== 1 ? 's' : ''}
           {filter !== 'all' && ` (${filter})`}
         </div>
       )}
     </div>
   )
-} 
+}

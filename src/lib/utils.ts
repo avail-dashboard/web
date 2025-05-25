@@ -1,16 +1,19 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 // Format large numbers with appropriate suffixes
-export function formatNumber(num: number | string, decimals: number = 2): string {
+export function formatNumber(
+  num: number | string,
+  decimals: number = 2
+): string {
   const n = typeof num === 'string' ? parseFloat(num) : num
-  
+
   if (isNaN(n)) return '0'
-  
+
   if (n >= 1e9) {
     return (n / 1e9).toFixed(decimals) + 'B'
   }
@@ -20,21 +23,28 @@ export function formatNumber(num: number | string, decimals: number = 2): string
   if (n >= 1e3) {
     return (n / 1e3).toFixed(decimals) + 'K'
   }
-  
+
   return n.toLocaleString(undefined, { maximumFractionDigits: decimals })
 }
 
 // Format token amounts
-export function formatTokenAmount(amount: string | number, decimals: number = 18, displayDecimals: number = 4): string {
-  const num = typeof amount === 'string' ? BigInt(amount) : BigInt(Math.floor(amount))
+export function formatTokenAmount(
+  amount: string | number,
+  decimals: number = 18,
+  displayDecimals: number = 4
+): string {
+  const num =
+    typeof amount === 'string' ? BigInt(amount) : BigInt(Math.floor(amount))
   const divisor = BigInt(10 ** decimals)
   const quotient = num / divisor
   const remainder = num % divisor
-  
+
   const wholeString = quotient.toString()
   const remainderString = remainder.toString().padStart(decimals, '0')
-  const decimalString = remainderString.substring(0, displayDecimals).replace(/0+$/, '')
-  
+  const decimalString = remainderString
+    .substring(0, displayDecimals)
+    .replace(/0+$/, '')
+
   return decimalString ? `${wholeString}.${decimalString}` : wholeString
 }
 
@@ -50,12 +60,12 @@ export function formatTimeAgo(timestamp: number | string): string {
   const now = Date.now()
   const time = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp
   const diff = now - time
-  
+
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
-  
+
   if (days > 0) return `${days}d ago`
   if (hours > 0) return `${hours}h ago`
   if (minutes > 0) return `${minutes}m ago`
@@ -73,7 +83,7 @@ export function generateColor(seed: string): string {
   for (let i = 0; i < seed.length; i++) {
     hash = seed.charCodeAt(i) + ((hash << 5) - hash)
   }
-  
+
   const hue = hash % 360
   return `hsl(${hue}, 70%, 50%)`
 }
@@ -95,7 +105,10 @@ export function formatBlockNumber(blockNumber: number): string {
 }
 
 // Calculate percentage change
-export function calculatePercentageChange(current: number, previous: number): number {
+export function calculatePercentageChange(
+  current: number,
+  previous: number
+): number {
   if (previous === 0) return 0
   return ((current - previous) / previous) * 100
-} 
+}

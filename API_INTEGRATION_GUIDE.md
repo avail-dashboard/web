@@ -14,12 +14,14 @@ The frontend is configured to work with both **development** and **production** 
 ### Development Setup
 
 1. **Create environment file:**
+
 ```bash
 # In the web/ directory
 cp .env.example .env.local
 ```
 
 2. **Configure environment variables:**
+
 ```bash
 # Backend API Configuration
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1
@@ -48,6 +50,7 @@ SUBSCAN_API_KEY=your-production-subscan-key
 The integration expects the following endpoints from your backend server:
 
 ### Core Endpoints
+
 - `GET /api/v1/blocks` - Latest blocks with pagination
 - `GET /api/v1/blocks/:numberOrHash` - Specific block details
 - `GET /api/v1/chain/stats` - Chain statistics and metrics
@@ -58,11 +61,14 @@ The integration expects the following endpoints from your backend server:
 - `GET /api/v1/analytics` - Analytics data
 
 ### System Endpoints
+
 - `GET /health` - Backend health check
 - WebSocket at root for real-time updates
 
 ### Expected Response Format
+
 All API responses should follow this format:
+
 ```typescript
 {
   success: boolean
@@ -97,10 +103,10 @@ import { useBlocks, useChainData, useBackendStatus } from '@/lib/hooks/useAvailA
 function MyComponent() {
   // Auto-refreshing blocks data
   const { data: blocks, loading, error } = useBlocks(10)
-  
+
   // Chain statistics with 30s refresh
   const { data: chainData } = useChainData()
-  
+
   // Backend connection status
   const { isConnected } = useBackendStatus()
 
@@ -135,7 +141,7 @@ function RealtimeComponent() {
       subscribe('blocks')
       subscribe('chain')
     }
-    
+
     return () => {
       unsubscribe('blocks')
       unsubscribe('chain')
@@ -188,6 +194,7 @@ The frontend includes Next.js API routes that proxy requests to the backend:
 - `/api/health` - System health check
 
 These routes provide:
+
 - **Timeout handling** (5s for backend requests)
 - **Automatic fallback** to external APIs
 - **Consistent response format**
@@ -196,6 +203,7 @@ These routes provide:
 ## Development Workflow
 
 ### 1. Start Backend Server (SQLite - Zero Config!)
+
 ```bash
 cd server/
 npm run setup  # One-time setup (creates .env and data directory)
@@ -204,11 +212,13 @@ npm run dev    # Start with SQLite database
 ```
 
 **🎉 No PostgreSQL or Redis setup required for development!**
+
 - ✅ SQLite database auto-created at `./data/avail_explorer.db`
 - ✅ All tables created automatically
 - ✅ Ready to use immediately
 
 ### 2. Start Frontend
+
 ```bash
 cd web/
 npm run dev
@@ -216,6 +226,7 @@ npm run dev
 ```
 
 ### 3. Verify Integration
+
 - Visit `http://localhost:3000`
 - Check browser console for API connection logs
 - Use browser DevTools Network tab to monitor API calls
@@ -226,17 +237,20 @@ npm run dev
 ### Backend Connection Issues
 
 1. **Check environment variables:**
+
 ```bash
 echo $NEXT_PUBLIC_API_BASE_URL
 echo $NEXT_PUBLIC_WS_URL
 ```
 
 2. **Verify backend server is running:**
+
 ```bash
 curl http://localhost:3001/health
 ```
 
 3. **Check browser console for errors:**
+
 - Look for "Backend is not available" warnings
 - Check for CORS errors
 - Verify API request/response logs
@@ -244,18 +258,22 @@ curl http://localhost:3001/health
 ### Common Issues
 
 #### CORS Errors
+
 Ensure backend CORS configuration allows frontend origin:
+
 ```typescript
 // Backend CORS config should include
 origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
 ```
 
 #### WebSocket Connection Failures
+
 - Check firewall settings
 - Verify WebSocket URL is correct
 - Ensure backend WebSocket server is enabled
 
 #### API Timeout Issues
+
 - Check backend server performance
 - Monitor network connectivity
 - Consider increasing timeout in API client
@@ -263,7 +281,9 @@ origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
 ## Production Deployment
 
 ### Environment Variables
+
 Set all required environment variables in your deployment platform:
+
 ```bash
 NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com/api/v1
 NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com
@@ -271,7 +291,9 @@ NEXT_PUBLIC_NODE_ENV=production
 ```
 
 ### Backend Health Monitoring
+
 The `/api/health` endpoint provides comprehensive system status:
+
 - Frontend service status
 - Backend API connectivity
 - Database connection status
@@ -283,17 +305,20 @@ Monitor this endpoint for production health checks.
 ## Performance Considerations
 
 ### Caching Strategy
+
 - Chain data: 30s refresh interval
-- Blocks: 6s refresh interval  
+- Blocks: 6s refresh interval
 - Validators: 5min refresh interval
 - Analytics: 1min refresh interval
 
 ### Request Optimization
+
 - Automatic debouncing for search queries (300ms)
 - Request deduplication for identical calls
 - Graceful error handling with exponential backoff
 
 ### WebSocket Optimization
+
 - Automatic reconnection with backoff
 - Selective topic subscription
 - Message parsing error handling
@@ -301,16 +326,19 @@ Monitor this endpoint for production health checks.
 ## Security Notes
 
 ### API Keys
+
 - Store sensitive API keys server-side only
 - Frontend should only have public configuration
 - Use environment-specific keys
 
 ### CORS Configuration
+
 - Restrict CORS origins in production
 - Validate all incoming requests
 - Implement rate limiting
 
 ### Error Handling
+
 - Avoid exposing internal errors to client
 - Log detailed errors server-side
-- Provide user-friendly error messages 
+- Provide user-friendly error messages

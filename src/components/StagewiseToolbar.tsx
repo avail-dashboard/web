@@ -3,7 +3,7 @@
 import { StagewiseToolbar as Toolbar } from '@stagewise/toolbar-next'
 
 const stagewiseConfig = {
-  plugins: []
+  plugins: [],
 }
 
 export function StagewiseToolbar() {
@@ -13,4 +13,4 @@ export function StagewiseToolbar() {
   }
 
   return <Toolbar config={stagewiseConfig} />
-} 
+}

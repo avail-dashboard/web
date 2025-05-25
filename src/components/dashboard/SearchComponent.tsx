@@ -19,30 +19,32 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  const detectSearchType = (input: string): 'block' | 'transaction' | 'account' | 'unknown' => {
+  const detectSearchType = (
+    input: string
+  ): 'block' | 'transaction' | 'account' | 'unknown' => {
     // Remove whitespace
     const clean = input.trim()
-    
+
     // Block number (numeric)
     if (/^\d+$/.test(clean)) {
       return 'block'
     }
-    
+
     // Hash (0x + 64 hex chars)
     if (/^0x[a-fA-F0-9]{64}$/.test(clean)) {
       return 'transaction'
     }
-    
+
     // Block hash or transaction hash
     if (/^0x[a-fA-F0-9]{32,64}$/.test(clean)) {
       return 'block'
     }
-    
+
     // Account address (various substrate formats)
     if (clean.length >= 47 && clean.length <= 49) {
       return 'account'
     }
-    
+
     return 'unknown'
   }
 
@@ -69,8 +71,8 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
                 number: parseInt(searchQuery),
                 hash: '0x' + 'a'.repeat(64), // Mock hash
                 timestamp: Date.now() - Math.random() * 86400000,
-                extrinsics: Math.floor(Math.random() * 10)
-              }
+                extrinsics: Math.floor(Math.random() * 10),
+              },
             })
           } else {
             // Block by hash
@@ -81,8 +83,8 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
                 number: Math.floor(Math.random() * 1000000),
                 hash: searchQuery,
                 timestamp: Date.now() - Math.random() * 86400000,
-                extrinsics: Math.floor(Math.random() * 10)
-              }
+                extrinsics: Math.floor(Math.random() * 10),
+              },
             })
           }
           break
@@ -99,8 +101,8 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
               timestamp: Date.now() - Math.random() * 86400000,
               from: '5' + 'A'.repeat(47),
               to: '5' + 'B'.repeat(47),
-              value: (Math.random() * 1000).toFixed(4)
-            }
+              value: (Math.random() * 1000).toFixed(4),
+            },
           })
           break
 
@@ -113,8 +115,8 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
               address: searchQuery,
               balance: (Math.random() * 10000).toFixed(4),
               nonce: Math.floor(Math.random() * 100),
-              transactions: Math.floor(Math.random() * 500)
-            }
+              transactions: Math.floor(Math.random() * 500),
+            },
           })
           break
 
@@ -125,7 +127,6 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
 
       setResults(searchResults)
       onSearch?.(searchQuery, searchResults)
-
     } catch (err) {
       console.error('Search error:', err)
       setError('Search failed. Please try again.')
@@ -155,7 +156,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             placeholder="Search blocks, transactions, or accounts..."
             className="w-full pl-10 pr-12 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-avail-500 focus:border-transparent"
           />
@@ -164,7 +165,11 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
             disabled={isSearching || !query.trim()}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-avail-600 text-white px-3 py-1 rounded text-sm hover:bg-avail-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+            {isSearching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              'Search'
+            )}
           </button>
         </div>
       </form>
@@ -212,38 +217,56 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
                   {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                 </span>
               </div>
-              
+
               {result.type === 'block' && (
                 <div>
-                  <div className="font-semibold">Block #{result.data.number.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground font-mono">{result.data.hash}</div>
+                  <div className="font-semibold">
+                    Block #{result.data.number.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground font-mono">
+                    {result.data.hash}
+                  </div>
                   <div className="text-sm mt-1">
                     <span>Time: {formatTime(result.data.timestamp)}</span>
-                    <span className="ml-4">Extrinsics: {result.data.extrinsics}</span>
+                    <span className="ml-4">
+                      Extrinsics: {result.data.extrinsics}
+                    </span>
                   </div>
                 </div>
               )}
 
               {result.type === 'transaction' && (
                 <div>
-                  <div className="font-semibold text-sm font-mono">{result.data.hash}</div>
+                  <div className="font-semibold text-sm font-mono">
+                    {result.data.hash}
+                  </div>
                   <div className="text-sm mt-1">
-                    <span>Block: #{result.data.blockNumber.toLocaleString()}</span>
+                    <span>
+                      Block: #{result.data.blockNumber.toLocaleString()}
+                    </span>
                     <span className="ml-4">Status: </span>
-                    <span className={result.data.success ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={
+                        result.data.success ? 'text-green-600' : 'text-red-600'
+                      }
+                    >
                       {result.data.success ? 'Success' : 'Failed'}
                     </span>
                   </div>
                   <div className="text-sm mt-1">
                     <span>Value: {result.data.value} AVAIL</span>
-                    <span className="ml-4">Time: {formatTime(result.data.timestamp)}</span>
+                    <span className="ml-4">
+                      Time: {formatTime(result.data.timestamp)}
+                    </span>
                   </div>
                 </div>
               )}
 
               {result.type === 'account' && (
                 <div>
-                  <div className="font-semibold text-sm font-mono">{formatAddress(result.data.address)}</div>
+                  <div className="font-semibold text-sm font-mono">
+                    {formatAddress(result.data.address)}
+                  </div>
                   <div className="text-sm mt-1">
                     <span>Balance: {result.data.balance} AVAIL</span>
                     <span className="ml-4">Nonce: {result.data.nonce}</span>
@@ -259,4 +282,4 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
       )}
     </div>
   )
-} 
+}

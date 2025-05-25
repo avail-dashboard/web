@@ -23,12 +23,12 @@ interface HealthStatus {
   }
 }
 
-export function BackendStatus({ 
-  showDetails = false, 
-  className = "" 
-}: { 
+export function BackendStatus({
+  showDetails = false,
+  className = '',
+}: {
   showDetails?: boolean
-  className?: string 
+  className?: string
 }) {
   const { isConnected, lastChecked, checkStatus } = useBackendStatus()
   const [healthData, setHealthData] = useState<HealthStatus | null>(null)
@@ -74,7 +74,7 @@ export function BackendStatus({
     if (typeof status === 'boolean') {
       return status ? '🟢' : '🔴'
     }
-    
+
     switch (status.toLowerCase()) {
       case 'healthy':
         return '🟢'
@@ -92,8 +92,12 @@ export function BackendStatus({
     // Simple status indicator
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
-        <span className={`text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+        <div
+          className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+        />
+        <span
+          className={`text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}
+        >
           {isConnected ? 'Backend Connected' : 'Backend Offline'}
         </span>
       </div>
@@ -118,7 +122,9 @@ export function BackendStatus({
           <span className="text-sm font-medium">Overall Status</span>
           <div className="flex items-center space-x-2">
             <span>{getStatusIcon(healthData?.status || 'unknown')}</span>
-            <span className={`text-sm ${getStatusColor(healthData?.status || 'unknown')}`}>
+            <span
+              className={`text-sm ${getStatusColor(healthData?.status || 'unknown')}`}
+            >
               {healthData?.status || 'Checking...'}
             </span>
           </div>
@@ -129,7 +135,9 @@ export function BackendStatus({
           <span className="text-sm font-medium">Backend API</span>
           <div className="flex items-center space-x-2">
             <span>{getStatusIcon(isConnected)}</span>
-            <span className={`text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              className={`text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}
+            >
               {isConnected ? 'Connected' : 'Offline'}
             </span>
           </div>
@@ -145,17 +153,29 @@ export function BackendStatus({
                   <span>Database</span>
                   <div className="flex items-center space-x-2">
                     <span>{getStatusIcon(healthData.services.database)}</span>
-                    <span className={healthData.services.database ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={
+                        healthData.services.database
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }
+                    >
                       {healthData.services.database ? 'Connected' : 'Offline'}
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-sm">
                   <span>Cache (Redis)</span>
                   <div className="flex items-center space-x-2">
                     <span>{getStatusIcon(healthData.services.caching)}</span>
-                    <span className={healthData.services.caching ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={
+                        healthData.services.caching
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }
+                    >
                       {healthData.services.caching ? 'Connected' : 'Offline'}
                     </span>
                   </div>
@@ -165,7 +185,13 @@ export function BackendStatus({
                   <span>WebSocket</span>
                   <div className="flex items-center space-x-2">
                     <span>{getStatusIcon(healthData.services.websocket)}</span>
-                    <span className={healthData.services.websocket ? 'text-green-600' : 'text-red-600'}>
+                    <span
+                      className={
+                        healthData.services.websocket
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }
+                    >
                       {healthData.services.websocket ? 'Available' : 'Offline'}
                     </span>
                   </div>
@@ -178,7 +204,9 @@ export function BackendStatus({
               <div className="mt-4 pt-4 border-t">
                 <h4 className="text-sm font-medium mb-2">Error Details</h4>
                 <div className="bg-red-50 border border-red-200 rounded p-2">
-                  <p className="text-sm text-red-700">{healthData.backend.error}</p>
+                  <p className="text-sm text-red-700">
+                    {healthData.backend.error}
+                  </p>
                 </div>
               </div>
             )}
@@ -213,15 +241,17 @@ export function BackendStatus({
 }
 
 // Quick status badge for headers/navigation
-export function StatusBadge({ className = "" }: { className?: string }) {
+export function StatusBadge({ className = '' }: { className?: string }) {
   const { isConnected } = useBackendStatus()
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
-      <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+      <div
+        className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+      />
       <span className="text-xs text-gray-600">
         {isConnected ? 'Online' : 'Offline'}
       </span>
     </div>
   )
-} 
+}

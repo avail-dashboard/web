@@ -3,7 +3,16 @@
 import { useState } from 'react'
 import { Extrinsic } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
-import { CheckCircle, XCircle, Filter, ExternalLink, Copy, Hash, Clock, User } from 'lucide-react'
+import {
+  CheckCircle,
+  XCircle,
+  Filter,
+  ExternalLink,
+  Copy,
+  Hash,
+  Clock,
+  User,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface ExtrinsicListProps {
@@ -13,27 +22,63 @@ interface ExtrinsicListProps {
   showFilters?: boolean
 }
 
-export function ExtrinsicList({ 
-  extrinsics, 
-  showBlockNumber = true, 
+export function ExtrinsicList({
+  extrinsics,
+  showBlockNumber = true,
   compact = false,
-  showFilters = true 
+  showFilters = true,
 }: ExtrinsicListProps) {
   const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
   const [moduleFilter, setModuleFilter] = useState<string>('all')
   const [copied, setCopied] = useState<string | null>(null)
 
+  // Debug: Log the extrinsics data to see its structure
+  console.log('ExtrinsicList received extrinsics:', extrinsics)
+
   // Get unique modules for filtering
   const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.module)))
 
-  // Filter extrinsics
+  // Validate and filter extrinsics
   const filteredExtrinsics = extrinsics.filter(extrinsic => {
-    const statusMatch = filter === 'all' || 
+    // Ensure all required properties exist
+    if (!extrinsic || typeof extrinsic !== 'object') {
+      console.error('Invalid extrinsic:', extrinsic)
+      return false
+    }
+
+    // Check for required properties and their types
+    const requiredProps = {
+      hash: 'string',
+      blockNumber: 'number',
+      module: 'string',
+      call: 'string',
+      success: 'boolean',
+      timestamp: 'number',
+      signer: 'string',
+    }
+
+    for (const [prop, expectedType] of Object.entries(requiredProps)) {
+      if (!(prop in extrinsic)) {
+        console.error(`Extrinsic missing required property: ${prop}`, extrinsic)
+        return false
+      }
+      if (typeof extrinsic[prop as keyof Extrinsic] !== expectedType) {
+        console.error(
+          `Extrinsic property ${prop} has wrong type. Expected ${expectedType}, got ${typeof extrinsic[prop as keyof Extrinsic]}`,
+          extrinsic
+        )
+        return false
+      }
+    }
+
+    const statusMatch =
+      filter === 'all' ||
       (filter === 'success' && extrinsic.success) ||
       (filter === 'failed' && !extrinsic.success)
-    
-    const moduleMatch = moduleFilter === 'all' || extrinsic.module === moduleFilter
-    
+
+    const moduleMatch =
+      moduleFilter === 'all' || extrinsic.module === moduleFilter
+
     return statusMatch && moduleMatch
   })
 
@@ -53,18 +98,18 @@ export function ExtrinsicList({
   }
 
   const getStatusColor = (success: boolean) => {
-    return success 
-      ? 'text-green-600 bg-green-50 border-green-200' 
+    return success
+      ? 'text-green-600 bg-green-50 border-green-200'
       : 'text-red-600 bg-red-50 border-red-200'
   }
 
   const getModuleColor = (module: string) => {
     const colors = {
-      'system': 'bg-blue-100 text-blue-800',
-      'balances': 'bg-green-100 text-green-800',
-      'staking': 'bg-purple-100 text-purple-800',
-      'utility': 'bg-orange-100 text-orange-800',
-      'default': 'bg-gray-100 text-gray-800'
+      system: 'bg-blue-100 text-blue-800',
+      balances: 'bg-green-100 text-green-800',
+      staking: 'bg-purple-100 text-purple-800',
+      utility: 'bg-orange-100 text-orange-800',
+      default: 'bg-gray-100 text-gray-800',
     }
     return colors[module as keyof typeof colors] || colors.default
   }
@@ -86,13 +131,15 @@ export function ExtrinsicList({
             <Filter className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Filters:</span>
           </div>
-          
+
           {/* Status Filter */}
           <div className="flex items-center space-x-2">
             <label className="text-sm text-muted-foreground">Status:</label>
             <select
               value={filter}
-              onChange={(e) => setFilter(e.target.value as 'all' | 'success' | 'failed')}
+              onChange={e =>
+                setFilter(e.target.value as 'all' | 'success' | 'failed')
+              }
               className="text-sm border rounded px-2 py-1 bg-background"
             >
               <option value="all">All</option>
@@ -106,7 +153,7 @@ export function ExtrinsicList({
             <label className="text-sm text-muted-foreground">Module:</label>
             <select
               value={moduleFilter}
-              onChange={(e) => setModuleFilter(e.target.value)}
+              onChange={e => setModuleFilter(e.target.value)}
               className="text-sm border rounded px-2 py-1 bg-background"
             >
               <option value="all">All Modules</option>
@@ -119,7 +166,8 @@ export function ExtrinsicList({
           </div>
 
           <div className="text-sm text-muted-foreground">
-            Showing {filteredExtrinsics.length} of {extrinsics.length} extrinsics
+            Showing {filteredExtrinsics.length} of {extrinsics.length}{' '}
+            extrinsics
           </div>
         </div>
       )}
@@ -147,7 +195,9 @@ export function ExtrinsicList({
                       {compact ? formatAddress(extrinsic.hash) : extrinsic.hash}
                     </Link>
                     <button
-                      onClick={() => copyToClipboard(extrinsic.hash, `hash-${index}`)}
+                      onClick={() =>
+                        copyToClipboard(extrinsic.hash, `hash-${index}`)
+                      }
                       className="p-1 hover:bg-muted rounded"
                       title="Copy hash"
                     >
@@ -157,9 +207,11 @@ export function ExtrinsicList({
                       <span className="text-green-500 text-xs">Copied!</span>
                     )}
                   </div>
-                  
+
                   {/* Status indicator */}
-                  <div className={`flex items-center space-x-1 px-2 py-1 rounded-full border text-xs ${getStatusColor(extrinsic.success)}`}>
+                  <div
+                    className={`flex items-center space-x-1 px-2 py-1 rounded-full border text-xs ${getStatusColor(extrinsic.success)}`}
+                  >
                     {extrinsic.success ? (
                       <CheckCircle className="h-3 w-3" />
                     ) : (
@@ -171,7 +223,9 @@ export function ExtrinsicList({
 
                 {/* Module and Call */}
                 <div className="flex items-center space-x-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
+                  >
                     {extrinsic.module}
                   </span>
                   <span className="text-sm font-medium">{extrinsic.call}</span>
@@ -190,7 +244,7 @@ export function ExtrinsicList({
                       </Link>
                     </div>
                   )}
-                  
+
                   <div className="flex items-center space-x-1">
                     <User className="h-3 w-3" />
                     <span>Signer:</span>
@@ -229,4 +283,4 @@ export function ExtrinsicList({
       )}
     </div>
   )
-} 
+}

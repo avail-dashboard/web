@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useBlocks, useChainData, useBackendStatus } from '@/lib/hooks/useAvailAPI'
+import {
+  useBlocks,
+  useChainData,
+  useBackendStatus,
+} from '@/lib/hooks/useAvailAPI'
 import { BackendStatus, StatusBadge } from '@/components/BackendStatus'
 import { formatTimeAgo } from '@/lib/utils'
 import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
@@ -13,14 +17,24 @@ import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
 
 export default function Dashboard() {
   // Using the new API hooks
-  const { data: chainData, loading: chainLoading, error: chainError, refetch: refetchChain } = useChainData({
-    refetchInterval: 60000 // Refresh every 60 seconds
+  const {
+    data: chainData,
+    loading: chainLoading,
+    error: chainError,
+    refetch: refetchChain,
+  } = useChainData({
+    refetchInterval: 60000, // Refresh every 60 seconds
   })
-  
-  const { data: latestBlocks, loading: blocksLoading, error: blocksError, refetch: refetchBlocks } = useBlocks(5, {
-    refetchInterval: 15000 // Refresh every 15 seconds
+
+  const {
+    data: latestBlocks,
+    loading: blocksLoading,
+    error: blocksError,
+    refetch: refetchBlocks,
+  } = useBlocks(5, {
+    refetchInterval: 15000, // Refresh every 15 seconds
   })
-  
+
   const { isConnected } = useBackendStatus()
 
   const formatNumber = (num: number): string => {
@@ -52,9 +66,7 @@ export default function Dashboard() {
             <div></div>
             <div></div>
           </div>
-          <p className="mt-4 text-muted-foreground">
-            Loading dashboard...
-          </p>
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -64,12 +76,14 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
       {/* API Call Monitor for debugging */}
       {/* {process.env.NODE_ENV === 'development' && <APICallMonitor />} */}
-      
+
       {/* Header */}
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+            <h1 className="text-2xl font-bold text-avail-600">
+              Avail Explorer
+            </h1>
             <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
@@ -100,9 +114,14 @@ export default function Dashboard() {
             </button>
             {chainData && (
               <div className="text-right text-sm">
-                <div className="font-semibold">AVAIL ${chainData.tokenPrice.toFixed(8)}</div>
-                <div className={`text-xs ${chainData.priceChange < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  {chainData.priceChange > 0 ? '+' : ''}{chainData.priceChange.toFixed(2)}%
+                <div className="font-semibold">
+                  AVAIL ${chainData.tokenPrice.toFixed(8)}
+                </div>
+                <div
+                  className={`text-xs ${chainData.priceChange < 0 ? 'text-red-500' : 'text-green-500'}`}
+                >
+                  {chainData.priceChange > 0 ? '+' : ''}
+                  {chainData.priceChange.toFixed(2)}%
                 </div>
               </div>
             )}
@@ -138,7 +157,9 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Blocks</h3>
-                      <p className="text-sm text-muted-foreground">Explore blockchain blocks</p>
+                      <p className="text-sm text-muted-foreground">
+                        Explore blockchain blocks
+                      </p>
                     </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-avail-600 transition-colors" />
@@ -147,7 +168,9 @@ export default function Dashboard() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Latest Block:</span>
                     <span className="font-mono">
-                      {chainData ? `#${formatNumber(chainData.finalizedBlocks)}` : 'Loading...'}
+                      {chainData
+                        ? `#${formatNumber(chainData.finalizedBlocks)}`
+                        : 'Loading...'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -168,16 +191,22 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Transactions</h3>
-                      <p className="text-sm text-muted-foreground">Browse all extrinsics</p>
+                      <p className="text-sm text-muted-foreground">
+                        Browse all extrinsics
+                      </p>
                     </div>
                   </div>
                   <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Extrinsics:</span>
+                    <span className="text-muted-foreground">
+                      Total Extrinsics:
+                    </span>
                     <span className="font-mono">
-                      {chainData ? formatNumber(chainData.signedExtrinsics) : 'Loading...'}
+                      {chainData
+                        ? formatNumber(chainData.signedExtrinsics)
+                        : 'Loading...'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -197,7 +226,9 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg">Accounts</h3>
-                    <p className="text-sm text-muted-foreground">Search account details</p>
+                    <p className="text-sm text-muted-foreground">
+                      Search account details
+                    </p>
                   </div>
                 </div>
                 <Search className="h-5 w-5 text-muted-foreground" />
@@ -207,9 +238,11 @@ export default function Dashboard() {
                   type="text"
                   placeholder="Enter account address..."
                   className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-avail-600/20 focus:border-avail-600"
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter') {
-                      const address = (e.target as HTMLInputElement).value.trim()
+                      const address = (
+                        e.target as HTMLInputElement
+                      ).value.trim()
                       if (address) {
                         window.location.href = `/accounts/${address}`
                       }
@@ -217,7 +250,8 @@ export default function Dashboard() {
                   }}
                 />
                 <div className="text-xs text-muted-foreground">
-                  Press Enter to search or try: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+                  Press Enter to search or try:
+                  5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
                 </div>
               </div>
             </div>
@@ -229,17 +263,23 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Latest Block:</span>
-                <Link 
-                  href={chainData ? `/blocks/${chainData.finalizedBlocks}` : '/blocks'} 
+                <Link
+                  href={
+                    chainData
+                      ? `/blocks/${chainData.finalizedBlocks}`
+                      : '/blocks'
+                  }
                   className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
                 >
-                  {chainData ? `#${formatNumber(chainData.finalizedBlocks)}` : 'View Latest'}
+                  {chainData
+                    ? `#${formatNumber(chainData.finalizedBlocks)}`
+                    : 'View Latest'}
                 </Link>
               </div>
               <div>
                 <span className="text-muted-foreground">Sample Account:</span>
-                <Link 
-                  href="/accounts/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" 
+                <Link
+                  href="/accounts/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
                   className="ml-2 text-avail-600 hover:text-avail-700 font-mono"
                 >
                   5GrwvaEF...
@@ -247,8 +287,8 @@ export default function Dashboard() {
               </div>
               <div>
                 <span className="text-muted-foreground">All Transactions:</span>
-                <Link 
-                  href="/extrinsics" 
+                <Link
+                  href="/extrinsics"
                   className="ml-2 text-avail-600 hover:text-avail-700"
                 >
                   Browse All →
@@ -264,28 +304,51 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold mb-4">Chain Data</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{formatNumber(chainData.finalizedBlocks)}</div>
-                <div className="text-sm text-muted-foreground">Finalized Blocks</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {formatNumber(chainData.finalizedBlocks)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Finalized Blocks
+                </div>
               </div>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{formatNumber(chainData.signedExtrinsics)}</div>
-                <div className="text-sm text-muted-foreground">Signed Extrinsics</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {formatNumber(chainData.signedExtrinsics)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Signed Extrinsics
+                </div>
               </div>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{chainData.stakedAmount} / {chainData.bondedAmount}</div>
-                <div className="text-sm text-muted-foreground">Staked / Bonded</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {chainData.stakedAmount} / {chainData.bondedAmount}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Staked / Bonded
+                </div>
               </div>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{formatNumber(chainData.holders)} / {formatNumber(chainData.totalAccounts)}</div>
-                <div className="text-sm text-muted-foreground">Holders / Total Accounts</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {formatNumber(chainData.holders)} /{' '}
+                  {formatNumber(chainData.totalAccounts)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Holders / Total Accounts
+                </div>
               </div>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{formatNumber(chainData.transfers)}</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {formatNumber(chainData.transfers)}
+                </div>
                 <div className="text-sm text-muted-foreground">Transfers</div>
               </div>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <div className="text-2xl font-bold text-avail-600">{chainData.inflationRate}%</div>
-                <div className="text-sm text-muted-foreground">Inflation Rate</div>
+                <div className="text-2xl font-bold text-avail-600">
+                  {chainData.inflationRate}%
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Inflation Rate
+                </div>
               </div>
             </div>
           </section>
@@ -297,12 +360,12 @@ export default function Dashboard() {
             <section>
               <h2 className="text-xl font-semibold mb-4">Token Distribution</h2>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
-                <TokenDistributionChart 
+                <TokenDistributionChart
                   data={{
                     circulating: chainData.circulating,
                     staking: chainData.staking,
                     treasury: chainData.treasury,
-                    others: chainData.others
+                    others: chainData.others,
                   }}
                   totalIssuance={chainData.totalIssuance}
                 />
@@ -317,7 +380,9 @@ export default function Dashboard() {
                   <BlocksChart blocks={latestBlocks} />
                 ) : (
                   <div className="h-80 flex items-center justify-center text-muted-foreground">
-                    {blocksLoading ? 'Loading blocks...' : 'No block data available'}
+                    {blocksLoading
+                      ? 'Loading blocks...'
+                      : 'No block data available'}
                   </div>
                 )}
               </div>
@@ -330,7 +395,9 @@ export default function Dashboard() {
           {/* Token Distribution Details */}
           {chainData && (
             <section>
-              <h2 className="text-xl font-semibold mb-4">Distribution Details</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                Distribution Details
+              </h2>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -339,8 +406,12 @@ export default function Dashboard() {
                       <span className="text-sm">Circulating</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{chainData.circulating.amount}</div>
-                      <div className="text-xs text-muted-foreground">({chainData.circulating.percentage}%)</div>
+                      <div className="font-semibold">
+                        {chainData.circulating.amount}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({chainData.circulating.percentage}%)
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
@@ -349,8 +420,12 @@ export default function Dashboard() {
                       <span className="text-sm">Staking</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{chainData.staking.amount}</div>
-                      <div className="text-xs text-muted-foreground">({chainData.staking.percentage}%)</div>
+                      <div className="font-semibold">
+                        {chainData.staking.amount}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({chainData.staking.percentage}%)
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
@@ -359,8 +434,12 @@ export default function Dashboard() {
                       <span className="text-sm">Treasury</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{chainData.treasury.amount}</div>
-                      <div className="text-xs text-muted-foreground">({chainData.treasury.percentage}%)</div>
+                      <div className="font-semibold">
+                        {chainData.treasury.amount}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({chainData.treasury.percentage}%)
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
@@ -369,8 +448,12 @@ export default function Dashboard() {
                       <span className="text-sm">Others</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{chainData.others.amount}</div>
-                      <div className="text-xs text-muted-foreground">({chainData.others.percentage}%)</div>
+                      <div className="font-semibold">
+                        {chainData.others.amount}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        ({chainData.others.percentage}%)
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -382,7 +465,10 @@ export default function Dashboard() {
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold">Latest Blocks</h2>
-              <Link href="/blocks" className="text-sm text-avail-600 hover:text-avail-700">
+              <Link
+                href="/blocks"
+                className="text-sm text-avail-600 hover:text-avail-700"
+              >
                 View All
               </Link>
             </div>
@@ -393,19 +479,23 @@ export default function Dashboard() {
                 </div>
               ) : latestBlocks && latestBlocks.length > 0 ? (
                 <div className="divide-y">
-                  {latestBlocks.map((block) => (
+                  {latestBlocks.map(block => (
                     <Link key={block.number} href={`/blocks/${block.number}`}>
                       <div className="p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-avail-600">#{block.number.toLocaleString()}</div>
+                            <div className="font-semibold text-avail-600">
+                              #{block.number.toLocaleString()}
+                            </div>
                             <div className="text-xs text-muted-foreground font-mono">
                               {block.hash.slice(0, 20)}...{block.hash.slice(-8)}
                             </div>
                           </div>
                           <div className="text-right text-sm">
                             <div>{formatTimeAgo(block.time)}</div>
-                            <div className="text-xs text-muted-foreground">{block.extrinsics} extrinsics</div>
+                            <div className="text-xs text-muted-foreground">
+                              {block.extrinsics} extrinsics
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -414,7 +504,9 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
-                  {blocksError ? 'Error loading blocks' : 'No block data available'}
+                  {blocksError
+                    ? 'Error loading blocks'
+                    : 'No block data available'}
                 </div>
               )}
             </div>
@@ -426,10 +518,12 @@ export default function Dashboard() {
       <footer className="border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 mt-16">
         <div className="container mx-auto px-4 py-6">
           <div className="text-center text-sm text-muted-foreground">
-            <p>Avail Explorer Dashboard - Built with Next.js and Tailwind CSS</p>
+            <p>
+              Avail Explorer Dashboard - Built with Next.js and Tailwind CSS
+            </p>
           </div>
         </div>
       </footer>
     </div>
   )
-} 
+}

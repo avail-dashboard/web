@@ -14,12 +14,15 @@ The loading issue has been fixed by updating the main page to use the new React 
 ## Testing the Integration
 
 ### 1. **Frontend Only (Current State)**
+
 Your website should now load with:
+
 - ✅ Fallback data from Subscan & CoinGecko APIs
 - ✅ Backend status monitoring (will show "Backend Offline")
 - ✅ All dashboard features working
 
 ### 2. **With Backend (Full Integration)**
+
 To test the full backend integration:
 
 ```bash
@@ -35,11 +38,13 @@ npm run dev
 ## What You Should See
 
 ### **Without Backend (Fallback Mode)**
+
 - 🟡 "Backend offline - using fallback" message
 - 🟢 Dashboard loads with real data from external APIs
 - 🟢 All statistics, charts, and blocks display correctly
 
 ### **With Backend Connected**
+
 - 🟢 "Backend Connected" status
 - 🟢 Real-time updates via WebSocket
 - 🟢 Enhanced features (search, detailed analytics)
@@ -57,11 +62,13 @@ npm run dev
 ## Troubleshooting
 
 ### Website Still Not Loading?
+
 1. **Check browser console** for error messages
 2. **Hard refresh** the page (Cmd/Ctrl + Shift + R)
 3. **Check if dev server is running** - should see "Ready" message
 
 ### Backend Connection Issues?
+
 1. **Backend not required** - website works with fallback data
 2. **To test backend** - follow backend setup in server/ directory
 3. **Check port 3001** - backend should run on http://localhost:3001
@@ -73,4 +80,4 @@ npm run dev
 3. **Check real-time updates** - watch blocks auto-refresh
 4. **Review API documentation** - see API_INTEGRATION_GUIDE.md for details
 
-Your Avail Explorer should now be fully functional! 🚀 
+Your Avail Explorer should now be fully functional! 🚀

@@ -10,7 +10,12 @@ export default function ExtrinsicsPage() {
   const [pageSize] = useState(20)
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  const { data: extrinsics, loading, error, refetch } = useExtrinsics(
+  const {
+    data: extrinsics,
+    loading,
+    error,
+    refetch,
+  } = useExtrinsics(
     undefined, // No specific block
     currentPage,
     pageSize
@@ -22,7 +27,9 @@ export default function ExtrinsicsPage() {
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="container flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+              <h1 className="text-2xl font-bold text-avail-600">
+                Avail Explorer
+              </h1>
               <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
                 <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span>Mainnet</span>
@@ -30,7 +37,7 @@ export default function ExtrinsicsPage() {
             </div>
           </div>
         </header>
-        
+
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="loading-dots">
@@ -52,14 +59,18 @@ export default function ExtrinsicsPage() {
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="container flex h-16 items-center justify-between px-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+              <h1 className="text-2xl font-bold text-avail-600">
+                Avail Explorer
+              </h1>
             </div>
           </div>
         </header>
-        
+
         <div className="text-center py-12">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-semibold mb-2">Failed to Load Extrinsics</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            Failed to Load Extrinsics
+          </h3>
           <p className="text-muted-foreground mb-4">
             There was an error loading the extrinsic data.
           </p>
@@ -80,7 +91,9 @@ export default function ExtrinsicsPage() {
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-avail-600">Avail Explorer</h1>
+            <h1 className="text-2xl font-bold text-avail-600">
+              Avail Explorer
+            </h1>
             <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
               <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
@@ -98,26 +111,28 @@ export default function ExtrinsicsPage() {
               Real-time view of the latest transactions on the Avail network
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             {/* Auto-refresh toggle */}
             <label className="flex items-center space-x-2 text-sm">
               <input
                 type="checkbox"
                 checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
+                onChange={e => setAutoRefresh(e.target.checked)}
                 className="rounded"
               />
               <span>Auto-refresh</span>
             </label>
-            
+
             {/* Manual refresh */}
             <button
               onClick={() => refetch()}
               disabled={loading}
               className="flex items-center space-x-2 px-3 py-2 bg-avail-600 text-white rounded hover:bg-avail-700 disabled:opacity-50"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+              />
               <span>Refresh</span>
             </button>
           </div>
@@ -126,7 +141,7 @@ export default function ExtrinsicsPage() {
         {/* Extrinsics List */}
         <div className="bg-card p-6 rounded-lg border shadow-sm">
           {extrinsics && extrinsics.length > 0 ? (
-            <ExtrinsicList 
+            <ExtrinsicList
               extrinsics={extrinsics}
               showBlockNumber={true}
               compact={false}
@@ -135,8 +150,12 @@ export default function ExtrinsicsPage() {
           ) : (
             <div className="text-center py-12">
               <div className="text-muted-foreground text-6xl mb-4">📄</div>
-              <h3 className="text-xl font-semibold mb-2">No Extrinsics Found</h3>
-              <p className="text-muted-foreground">No extrinsic data is currently available.</p>
+              <h3 className="text-xl font-semibold mb-2">
+                No Extrinsics Found
+              </h3>
+              <p className="text-muted-foreground">
+                No extrinsic data is currently available.
+              </p>
             </div>
           )}
         </div>
@@ -153,4 +172,4 @@ export default function ExtrinsicsPage() {
       </main>
     </div>
   )
-} 
+}

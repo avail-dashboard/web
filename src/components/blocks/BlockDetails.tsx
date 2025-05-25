@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react'
 import { useBlock, useExtrinsics } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
 import { ExtrinsicList } from './ExtrinsicList'
-import { ChevronLeft, ChevronRight, Copy, ExternalLink, Clock, Hash, Users, Activity } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  ExternalLink,
+  Clock,
+  Hash,
+  Users,
+  Activity,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface BlockDetailsProps {
@@ -13,11 +22,21 @@ interface BlockDetailsProps {
 }
 
 export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
-  const { data: block, loading: blockLoading, error: blockError, refetch } = useBlock(blockNumber)
+  const {
+    data: block,
+    loading: blockLoading,
+    error: blockError,
+    refetch,
+  } = useBlock(blockNumber)
   const { data: extrinsics, loading: extrinsicsLoading } = useExtrinsics(
-    typeof blockNumber === 'number' ? blockNumber : parseInt(blockNumber.toString())
+    typeof blockNumber === 'number'
+      ? blockNumber
+      : parseInt(blockNumber.toString())
   )
-  
+
+  // Debug: Log the extrinsics data to see its structure
+  console.log('BlockDetails received extrinsics:', extrinsics)
+
   const [copied, setCopied] = useState<string | null>(null)
 
   // Auto-refresh every 30 seconds for latest blocks
@@ -75,8 +94,8 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
           <p className="text-muted-foreground mb-4">
             Block #{blockNumber} could not be found or loaded.
           </p>
-          <Link 
-            href="/blocks" 
+          <Link
+            href="/blocks"
             className="bg-avail-600 text-white px-4 py-2 rounded hover:bg-avail-700"
           >
             Back to Blocks
@@ -91,7 +110,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       {/* Header with Navigation */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <Link 
+          <Link
             href="/blocks"
             className="text-avail-600 hover:text-avail-700 flex items-center space-x-2"
           >
@@ -100,7 +119,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
           </Link>
           <h1 className="text-3xl font-bold">Block #{block.number}</h1>
         </div>
-        
+
         {/* Block Navigation */}
         <div className="flex items-center space-x-2">
           <button
@@ -144,7 +163,9 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             <div className="flex justify-between items-start">
               <span className="text-muted-foreground">Hash:</span>
               <div className="flex items-center space-x-2">
-                <span className="font-mono text-sm break-all">{block.hash}</span>
+                <span className="font-mono text-sm break-all">
+                  {block.hash}
+                </span>
                 <button
                   onClick={() => copyToClipboard(block.hash, 'hash')}
                   className="p-1 hover:bg-muted rounded"
@@ -161,7 +182,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">Parent Hash:</span>
                 <div className="flex items-center space-x-2">
-                  <Link 
+                  <Link
                     href={`/blocks/${block.number - 1}`}
                     className="font-mono text-sm text-avail-600 hover:text-avail-700 break-all"
                   >
@@ -174,8 +195,12 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Timestamp:</span>
               <div className="text-right">
-                <div className="font-semibold">{new Date(block.time).toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">{formatTimeAgo(block.time)}</div>
+                <div className="font-semibold">
+                  {new Date(block.time).toLocaleString()}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {formatTimeAgo(block.time)}
+                </div>
               </div>
             </div>
           </div>
@@ -190,15 +215,21 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Extrinsics:</span>
-              <span className="font-semibold text-avail-600">{block.extrinsics}</span>
+              <span className="font-semibold text-avail-600">
+                {block.extrinsics}
+              </span>
             </div>
             {block.stateRoot && (
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">State Root:</span>
                 <div className="flex items-center space-x-2">
-                  <span className="font-mono text-sm break-all">{block.stateRoot}</span>
+                  <span className="font-mono text-sm break-all">
+                    {block.stateRoot}
+                  </span>
                   <button
-                    onClick={() => copyToClipboard(block.stateRoot!, 'stateRoot')}
+                    onClick={() =>
+                      copyToClipboard(block.stateRoot!, 'stateRoot')
+                    }
                     className="p-1 hover:bg-muted rounded"
                     title="Copy state root"
                   >
@@ -238,11 +269,13 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
               <div></div>
               <div></div>
             </div>
-            <span className="ml-4 text-muted-foreground">Loading extrinsics...</span>
+            <span className="ml-4 text-muted-foreground">
+              Loading extrinsics...
+            </span>
           </div>
         ) : extrinsics && extrinsics.length > 0 ? (
-          <ExtrinsicList 
-            extrinsics={extrinsics} 
+          <ExtrinsicList
+            extrinsics={extrinsics}
             showBlockNumber={false}
             compact={false}
           />
@@ -254,4 +287,4 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       </div>
     </div>
   )
-} 
+}
