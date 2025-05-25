@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const block = searchParams.get('block')
 
   try {
-    // Try to fetch from backend first
+    // Fetch from backend API
     const params = new URLSearchParams({ page, limit })
     if (block) {
       params.append('block', block)
@@ -23,44 +23,34 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(10000),
       }
     )
 
     if (backendResponse.ok) {
       const data = await backendResponse.json()
+      console.log('✅ Backend extrinsics data received:', data.meta)
       return NextResponse.json(data)
     }
 
-    // If backend fails, return mock data for development
-    console.warn('Backend not available, using mock extrinsics data')
-
-    const mockExtrinsics = Array.from({ length: parseInt(limit) }, (_, i) => ({
-      hash: `0x${Math.random().toString(16).substring(2).padStart(64, '0')}`,
-      blockNumber: block
-        ? parseInt(block)
-        : 999999 - Math.floor(Math.random() * 1000),
-      extrinsicIndex: i,
-      module: ['system', 'balances', 'staking', 'utility'][
-        Math.floor(Math.random() * 4)
-      ],
-      call: ['transfer', 'transferKeepAlive', 'bond', 'batch'][
-        Math.floor(Math.random() * 4)
-      ],
-      success: Math.random() > 0.1,
-      timestamp: Date.now() - i * 6000, // 6 seconds between extrinsics
-      signer: `5${Math.random().toString(36).substring(2, 48)}`,
-      fee: Math.floor(Math.random() * 1000000000000), // Random fee
-    }))
-
-    return NextResponse.json({
-      success: true,
-      data: mockExtrinsics,
-      timestamp: new Date().toISOString(),
-      message: 'Using mock extrinsics data (backend not available)',
-    })
+    // If backend fails, return error instead of mock data
+    console.error('❌ Backend not available for extrinsics')
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Backend service unavailable - no extrinsics data available',
+        data: [],
+        meta: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 0,
+          source: 'error',
+        },
+      },
+      { status: 503 }
+    )
   } catch (error) {
-    console.error('Extrinsics API error:', error)
+    console.error('❌ Extrinsics API error:', error)
 
     if (error instanceof Error) {
       if (error.name === 'TimeoutError') {
@@ -68,6 +58,7 @@ export async function GET(request: Request) {
           {
             success: false,
             error: 'Request timeout - backend server may be unavailable',
+            data: [],
           },
           { status: 503 }
         )
@@ -78,6 +69,7 @@ export async function GET(request: Request) {
       {
         success: false,
         error: 'Failed to fetch extrinsics',
+        data: [],
       },
       { status: 500 }
     )

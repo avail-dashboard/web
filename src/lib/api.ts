@@ -543,53 +543,59 @@ export class AvailAPI {
   }
 
   async getChainData(): Promise<ChainData> {
-    const mockData: ChainData = {
-      finalizedBlocks: 1399813,
-      signedExtrinsics: 576934,
-      stakedAmount: '5.383B',
-      bondedAmount: '5.386B',
-      holders: 203302,
-      totalAccounts: 288348,
-      transfers: 643469,
-      inflationRate: 4.22,
-      tokenPrice: 0.03645154,
-      priceChange: -4.81,
-      totalIssuance: '10.442B',
-      circulating: { amount: '4.819B', percentage: 46.14 },
-      staking: { amount: '5.386B', percentage: 51.57 },
-      treasury: { amount: '230.471M', percentage: 2.2 },
-      others: { amount: '7.209M', percentage: 0.06 },
+    // Default fallback data (only used if all APIs fail)
+    const fallbackData: ChainData = {
+      finalizedBlocks: 0,
+      signedExtrinsics: 0,
+      stakedAmount: '0',
+      bondedAmount: '0',
+      holders: 0,
+      totalAccounts: 0,
+      transfers: 0,
+      inflationRate: 0,
+      tokenPrice: 0,
+      priceChange: 0,
+      totalIssuance: '0',
+      circulating: { amount: '0', percentage: 0 },
+      staking: { amount: '0', percentage: 0 },
+      treasury: { amount: '0', percentage: 0 },
+      others: { amount: '0', percentage: 0 },
     }
 
     try {
-      let data: Partial<ChainData>
+      let data: Partial<ChainData> = {}
 
       if (this.useBackend) {
+        console.log('🔄 Fetching chain data from backend...')
         data = await this.backend.getChainStats()
+        console.log('✅ Backend data received:', data)
       } else {
+        console.log('🔄 Fetching chain data from frontend API...')
         data = await this.frontend.getChainData()
+        console.log('✅ Frontend API data received:', data)
       }
 
-      return { ...mockData, ...data }
+      // Merge with fallback data, prioritizing API data
+      const result = { ...fallbackData, ...data }
+      console.log('📊 Final chain data:', result)
+      return result
     } catch (error) {
-      console.error(
-        'Failed to fetch chain data from backend, trying frontend API...'
-      )
+      console.error('❌ Failed to fetch chain data from primary source:', error)
+
       if (this.useBackend) {
+        console.log('🔄 Trying frontend API as fallback...')
         this.useBackend = false
         try {
           const data = await this.frontend.getChainData()
-          return { ...mockData, ...data }
+          console.log('✅ Frontend API fallback data received:', data)
+          return { ...fallbackData, ...data }
         } catch (frontendError) {
-          console.error(
-            'Frontend API also failed, using mock data:',
-            frontendError
-          )
-          return mockData
+          console.error('❌ Frontend API also failed:', frontendError)
         }
       }
-      console.error('All API sources failed, using mock data:', error)
-      return mockData
+
+      console.warn('⚠️ All API sources failed, using fallback data')
+      return fallbackData
     }
   }
 

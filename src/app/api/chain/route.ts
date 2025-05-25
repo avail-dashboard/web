@@ -15,8 +15,14 @@ export async function GET(request: Request) {
     })
 
     if (backendResponse.ok) {
-      const data = await backendResponse.json()
-      return NextResponse.json(data)
+      const backendData = await backendResponse.json()
+      console.log('✅ Backend response received:', backendData)
+
+      // Check if backend returned the expected structure
+      if (backendData.success && backendData.data) {
+        // Backend data is already in the correct format, just pass it through
+        return NextResponse.json(backendData)
+      }
     }
 
     // If backend fails, fall back to Subscan API
@@ -38,45 +44,67 @@ export async function GET(request: Request) {
       ),
     ])
 
+    // Initialize with default values matching ChainData interface
     let chainData: any = {
       finalizedBlocks: 0,
       signedExtrinsics: 0,
+      stakedAmount: '0',
+      bondedAmount: '0',
+      holders: 0,
       totalAccounts: 0,
       transfers: 0,
+      inflationRate: 0,
       tokenPrice: 0,
       priceChange: 0,
+      totalIssuance: '0',
+      circulating: { amount: '0', percentage: 0 },
+      staking: { amount: '0', percentage: 0 },
+      treasury: { amount: '0', percentage: 0 },
+      others: { amount: '0', percentage: 0 },
     }
 
     // Process stats response
     if (statsResponse.status === 'fulfilled' && statsResponse.value.ok) {
       const stats = await statsResponse.value.json()
-      chainData = {
-        ...chainData,
-        finalizedBlocks: stats.data?.blockNum || 0,
-        signedExtrinsics: stats.data?.extrinsicsCount || 0,
-        totalAccounts: stats.data?.accountsCount || 0,
-        transfers: stats.data?.transfersCount || 0,
+      console.log('📊 Subscan stats received:', stats.data)
+
+      if (stats.data) {
+        chainData = {
+          ...chainData,
+          finalizedBlocks: stats.data.blockNum || 0,
+          signedExtrinsics: stats.data.extrinsicsCount || 0,
+          totalAccounts: stats.data.accountsCount || 0,
+          transfers: stats.data.transfersCount || 0,
+        }
       }
     }
 
     // Process price response
     if (priceResponse.status === 'fulfilled' && priceResponse.value.ok) {
       const priceData = await priceResponse.value.json()
+      console.log('💰 Price data received:', priceData)
+
       const avail = priceData.avail
-      chainData = {
-        ...chainData,
-        tokenPrice: avail?.usd || 0,
-        priceChange: avail?.usd_24h_change || 0,
+      if (avail) {
+        chainData = {
+          ...chainData,
+          tokenPrice: avail.usd || 0,
+          priceChange: avail.usd_24h_change || 0,
+        }
       }
     }
+
+    console.log('📊 Final frontend API chain data:', chainData)
 
     return NextResponse.json({
       success: true,
       data: chainData,
-      timestamp: new Date().toISOString(),
+      meta: {
+        source: 'subscan',
+      },
     })
   } catch (error) {
-    console.error('Chain stats API error:', error)
+    console.error('❌ Chain stats API error:', error)
 
     if (error instanceof Error) {
       if (error.name === 'TimeoutError') {
