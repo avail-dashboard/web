@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 
 // Types for blockchain data
 export interface ChainData {
@@ -58,6 +58,28 @@ export interface Account {
   feeFrozen: string
 }
 
+export interface DataSubmission {
+  extrinsicId: string
+  blockNumber: number
+  extrinsicIndex: number
+  appId: number
+  size: number
+  dataHash: string
+  submitter: string
+  timestamp: number
+  success: boolean
+}
+
+export interface DataSubmissionStats {
+  totalSubmissions: number
+  totalDataSize: number
+  uniqueApps: number
+  uniqueSubmitters: number
+  averageSize: number
+  submissionsToday: number
+  dataSizeToday: number
+}
+
 export interface SearchResult {
   type: 'block' | 'extrinsic' | 'account'
   data: Block | Extrinsic | Account
@@ -71,6 +93,20 @@ export interface APIResponse<T> {
   timestamp: string
 }
 
+// Raw API response types (snake_case from backend)
+interface RawBlock {
+  number: number
+  hash: string
+  timestamp?: number
+  time?: number
+  extrinsics_count?: number
+  extrinsics?: number
+  parent_hash?: string
+  parentHash?: string
+  state_root?: string
+  stateRoot?: string
+}
+
 // Configuration
 const getConfig = () => ({
   baseURL:
@@ -79,7 +115,7 @@ const getConfig = () => ({
   isDev: process.env.NEXT_PUBLIC_NODE_ENV === 'development',
   timeout: 10000,
   maxConcurrentRequests: 5, // Limit concurrent requests
-  requestQueue: [] as Array<() => Promise<any>>,
+  requestQueue: [] as Array<() => Promise<unknown>>,
   activeRequests: 0,
 })
 
@@ -87,7 +123,7 @@ const getConfig = () => ({
 class RequestThrottler {
   private maxConcurrent: number
   private activeRequests: number = 0
-  private queue: Array<() => Promise<any>> = []
+  private queue: Array<() => Promise<unknown>> = []
 
   constructor(maxConcurrent: number = 5) {
     this.maxConcurrent = maxConcurrent
@@ -192,19 +228,24 @@ class BackendAPIClient {
   async getBlocks(page = 0, limit = 10): Promise<Block[]> {
     return requestThrottler.throttle(async () => {
       try {
-        const response = await this.client.get<APIResponse<any[]>>('/blocks', {
-          params: { page, limit },
-        })
+        const response = await this.client.get<APIResponse<RawBlock[]>>(
+          '/blocks',
+          {
+            params: { page, limit },
+          }
+        )
 
         // Transform snake_case to camelCase
-        const blocks: Block[] = response.data.data.map((rawBlock: any) => ({
-          number: rawBlock.number,
-          hash: rawBlock.hash,
-          time: rawBlock.timestamp || rawBlock.time,
-          extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics,
-          parentHash: rawBlock.parent_hash || rawBlock.parentHash,
-          stateRoot: rawBlock.state_root || rawBlock.stateRoot,
-        }))
+        const blocks: Block[] = response.data.data.map(
+          (rawBlock: RawBlock) => ({
+            number: rawBlock.number,
+            hash: rawBlock.hash,
+            time: rawBlock.timestamp || rawBlock.time || 0,
+            extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics || 0,
+            parentHash: rawBlock.parent_hash || rawBlock.parentHash,
+            stateRoot: rawBlock.state_root || rawBlock.stateRoot,
+          })
+        )
 
         return blocks
       } catch (error) {
@@ -216,7 +257,7 @@ class BackendAPIClient {
 
   async getBlock(numberOrHash: string | number): Promise<Block> {
     try {
-      const response = await this.client.get<APIResponse<any>>(
+      const response = await this.client.get<APIResponse<RawBlock>>(
         `/blocks/${numberOrHash}`
       )
       const rawBlock = response.data.data
@@ -225,8 +266,8 @@ class BackendAPIClient {
       const block: Block = {
         number: rawBlock.number,
         hash: rawBlock.hash,
-        time: rawBlock.timestamp || rawBlock.time,
-        extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics,
+        time: rawBlock.timestamp || rawBlock.time || 0,
+        extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics || 0,
         parentHash: rawBlock.parent_hash || rawBlock.parentHash,
         stateRoot: rawBlock.state_root || rawBlock.stateRoot,
       }
@@ -244,30 +285,34 @@ class BackendAPIClient {
     limit = 10
   ): Promise<Extrinsic[]> {
     try {
-      const params: any = { page, limit }
+      const params: Record<string, string | number> = { page, limit }
       if (blockNumber !== undefined) {
         params.block = blockNumber
       }
 
-      const response = await this.client.get<APIResponse<any[]>>(
+      const response = await this.client.get<APIResponse<unknown[]>>(
         '/extrinsics',
         { params }
       )
 
       // Transform snake_case to camelCase and remove id field
       const extrinsics: Extrinsic[] = response.data.data.map(
-        (rawExtrinsic: any) => ({
-          hash: rawExtrinsic.hash,
-          blockNumber: rawExtrinsic.block_number || rawExtrinsic.blockNumber,
-          module: rawExtrinsic.module,
-          call: rawExtrinsic.call,
-          success: rawExtrinsic.success,
-          timestamp: rawExtrinsic.timestamp,
-          signer: rawExtrinsic.signer,
-          fee: rawExtrinsic.fee,
-          extrinsicIndex:
-            rawExtrinsic.extrinsic_index || rawExtrinsic.extrinsicIndex,
-        })
+        (rawExtrinsic: unknown) => {
+          const raw = rawExtrinsic as Record<string, unknown>
+          return {
+            hash: raw.hash as string,
+            blockNumber: (raw.block_number || raw.blockNumber) as number,
+            module: raw.module as string,
+            call: raw.call as string,
+            success: raw.success as boolean,
+            timestamp: raw.timestamp as number,
+            signer: raw.signer as string,
+            fee: raw.fee as number | undefined,
+            extrinsicIndex: (raw.extrinsic_index || raw.extrinsicIndex) as
+              | number
+              | undefined,
+          }
+        }
       )
 
       return extrinsics
@@ -328,15 +373,57 @@ class BackendAPIClient {
     }
   }
 
-  async getAnalytics(period: '24h' | '7d' | '30d' = '24h'): Promise<any> {
+  async getDataSubmissions(
+    page = 0,
+    limit = 10,
+    appId?: number,
+    submitter?: string
+  ): Promise<DataSubmission[]> {
+    return requestThrottler.throttle(async () => {
+      try {
+        const params: Record<string, string | number> = { page, limit }
+        if (appId !== undefined) params.appId = appId
+        if (submitter) params.submitter = submitter
+
+        const response = await this.client.get<APIResponse<DataSubmission[]>>(
+          '/data-submissions',
+          { params }
+        )
+        return response.data.data
+      } catch (error) {
+        console.error('Failed to fetch data submissions:', error)
+        throw error
+      }
+    })
+  }
+
+  async getDataSubmissionStats(): Promise<DataSubmissionStats> {
+    return requestThrottler.throttle(async () => {
+      try {
+        const response = await this.client.get<
+          APIResponse<DataSubmissionStats>
+        >('/data-submissions/stats')
+        return response.data.data
+      } catch (error) {
+        console.error('Failed to fetch data submission stats:', error)
+        throw error
+      }
+    })
+  }
+
+  async getAnalytics(
+    period: '24h' | '7d' | '30d' = '24h'
+  ): Promise<Record<string, unknown>> {
     try {
-      const response = await this.client.get<APIResponse<any>>('/analytics', {
+      const response = await this.client.get<
+        APIResponse<Record<string, unknown>>
+      >('/analytics', {
         params: { period },
       })
       return response.data.data
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error)
-      throw error
+    } catch {
+      console.error('Failed to fetch analytics')
+      throw new Error('Failed to fetch analytics')
     }
   }
 
@@ -345,7 +432,7 @@ class BackendAPIClient {
     try {
       await this.client.get('/health')
       return true
-    } catch (error) {
+    } catch {
       return false
     }
   }
@@ -446,6 +533,53 @@ class FrontendAPIClient {
       return []
     }
   }
+
+  async getDataSubmissions(
+    page = 0,
+    limit = 10,
+    appId?: number,
+    submitter?: string
+  ): Promise<DataSubmission[]> {
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      })
+      if (appId !== undefined) params.append('appId', appId.toString())
+      if (submitter) params.append('submitter', submitter)
+
+      const response = await fetch(`/api/data-submissions?${params}`)
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch data submissions')
+      }
+
+      return data.data
+    } catch (error) {
+      console.error('Frontend API - Failed to fetch data submissions:', error)
+      return []
+    }
+  }
+
+  async getDataSubmissionStats(): Promise<DataSubmissionStats | null> {
+    try {
+      const response = await fetch('/api/data-submissions/stats')
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch data submission stats')
+      }
+
+      return data.data
+    } catch (error) {
+      console.error(
+        'Frontend API - Failed to fetch data submission stats:',
+        error
+      )
+      return null
+    }
+  }
 }
 
 // ==== UNIFIED API CLIENT WITH PROPER FALLBACK ====
@@ -471,7 +605,7 @@ export class AvailAPI {
       } else {
         console.log('✅ Backend is available')
       }
-    } catch (error) {
+    } catch {
       console.warn(
         '⚠️  Backend health check failed, using Next.js API routes as fallback'
       )
@@ -640,14 +774,70 @@ export class AvailAPI {
     }
   }
 
-  async getAnalytics(period: '24h' | '7d' | '30d' = '24h'): Promise<any> {
+  async getDataSubmissions(
+    page = 0,
+    limit = 10,
+    appId?: number,
+    submitter?: string
+  ): Promise<DataSubmission[]> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getDataSubmissions(
+          page,
+          limit,
+          appId,
+          submitter
+        )
+      } else {
+        return await this.frontend.getDataSubmissions(
+          page,
+          limit,
+          appId,
+          submitter
+        )
+      }
+    } catch (error) {
+      console.error('Failed to fetch data submissions:', error)
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.frontend.getDataSubmissions(
+          page,
+          limit,
+          appId,
+          submitter
+        )
+      }
+      return []
+    }
+  }
+
+  async getDataSubmissionStats(): Promise<DataSubmissionStats | null> {
+    try {
+      if (this.useBackend) {
+        return await this.backend.getDataSubmissionStats()
+      } else {
+        return await this.frontend.getDataSubmissionStats()
+      }
+    } catch (error) {
+      console.error('Failed to fetch data submission stats:', error)
+      if (this.useBackend) {
+        this.useBackend = false
+        return await this.frontend.getDataSubmissionStats()
+      }
+      return null
+    }
+  }
+
+  async getAnalytics(
+    period: '24h' | '7d' | '30d' = '24h'
+  ): Promise<Record<string, unknown> | null> {
     try {
       if (this.useBackend) {
         return await this.backend.getAnalytics(period)
       }
       return null
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error)
+    } catch {
+      console.error('Failed to fetch analytics')
       return null
     }
   }
@@ -675,7 +865,10 @@ export class AvailWebSocket {
   private maxReconnectAttempts = 5
   private reconnectDelay = 1000
 
-  connect(onMessage?: (data: any) => void, onError?: (error: Event) => void) {
+  connect(
+    onMessage?: (data: Record<string, unknown>) => void,
+    onError?: (error: Event) => void
+  ) {
     try {
       this.ws = new WebSocket(this.config.wsURL)
 
@@ -709,7 +902,7 @@ export class AvailWebSocket {
   }
 
   private attemptReconnect(
-    onMessage?: (data: any) => void,
+    onMessage?: (data: Record<string, unknown>) => void,
     onError?: (error: Event) => void
   ) {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {

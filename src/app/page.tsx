@@ -1,17 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import React from 'react'
 import {
   useBlocks,
   useChainData,
   useBackendStatus,
 } from '@/lib/hooks/useAvailAPI'
 import { StatusBadge } from '@/components/BackendStatus'
-import { formatTimeAgo } from '@/lib/utils'
 import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
-import { APICallMonitor } from '@/components/APICallMonitor'
 import { TransfersTable } from '@/components/transfers/TransfersTable'
 import Link from 'next/link'
 import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
@@ -142,7 +140,7 @@ export default function Dashboard() {
         {/* Explorer Navigation */}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">Explore the Network</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Blocks Explorer */}
             <Link href="/blocks" className="group">
               <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-avail-600/50">
@@ -251,6 +249,40 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Data Submissions Explorer */}
+            <Link href="/data-submissions" className="group">
+              <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-purple-600/50">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                      <Activity className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        Data Submissions
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Browse data availability submissions
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-600 transition-colors" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Data Submissions:
+                    </span>
+                    <span className="font-mono">Loading...</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Unique Apps:</span>
+                    <span>Loading...</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
 
