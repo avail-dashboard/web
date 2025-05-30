@@ -17,7 +17,7 @@ COPY . .
 RUN mkdir -p ./public
 
 # Set environment variables for the build
-ENV NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api/v1
+ENV NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
 ENV NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
 ENV NEXT_PUBLIC_NODE_ENV=production
 ENV AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1'
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api'
 
 export async function GET() {
   const health = {
@@ -26,7 +26,7 @@ export async function GET() {
   try {
     // Check backend health
     const backendResponse = await fetch(
-      `${BACKEND_API_URL.replace('/api/v1', '')}/health`,
+      `${BACKEND_API_URL.replace('/api', '')}/health`,
       {
         method: 'GET',
         signal: AbortSignal.timeout(3000),
