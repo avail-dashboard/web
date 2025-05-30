@@ -1,175 +1,439 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useExtrinsics } from '@/lib/hooks/useAvailAPI'
-import { ExtrinsicList } from '@/components/blocks/ExtrinsicList'
-import { RefreshCw } from 'lucide-react'
+import * as React from "react"
+import { useQuery } from "@tanstack/react-query"
+import { ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDown, Clock, Hash, User, CheckCircle, XCircle, Filter, Activity } from "lucide-react"
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+
+import { extrinsicsApi, Extrinsic } from "@/lib/api"
+import { DataTable } from "@/components/ui/data-table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+
+// Format timestamp to relative time
+const formatTimeAgo = (timestamp: string) => {
+  const now = new Date()
+  const time = new Date(timestamp)
+  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
+  
+  if (diffInSeconds < 60) return `${diffInSeconds}s ago`
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+  return `${Math.floor(diffInSeconds / 86400)}d ago`
+}
+
+// Format fee amount
+const formatFee = (fee: string) => {
+  const feeNum = parseFloat(fee)
+  if (feeNum === 0) return "0"
+  if (feeNum < 0.001) return "<0.001"
+  return feeNum.toFixed(6)
+}
+
+// Get method color based on section
+const getMethodColor = (section: string) => {
+  const colors: Record<string, string> = {
+    balances: "bg-green-100 text-green-800",
+    system: "bg-blue-100 text-blue-800", 
+    timestamp: "bg-gray-100 text-gray-800",
+    dataAvailability: "bg-purple-100 text-purple-800",
+    staking: "bg-orange-100 text-orange-800",
+    session: "bg-yellow-100 text-yellow-800",
+    grandpa: "bg-red-100 text-red-800",
+    sudo: "bg-pink-100 text-pink-800",
+  }
+  return colors[section] || "bg-gray-100 text-gray-800"
+}
 
 export default function ExtrinsicsPage() {
-  const [currentPage, setCurrentPage] = useState(0)
-  const [pageSize] = useState(20)
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  const searchParams = useSearchParams()
+  const blockParam = searchParams.get('block')
+  
+  const [page, setPage] = React.useState(1)
+  const [limit, setLimit] = React.useState(20)
+  const [blockFilter, setBlockFilter] = React.useState<string>(blockParam || "")
+  const [signerFilter, setSignerFilter] = React.useState<string>("")
+  const [methodFilter, setMethodFilter] = React.useState<string>("")
+  const [successFilter, setSuccessFilter] = React.useState<string>("")
 
-  const {
-    data: extrinsics,
-    loading,
-    error,
-    refetch,
-  } = useExtrinsics(
-    undefined, // No specific block
-    currentPage,
-    pageSize
-  )
+  // Fetch extrinsics data
+  const { data: extrinsicsData, isLoading, error } = useQuery({
+    queryKey: ['extrinsics', page, limit, blockFilter, signerFilter, methodFilter, successFilter],
+    queryFn: () => extrinsicsApi.getExtrinsics({
+      page,
+      limit,
+      block: blockFilter ? Number(blockFilter) : undefined,
+      signer: signerFilter || undefined,
+      method: methodFilter || undefined,
+      success: successFilter ? successFilter === 'true' : undefined,
+    }),
+    refetchInterval: 10000, // Refetch every 10 seconds
+    staleTime: 5000,
+  })
 
-  if (loading && !extrinsics) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
-        <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-          <div className="container flex h-16 items-center justify-between px-4">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">
-                Avail Explorer
-              </h1>
-              <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
-                <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span>Mainnet</span>
-              </div>
-            </div>
-          </div>
-        </header>
+  // Fetch latest extrinsics for stats
+  const { data: latestExtrinsics } = useQuery({
+    queryKey: ['extrinsics', 'latest'],
+    queryFn: () => extrinsicsApi.getLatestExtrinsics(20),
+    refetchInterval: 10000,
+  })
 
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="loading-dots">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-            <p className="mt-4 text-muted-foreground">Loading extrinsics...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Calculate stats
+  const stats = React.useMemo(() => {
+    if (!latestExtrinsics || latestExtrinsics.length === 0) {
+      return { successRate: 0, averageFee: 0, uniqueMethods: 0, methodBreakdown: {} }
+    }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
-        <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-          <div className="container flex h-16 items-center justify-between px-4">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-avail-600">
-                Avail Explorer
-              </h1>
-            </div>
-          </div>
-        </header>
+    const successful = latestExtrinsics.filter(ext => ext.success).length
+    const successRate = (successful / latestExtrinsics.length) * 100
 
-        <div className="text-center py-12">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-xl font-semibold mb-2">
-            Failed to Load Extrinsics
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            There was an error loading the extrinsic data.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="bg-avail-600 text-white px-4 py-2 rounded hover:bg-avail-700"
+    const totalFees = latestExtrinsics.reduce((sum, ext) => sum + parseFloat(ext.fee || '0'), 0)
+    const averageFee = totalFees / latestExtrinsics.length
+
+    const methods = new Set(latestExtrinsics.map(ext => `${ext.section}.${ext.method}`))
+    const uniqueMethods = methods.size
+
+    const methodBreakdown = latestExtrinsics.reduce((acc, ext) => {
+      const key = ext.section
+      acc[key] = (acc[key] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    return { successRate, averageFee, uniqueMethods, methodBreakdown }
+  }, [latestExtrinsics])
+
+  // Define table columns
+  const columns: ColumnDef<Extrinsic>[] = [
+    {
+      accessorKey: "hash",
+      header: "Hash",
+      cell: ({ row }) => (
+        <Link 
+          href={`/extrinsics/${row.original.hash}`}
+          className="font-mono text-blue-600 hover:text-blue-800 hover:underline text-sm"
+        >
+          {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-10)}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "blockNumber",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-8 px-2"
+        >
+          <Hash className="mr-2 h-4 w-4" />
+          Block
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <Link 
+          href={`/blocks/${row.original.blockNumber}`}
+          className="font-mono text-blue-600 hover:underline"
+        >
+          #{row.original.blockNumber.toLocaleString()}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "timestamp",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-8 px-2"
+        >
+          <Clock className="mr-2 h-4 w-4" />
+          Age
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {formatTimeAgo(row.original.timestamp)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "method",
+      header: "Method",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Badge 
+            className={`text-xs ${getMethodColor(row.original.section)}`}
+            variant="secondary"
           >
-            Try Again
-          </button>
+            {row.original.section}
+          </Badge>
+          <span className="font-mono text-sm">{row.original.method}</span>
         </div>
-      </div>
-    )
-  }
+      ),
+    },
+    {
+      accessorKey: "signer",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-8 px-2"
+        >
+          <User className="mr-2 h-4 w-4" />
+          Signer
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <Link 
+          href={`/accounts/${row.original.signer}`}
+          className="font-mono text-sm text-blue-600 hover:underline"
+        >
+          {row.original.signer.slice(0, 8)}...{row.original.signer.slice(-8)}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "fee",
+      header: "Fee",
+      cell: ({ row }) => (
+        <span className="text-sm font-mono">
+          {formatFee(row.original.fee)} AVAIL
+        </span>
+      ),
+    },
+    {
+      accessorKey: "success",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge 
+          variant={row.original.success ? 'success' : 'destructive'}
+          className="text-xs"
+        >
+          {row.original.success ? (
+            <CheckCircle className="mr-1 h-3 w-3" />
+          ) : (
+            <XCircle className="mr-1 h-3 w-3" />
+          )}
+          {row.original.success ? 'Success' : 'Failed'}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "events",
+      header: "Events",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.original.events?.length || 0}
+        </span>
+      ),
+    },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/50">
+    <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-avail-600">
-              Avail Explorer
-            </h1>
-            <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
-              <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-              <span>Mainnet</span>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Extrinsics</h1>
+          <p className="text-muted-foreground">
+            Browse and analyze all extrinsics on the Avail network
+          </p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.successRate.toFixed(1)}%
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Last 20 extrinsics
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Fee</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatFee(stats.averageFee.toString())}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              AVAIL per extrinsic
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Unique Methods</CardTitle>
+            <Hash className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.uniqueMethods}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Different call types
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Top Section</CardTitle>
+            <Filter className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {Object.entries(stats.methodBreakdown).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Most active section
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filters</CardTitle>
+          <CardDescription>
+            Filter extrinsics by block, signer, method, or success status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Block Number</label>
+              <Input
+                placeholder="Enter block number..."
+                value={blockFilter}
+                onChange={(e) => setBlockFilter(e.target.value)}
+                type="number"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Signer</label>
+              <Input
+                placeholder="Enter signer address..."
+                value={signerFilter}
+                onChange={(e) => setSignerFilter(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Method</label>
+              <Input
+                placeholder="e.g. transfer, submit_data..."
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Status</label>
+              <Select value={successFilter} onValueChange={setSuccessFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="true">Success only</SelectItem>
+                  <SelectItem value="false">Failed only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Per Page</label>
+              <Select value={limit.toString()} onValueChange={(value: string) => setLimit(Number(value))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        </div>
-      </header>
+        </CardContent>
+      </Card>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">Latest Extrinsics</h1>
-            <p className="text-muted-foreground mt-1">
-              Real-time view of the latest transactions on the Avail network
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {/* Auto-refresh toggle */}
-            <label className="flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={e => setAutoRefresh(e.target.checked)}
-                className="rounded"
-              />
-              <span>Auto-refresh</span>
-            </label>
-
-            {/* Manual refresh */}
-            <button
-              onClick={() => refetch()}
-              disabled={loading}
-              className="flex items-center space-x-2 px-3 py-2 bg-avail-600 text-white rounded hover:bg-avail-700 disabled:opacity-50"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
-              <span>Refresh</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Extrinsics List */}
-        <div className="bg-card p-6 rounded-lg border shadow-sm">
-          {extrinsics && extrinsics.length > 0 ? (
-            <ExtrinsicList
-              extrinsics={extrinsics}
-              showBlockNumber={true}
-              compact={false}
-              showFilters={true}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-muted-foreground text-6xl mb-4">📄</div>
-              <h3 className="text-xl font-semibold mb-2">
-                No Extrinsics Found
-              </h3>
-              <p className="text-muted-foreground">
-                No extrinsic data is currently available.
-              </p>
+      {/* Extrinsics Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Extrinsics</CardTitle>
+          <CardDescription>
+            {extrinsicsData?.pagination && (
+              <>
+                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, extrinsicsData.pagination.total)} of {extrinsicsData.pagination.total.toLocaleString()} extrinsics
+              </>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            data={extrinsicsData?.data || []}
+            loading={isLoading}
+            searchable={false}
+            filterable={true}
+            pagination={{
+              pageSize: limit,
+              showSizeSelector: false,
+            }}
+            emptyMessage={error ? "Failed to load extrinsics" : "No extrinsics found"}
+          />
+          
+          {/* Custom Pagination */}
+          {extrinsicsData?.pagination && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Page {page} of {extrinsicsData.pagination.totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  disabled={page <= 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(prev => prev + 1)}
+                  disabled={page >= extrinsicsData.pagination.totalPages}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
-        </div>
-
-        {/* Loading indicator for auto-refresh */}
-        {loading && extrinsics && (
-          <div className="text-center py-4">
-            <div className="inline-flex items-center space-x-2 text-sm text-muted-foreground">
-              <RefreshCw className="h-3 w-3 animate-spin" />
-              <span>Updating...</span>
-            </div>
-          </div>
-        )}
-      </main>
+        </CardContent>
+      </Card>
     </div>
   )
 }
