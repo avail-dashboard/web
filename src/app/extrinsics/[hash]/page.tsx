@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ExtrinsicDetails } from '@/components/blocks/ExtrinsicDetails'
 import { Extrinsic } from '@/lib/api'
@@ -30,19 +30,30 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
 
         // Mock extrinsic data
         const mockExtrinsic: Extrinsic = {
+          id: extrinsicHash,
           hash: extrinsicHash,
           blockNumber: 999999,
+          blockHash:
+            '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+          index: 2,
+          method: 'transfer',
+          section: 'balances',
           module: 'balances',
           call: 'transfer',
           success: true,
-          timestamp: Date.now() - 300000, // 5 minutes ago
+          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago as string
           signer: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-          fee: 1000000000000000, // 0.001 AVAIL
+          fee: '1000000000000000', // 0.001 AVAIL as string
           extrinsicIndex: 2,
+          args: [],
+          nonce: 0,
+          signature: '0x1234567890abcdef',
+          tip: '0',
+          events: [],
         }
 
         setExtrinsic(mockExtrinsic)
-      } catch (err) {
+      } catch {
         setError('Failed to load extrinsic details')
       } finally {
         setLoading(false)
