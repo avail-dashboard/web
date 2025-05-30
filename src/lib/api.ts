@@ -455,6 +455,38 @@ export const availAPI = {
     }
   },
 
+  getDataSubmissions: async (page: number = 0, limit: number = 20, appId?: number, submitter?: string) => {
+    try {
+      const response = await dataSubmissionsApi.getDataSubmissions({
+        page: page + 1, // Convert 0-based to 1-based pagination
+        limit,
+        appId,
+        submitter,
+      })
+      return response.data || []
+    } catch (error) {
+      console.error('Failed to fetch data submissions:', error)
+      throw error
+    }
+  },
+
+  getDataSubmissionStats: async () => {
+    try {
+      // For now, return mock stats since the backend might not have this endpoint yet
+      return {
+        totalSubmissions: 0,
+        totalSize: '0 B',
+        uniqueApps: 0,
+        averageSize: '0 B',
+        submissionsToday: 0,
+        topApps: [],
+      }
+    } catch (error) {
+      console.error('Failed to fetch data submission stats:', error)
+      throw error
+    }
+  },
+
   refreshBackendStatus: async () => {
     try {
       const response = await fetch('/api/health')
