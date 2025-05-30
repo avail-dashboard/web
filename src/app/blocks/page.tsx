@@ -42,7 +42,7 @@ const formatSize = (bytes: number) => {
 export default function BlocksPage() {
   const [page, setPage] = React.useState(1)
   const [limit, setLimit] = React.useState(20)
-  const [statusFilter, setStatusFilter] = React.useState<string>("")
+  const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [validatorFilter, setValidatorFilter] = React.useState<string>("")
 
   // Fetch blocks data
@@ -51,7 +51,7 @@ export default function BlocksPage() {
     queryFn: () => blocksApi.getBlocks({
       page,
       limit,
-      status: statusFilter || undefined,
+      status: statusFilter === "all" ? undefined : statusFilter || undefined,
       validator: validatorFilter || undefined,
     }),
     refetchInterval: 6000, // Refetch every 6 seconds for real-time updates
@@ -280,7 +280,7 @@ export default function BlocksPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="finalized">Finalized</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
