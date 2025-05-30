@@ -1,31 +1,45 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { useQuery } from "@tanstack/react-query"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Clock, Hash, User, CheckCircle, XCircle, Filter } from "lucide-react"
-import Link from "next/link"
+import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ColumnDef } from '@tanstack/react-table'
+import {
+  ArrowUpDown,
+  Clock,
+  Hash,
+  User,
+  CheckCircle,
+  XCircle,
+  Filter,
+} from 'lucide-react'
+import Link from 'next/link'
 
-import { blocksApi, Block } from "@/lib/api"
-import { DataTable } from "@/components/ui/data-table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { blocksApi, Block } from '@/lib/api'
+import { DataTable } from '@/components/ui/data-table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 
 // Format timestamp to relative time
 const formatTimeAgo = (timestamp: string) => {
   const now = new Date()
   const time = new Date(timestamp)
   const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
-  
+
   if (diffInSeconds < 60) return `${diffInSeconds}s ago`
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
@@ -42,18 +56,23 @@ const formatSize = (bytes: number) => {
 export default function BlocksPage() {
   const [page, setPage] = React.useState(1)
   const [limit, setLimit] = React.useState(20)
-  const [statusFilter, setStatusFilter] = React.useState<string>("all")
-  const [validatorFilter, setValidatorFilter] = React.useState<string>("")
+  const [statusFilter, setStatusFilter] = React.useState<string>('all')
+  const [validatorFilter, setValidatorFilter] = React.useState<string>('')
 
   // Fetch blocks data
-  const { data: blocksData, isLoading, error } = useQuery({
+  const {
+    data: blocksData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['blocks', page, limit, statusFilter, validatorFilter],
-    queryFn: () => blocksApi.getBlocks({
-      page,
-      limit,
-      status: statusFilter === "all" ? undefined : statusFilter || undefined,
-      validator: validatorFilter || undefined,
-    }),
+    queryFn: () =>
+      blocksApi.getBlocks({
+        page,
+        limit,
+        status: statusFilter === 'all' ? undefined : statusFilter || undefined,
+        validator: validatorFilter || undefined,
+      }),
     refetchInterval: 6000, // Refetch every 6 seconds for real-time updates
     staleTime: 3000,
   })
@@ -73,17 +92,22 @@ export default function BlocksPage() {
 
     const blockTimes = []
     for (let i = 1; i < latestBlocks.length; i++) {
-      const current = new Date(latestBlocks[i-1].timestamp).getTime()
+      const current = new Date(latestBlocks[i - 1].timestamp).getTime()
       const previous = new Date(latestBlocks[i].timestamp).getTime()
       blockTimes.push((current - previous) / 1000)
     }
 
-    const averageBlockTime = blockTimes.length > 0 
-      ? blockTimes.reduce((a, b) => a + b, 0) / blockTimes.length 
-      : 0
+    const averageBlockTime =
+      blockTimes.length > 0
+        ? blockTimes.reduce((a, b) => a + b, 0) / blockTimes.length
+        : 0
 
-    const averageExtrinsics = latestBlocks.reduce((sum, block) => sum + block.extrinsicsCount, 0) / latestBlocks.length
-    const averageSize = latestBlocks.reduce((sum, block) => sum + block.size, 0) / latestBlocks.length
+    const averageExtrinsics =
+      latestBlocks.reduce((sum, block) => sum + block.extrinsicsCount, 0) /
+      latestBlocks.length
+    const averageSize =
+      latestBlocks.reduce((sum, block) => sum + block.size, 0) /
+      latestBlocks.length
 
     return { averageBlockTime, averageExtrinsics, averageSize }
   }, [latestBlocks])
@@ -91,11 +115,11 @@ export default function BlocksPage() {
   // Define table columns
   const columns: ColumnDef<Block>[] = [
     {
-      accessorKey: "number",
+      accessorKey: 'number',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <Hash className="mr-2 h-4 w-4" />
@@ -104,7 +128,7 @@ export default function BlocksPage() {
         </Button>
       ),
       cell: ({ row }) => (
-        <Link 
+        <Link
           href={`/blocks/${row.original.number}`}
           className="font-mono text-blue-600 hover:text-blue-800 hover:underline"
         >
@@ -113,11 +137,11 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: "timestamp",
+      accessorKey: 'timestamp',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <Clock className="mr-2 h-4 w-4" />
@@ -132,13 +156,13 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: "extrinsicsCount",
-      header: "Extrinsics",
+      accessorKey: 'extrinsicsCount',
+      header: 'Extrinsics',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">{row.original.extrinsicsCount}</span>
           {row.original.extrinsicsCount > 0 && (
-            <Link 
+            <Link
               href={`/extrinsics?block=${row.original.number}`}
               className="text-xs text-blue-600 hover:underline"
             >
@@ -149,11 +173,11 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: "validator",
+      accessorKey: 'validator',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <User className="mr-2 h-4 w-4" />
@@ -162,26 +186,28 @@ export default function BlocksPage() {
         </Button>
       ),
       cell: ({ row }) => (
-        <Link 
+        <Link
           href={`/validators/${row.original.validator}`}
           className="font-mono text-sm text-blue-600 hover:underline"
         >
-          {row.original.validator.slice(0, 8)}...{row.original.validator.slice(-8)}
+          {row.original.validator
+            ? `${row.original.validator.slice(0, 8)}...${row.original.validator.slice(-8)}`
+            : 'Unknown'}
         </Link>
       ),
     },
     {
-      accessorKey: "size",
-      header: "Size",
+      accessorKey: 'size',
+      header: 'Size',
       cell: ({ row }) => (
         <span className="text-sm">{formatSize(row.original.size)}</span>
       ),
     },
     {
-      accessorKey: "status",
-      header: "Status",
+      accessorKey: 'status',
+      header: 'Status',
       cell: ({ row }) => (
-        <Badge 
+        <Badge
           variant={row.original.status === 'finalized' ? 'success' : 'warning'}
           className="text-xs"
         >
@@ -195,8 +221,8 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: "hash",
-      header: "Hash",
+      accessorKey: 'hash',
+      header: 'Hash',
       cell: ({ row }) => (
         <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
           {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-10)}
@@ -221,7 +247,9 @@ export default function BlocksPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Block Time</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Average Block Time
+            </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -235,16 +263,16 @@ export default function BlocksPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Extrinsics</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Avg Extrinsics
+            </CardTitle>
             <Hash className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {stats.averageExtrinsics.toFixed(1)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Per block average
-            </p>
+            <p className="text-xs text-muted-foreground">Per block average</p>
           </CardContent>
         </Card>
         <Card>
@@ -256,9 +284,7 @@ export default function BlocksPage() {
             <div className="text-2xl font-bold">
               {formatSize(stats.averageSize)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Block size average
-            </p>
+            <p className="text-xs text-muted-foreground">Block size average</p>
           </CardContent>
         </Card>
       </div>
@@ -287,16 +313,21 @@ export default function BlocksPage() {
               </Select>
             </div>
             <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Validator</label>
+              <label className="text-sm font-medium mb-2 block">
+                Validator
+              </label>
               <Input
                 placeholder="Enter validator address..."
                 value={validatorFilter}
-                onChange={(e) => setValidatorFilter(e.target.value)}
+                onChange={e => setValidatorFilter(e.target.value)}
               />
             </div>
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Per Page</label>
-              <Select value={limit.toString()} onValueChange={(value: string) => setLimit(Number(value))}>
+              <Select
+                value={limit.toString()}
+                onValueChange={(value: string) => setLimit(Number(value))}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -319,7 +350,9 @@ export default function BlocksPage() {
           <CardDescription>
             {blocksData?.pagination && (
               <>
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, blocksData.pagination.total)} of {blocksData.pagination.total.toLocaleString()} blocks
+                Showing {(page - 1) * limit + 1} to{' '}
+                {Math.min(page * limit, blocksData.pagination.total)} of{' '}
+                {blocksData.pagination.total.toLocaleString()} blocks
               </>
             )}
           </CardDescription>
@@ -335,9 +368,9 @@ export default function BlocksPage() {
               pageSize: limit,
               showSizeSelector: false,
             }}
-            emptyMessage={error ? "Failed to load blocks" : "No blocks found"}
+            emptyMessage={error ? 'Failed to load blocks' : 'No blocks found'}
           />
-          
+
           {/* Custom Pagination */}
           {blocksData?.pagination && (
             <div className="flex items-center justify-between mt-4">
