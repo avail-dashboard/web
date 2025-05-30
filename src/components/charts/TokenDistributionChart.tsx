@@ -2,7 +2,14 @@
 
 import React from 'react'
 import { Doughnut } from 'react-chartjs-2'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js'
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Title,
+  ChartOptions,
+} from 'chart.js'
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, Title)
@@ -52,7 +59,7 @@ export function TokenDistributionChart({
     ],
   }
 
-  const options = {
+  const options: ChartOptions<'doughnut'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -71,15 +78,23 @@ export function TokenDistributionChart({
               return (data.labels as string[]).map(
                 (label: string, i: number) => {
                   const dataset = data.datasets[0]
-                  const backgroundColor = dataset.backgroundColor?.[i]
-                  const borderColor = dataset.borderColor?.[i]
+                  // Safely access backgroundColor and borderColor as arrays
+                  const backgroundColor = Array.isArray(dataset.backgroundColor)
+                    ? dataset.backgroundColor[i]
+                    : dataset.backgroundColor
+                  const borderColor = Array.isArray(dataset.borderColor)
+                    ? dataset.borderColor[i]
+                    : dataset.borderColor
 
                   return {
                     text: label,
                     fillStyle: backgroundColor,
                     strokeStyle: borderColor,
-                    lineWidth: dataset.borderWidth,
-                    pointStyle: 'circle',
+                    lineWidth:
+                      typeof dataset.borderWidth === 'number'
+                        ? dataset.borderWidth
+                        : 2,
+                    pointStyle: 'circle' as const,
                     hidden: false,
                     index: i,
                   }
