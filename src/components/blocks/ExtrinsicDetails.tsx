@@ -9,7 +9,6 @@ import {
   Copy,
   ExternalLink,
   Hash,
-  Clock,
   User,
   DollarSign,
   Activity,
@@ -33,11 +32,6 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const formatAddress = (address: string) => {
-    if (address.length <= 12) return address
-    return `${address.slice(0, 8)}...${address.slice(-8)}`
   }
 
   const formatFee = (fee?: number) => {
@@ -157,25 +151,25 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
               </Link>
             </div>
 
-            {extrinsic.extrinsicIndex !== undefined && (
+            {extrinsic.index !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Index:</span>
-                <span className="font-mono">{extrinsic.extrinsicIndex}</span>
+                <span className="font-mono">{extrinsic.index}</span>
               </div>
             )}
 
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Module:</span>
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.section)}`}
               >
-                {extrinsic.module}
+                {extrinsic.section}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Call:</span>
-              <span className="font-medium">{extrinsic.call}</span>
+              <span className="font-medium">{extrinsic.method}</span>
             </div>
 
             <div className="flex justify-between items-center">
@@ -225,7 +219,9 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
               <span className="text-muted-foreground">Transaction Fee:</span>
               <div className="flex items-center space-x-1">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="font-mono">{formatFee(extrinsic.fee)}</span>
+                <span className="font-mono">
+                  {formatFee(parseFloat(extrinsic.fee))}
+                </span>
               </div>
             </div>
 

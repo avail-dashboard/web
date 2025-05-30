@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useBlocks } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
 import {
@@ -10,7 +10,6 @@ import {
   Clock,
   Hash,
   Activity,
-  Users,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -59,7 +58,7 @@ export function BlockList({
     return num.toLocaleString()
   }
 
-  const getBlockStatus = (blockNumber: number) => {
+  const getBlockStatus = () => {
     // Mock logic - in reality this would come from the API
     return 'Finalized'
   }
@@ -191,8 +190,8 @@ export function BlockList({
                   <div className="flex items-center space-x-2">
                     <Activity className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {block.extrinsics} extrinsic
-                      {block.extrinsics !== 1 ? 's' : ''}
+                      {block.extrinsicsCount} extrinsic
+                      {block.extrinsicsCount !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -203,19 +202,21 @@ export function BlockList({
                 {/* Status */}
                 <div className="flex items-center justify-end space-x-2">
                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    {getBlockStatus(block.number)}
+                    {getBlockStatus()}
                   </span>
                 </div>
 
                 {/* Timestamp */}
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  <span>{formatTimeAgo(block.time)}</span>
+                  <span>
+                    {formatTimeAgo(new Date(block.timestamp).getTime())}
+                  </span>
                 </div>
 
                 {!compact && (
                   <div className="text-xs text-muted-foreground">
-                    {new Date(block.time).toLocaleString()}
+                    {new Date(block.timestamp).toLocaleString()}
                   </div>
                 )}
               </div>

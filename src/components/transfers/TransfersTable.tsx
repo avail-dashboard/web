@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useExtrinsics } from '@/lib/hooks/useAvailAPI'
-import { Extrinsic } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
 import {
   ArrowUpRight,
@@ -53,10 +52,10 @@ export function TransfersTable({
       const transferExtrinsics = extrinsics
         .filter(
           ext =>
-            ext.module === 'balances' &&
-            (ext.call === 'transfer' ||
-              ext.call === 'transfer_keep_alive' ||
-              ext.call === 'transfer_all')
+            ext.section === 'balances' &&
+            (ext.method === 'transfer' ||
+              ext.method === 'transfer_keep_alive' ||
+              ext.method === 'transfer_all')
         )
         .slice(0, limit)
         .map(ext => {
@@ -85,12 +84,12 @@ export function TransfersTable({
           return {
             hash: ext.hash,
             blockNumber: ext.blockNumber,
-            timestamp: ext.timestamp,
+            timestamp: new Date(ext.timestamp).getTime(),
             from: randomTransfer.from,
             to: randomTransfer.to,
             amount: randomTransfer.amount,
             success: ext.success,
-            fee: ext.fee,
+            fee: parseFloat(ext.fee),
           }
         })
 

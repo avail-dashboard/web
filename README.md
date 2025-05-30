@@ -1,6 +1,94 @@
 # Avail Explorer Dashboard
 
-A modern blockchain explorer dashboard for the Avail network, inspired by [avail.subscan.io](https://avail.subscan.io). Built with Next.js 14, TypeScript, and Tailwind CSS.
+A modern, responsive dashboard for exploring the Avail blockchain network.
+
+<!-- Pre-commit hooks test: ESLint and formatting enabled -->
+
+## Features
+
+- Real-time blockchain data visualization
+- Account and transaction exploration
+- Block details and extrinsic inspection
+- Responsive design with dark/light mode support
+- API integration with fallback support
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Radix UI
+- **State Management**: Zustand
+- **Data Fetching**: React Query
+- **Charts**: Chart.js, Recharts
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd avail-explorer-dashboard
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+
+```bash
+cp .env.example .env.local
+# Edit .env.local with your configuration
+```
+
+4. Run the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
+- `npm run type-check` - Run TypeScript checks
+
+## Environment Configuration
+
+Create a `.env.local` file with:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_WS_URL=ws://localhost:3001
+AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
+AVAIL_API_ENDPOINT=https://avail.api.subscan.io
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
 
 ## 🚀 Features
 
