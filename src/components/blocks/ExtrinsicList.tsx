@@ -7,7 +7,6 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  ExternalLink,
   Copy,
   Hash,
   Clock,
@@ -33,7 +32,7 @@ export function ExtrinsicList({
   const [copied, setCopied] = useState<string | null>(null)
 
   // Get unique modules for filtering
-  const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.module)))
+  const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.section)))
 
   // Filter extrinsics
   const filteredExtrinsics = extrinsics.filter(extrinsic => {
@@ -43,7 +42,7 @@ export function ExtrinsicList({
       (filter === 'failed' && !extrinsic.success)
 
     const moduleMatch =
-      moduleFilter === 'all' || extrinsic.module === moduleFilter
+      moduleFilter === 'all' || extrinsic.section === moduleFilter
 
     return statusMatch && moduleMatch
   })
@@ -190,11 +189,13 @@ export function ExtrinsicList({
                 {/* Module and Call */}
                 <div className="flex items-center space-x-3">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.section)}`}
                   >
-                    {extrinsic.module}
+                    {extrinsic.section}
                   </span>
-                  <span className="text-sm font-medium">{extrinsic.call}</span>
+                  <span className="text-sm font-medium">
+                    {extrinsic.method}
+                  </span>
                 </div>
 
                 {/* Block and Signer info */}

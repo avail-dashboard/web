@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useBlock, useExtrinsics } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
 import { ExtrinsicList } from './ExtrinsicList'
@@ -9,7 +9,6 @@ import {
   ChevronRight,
   Copy,
   ExternalLink,
-  Clock,
   Hash,
   Users,
   Activity,
@@ -193,10 +192,10 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
               <span className="text-muted-foreground">Timestamp:</span>
               <div className="text-right">
                 <div className="font-semibold">
-                  {new Date(block.time).toLocaleString()}
+                  {new Date(block.timestamp).toLocaleString()}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {formatTimeAgo(block.time)}
+                  {formatTimeAgo(new Date(block.timestamp).getTime())}
                 </div>
               </div>
             </div>
@@ -213,7 +212,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Extrinsics:</span>
               <span className="font-semibold text-avail-600">
-                {block.extrinsics}
+                {block.extrinsicsCount}
               </span>
             </div>
             {block.stateRoot && (
@@ -256,7 +255,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       <div className="bg-card p-6 rounded-lg border shadow-sm">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Users className="h-5 w-5 mr-2 text-avail-600" />
-          Extrinsics ({block.extrinsics})
+          Extrinsics ({block.extrinsicsCount})
         </h2>
         {extrinsicsLoading ? (
           <div className="flex items-center justify-center py-8">

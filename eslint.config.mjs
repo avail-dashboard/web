@@ -20,5 +20,10 @@ export default [
         version: 'detect',
       },
     },
+    rules: {
+      // Disable React import requirement for new JSX transform
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
+    },
   },
 ]

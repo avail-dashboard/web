@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useAccount } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
 import { TransactionHistory } from './TransactionHistory'
@@ -8,7 +8,6 @@ import { BalanceChart } from './BalanceChart'
 import { StakingInfo } from './StakingInfo'
 import {
   Copy,
-  ExternalLink,
   Wallet,
   TrendingUp,
   Shield,
@@ -142,10 +141,13 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             <Wallet className="h-4 w-4 text-avail-600" />
           </div>
           <div className="text-2xl font-bold text-avail-600">
-            {formatBalance(account.balance)} AVAIL
+            {formatBalance(account.balance.free)} AVAIL
           </div>
           <div className="text-sm text-muted-foreground mt-1">
-            ≈ ${(parseFloat(formatBalance(account.balance)) * 0.15).toFixed(2)}{' '}
+            ≈ $
+            {(parseFloat(formatBalance(account.balance.free)) * 0.15).toFixed(
+              2
+            )}{' '}
             USD
           </div>
         </div>
@@ -159,7 +161,7 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             <Shield className="h-4 w-4 text-orange-600" />
           </div>
           <div className="text-2xl font-bold text-orange-600">
-            {formatBalance(account.reserved)} AVAIL
+            {formatBalance(account.balance.reserved)} AVAIL
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             Locked for staking/governance

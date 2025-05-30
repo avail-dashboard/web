@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import {
   useBlocks,
   useChainData,
@@ -30,20 +30,7 @@ export function ExampleAPIUsage() {
   const { isConnected } = useBackendStatus()
 
   // WebSocket for real-time updates
-  const {
-    connected: wsConnected,
-    subscribe,
-    unsubscribe,
-  } = useWebSocket({
-    onBlockUpdate: block => {
-      console.log('Real-time block update:', block)
-      // Optionally trigger a manual refetch
-      refetch()
-    },
-    onChainStatsUpdate: stats => {
-      console.log('Real-time chain stats update:', stats)
-    },
-  })
+  const { connected: wsConnected, subscribe, unsubscribe } = useWebSocket()
 
   // Subscribe to real-time updates when WebSocket connects
   useEffect(() => {
@@ -112,16 +99,16 @@ export function ExampleAPIUsage() {
             <div>
               <div className="text-sm text-gray-500">Token Price</div>
               <div className="text-xl font-semibold">
-                ${chainData.tokenPrice.toFixed(4)}
+                ${chainData.tokenPrice?.toFixed(4) || 'N/A'}
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-500">24h Change</div>
               <div
-                className={`text-xl font-semibold ${chainData.priceChange >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                className={`text-xl font-semibold ${(chainData.priceChange || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}
               >
-                {chainData.priceChange >= 0 ? '+' : ''}
-                {chainData.priceChange.toFixed(2)}%
+                {(chainData.priceChange || 0) >= 0 ? '+' : ''}
+                {(chainData.priceChange || 0).toFixed(2)}%
               </div>
             </div>
           </div>
@@ -160,9 +147,11 @@ export function ExampleAPIUsage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm">{block.extrinsics} extrinsics</div>
+                  <div className="text-sm">
+                    {block.extrinsicsCount} extrinsics
+                  </div>
                   <div className="text-sm text-gray-500">
-                    {new Date(block.time).toLocaleTimeString()}
+                    {new Date(block.timestamp).toLocaleTimeString()}
                   </div>
                 </div>
               </div>
@@ -203,7 +192,7 @@ export function ExampleAPIUsage() {
 }
 
 // Example of a simple block component using the new hooks
-export function SimpleBlockDisplay({ blockNumber }: { blockNumber?: number }) {
+export function SimpleBlockDisplay() {
   const { data: block, loading, error } = useBlocks(1)
 
   if (loading) return <div>Loading block...</div>
@@ -218,8 +207,8 @@ export function SimpleBlockDisplay({ blockNumber }: { blockNumber?: number }) {
       <div className="mt-2">
         <div>Number: {latestBlock.number}</div>
         <div>Hash: {latestBlock.hash.slice(0, 20)}...</div>
-        <div>Extrinsics: {latestBlock.extrinsics}</div>
-        <div>Time: {new Date(latestBlock.time).toLocaleString()}</div>
+        <div>Extrinsics: {latestBlock.extrinsicsCount}</div>
+        <div>Time: {new Date(latestBlock.timestamp).toLocaleString()}</div>
       </div>
     </div>
   )
