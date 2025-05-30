@@ -46,9 +46,11 @@ export default function DataSubmissionsPage() {
 
   const fetchData = async () => {
     try {
+      console.log('🔄 fetchData: Starting data fetch...')
       setLoading(true)
       setError(null)
 
+      console.log('📡 fetchData: Making API calls...')
       const [submissionsData, statsData] = await Promise.all([
         availAPI
           .getDataSubmissions(
@@ -75,10 +77,17 @@ export default function DataSubmissionsPage() {
         }),
       ])
 
+      console.log('✅ fetchData: API calls completed', { 
+        submissionsCount: submissionsData.length, 
+        statsData 
+      })
+
       setSubmissions(submissionsData)
       setStats(statsData)
       setInitialLoad(false)
+      console.log('✅ fetchData: State updated successfully')
     } catch (err) {
+      console.error('❌ fetchData: Error in try block:', err)
       setError(
         'Failed to fetch data submissions. The backend service may be experiencing issues.'
       )
@@ -97,6 +106,7 @@ export default function DataSubmissionsPage() {
         dataSizeToday: 0,
       })
     } finally {
+      console.log('🏁 fetchData: Setting loading to false')
       setLoading(false)
     }
   }
