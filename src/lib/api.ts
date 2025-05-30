@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
@@ -213,14 +213,14 @@ export const blocksApi = {
     validator?: string
     status?: string
   }): Promise<PaginatedResponse<Block>> =>
-    api.get('/api/v1/blocks', { params }).then(res => res.data),
+    api.get('/api/blocks', { params }).then(res => res.data),
 
   getBlock: (identifier: string): Promise<Block> =>
-    api.get(`/api/v1/blocks/${identifier}`).then(res => res.data),
+    api.get(`/api/blocks/${identifier}`).then(res => res.data),
 
   getLatestBlocks: (limit = 10): Promise<Block[]> =>
     api
-      .get('/api/v1/blocks', { params: { page: 1, limit } })
+      .get('/api/blocks', { params: { page: 1, limit } })
       .then(res => res.data?.data || []),
 }
 
@@ -234,14 +234,14 @@ export const extrinsicsApi = {
     method?: string
     success?: boolean
   }): Promise<PaginatedResponse<Extrinsic>> =>
-    api.get('/api/v1/extrinsics', { params }).then(res => res.data),
+    api.get('/api/extrinsics', { params }).then(res => res.data),
 
   getExtrinsic: (hash: string): Promise<Extrinsic> =>
-    api.get(`/api/v1/extrinsics/${hash}`).then(res => res.data),
+    api.get(`/api/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
     api
-      .get('/api/v1/extrinsics', { params: { page: 1, limit } })
+      .get('/api/extrinsics', { params: { page: 1, limit } })
       .then(res => res.data?.data || []),
 }
 
@@ -252,10 +252,10 @@ export const accountsApi = {
     limit?: number
     orderBy?: string
   }): Promise<PaginatedResponse<Account>> =>
-    api.get('/api/v1/accounts', { params }).then(res => res.data),
+    api.get('/api/accounts', { params }).then(res => res.data),
 
   getAccount: (address: string): Promise<Account> =>
-    api.get(`/api/v1/accounts/${address}`).then(res => res.data),
+    api.get(`/api/accounts/${address}`).then(res => res.data),
 
   getAccountExtrinsics: (
     address: string,
@@ -265,7 +265,7 @@ export const accountsApi = {
     }
   ): Promise<PaginatedResponse<Extrinsic>> =>
     api
-      .get(`/api/v1/accounts/${address}/extrinsics`, { params })
+      .get(`/api/accounts/${address}/extrinsics`, { params })
       .then(res => res.data),
 
   getAccountTransfers: (
@@ -276,7 +276,7 @@ export const accountsApi = {
     }
   ): Promise<PaginatedResponse<Transfer>> =>
     api
-      .get(`/api/v1/accounts/${address}/transfers`, { params })
+      .get(`/api/accounts/${address}/transfers`, { params })
       .then(res => res.data),
 }
 
@@ -288,14 +288,14 @@ export const dataSubmissionsApi = {
     appId?: number
     submitter?: string
   }): Promise<PaginatedResponse<DataSubmission>> =>
-    api.get('/api/v1/data-submissions', { params }).then(res => res.data),
+    api.get('/api/data-submissions', { params }).then(res => res.data),
 
   getDataSubmission: (id: string): Promise<DataSubmission> =>
-    api.get(`/api/v1/data-submissions/${id}`).then(res => res.data),
+    api.get(`/api/data-submissions/${id}`).then(res => res.data),
 
   getLatestDataSubmissions: (limit = 10): Promise<DataSubmission[]> =>
     api
-      .get(`/api/v1/data-submissions/latest?limit=${limit}`)
+      .get(`/api/data-submissions/latest?limit=${limit}`)
       .then(res => res.data),
 }
 
@@ -307,10 +307,10 @@ export const validatorsApi = {
     active?: boolean
     orderBy?: string
   }): Promise<PaginatedResponse<Validator>> =>
-    api.get('/api/v1/validators', { params }).then(res => res.data),
+    api.get('/api/validators', { params }).then(res => res.data),
 
   getValidator: (address: string): Promise<Validator> =>
-    api.get(`/api/v1/validators/${address}`).then(res => res.data),
+    api.get(`/api/validators/${address}`).then(res => res.data),
 
   getValidatorBlocks: (
     address: string,
@@ -320,29 +320,29 @@ export const validatorsApi = {
     }
   ): Promise<PaginatedResponse<Block>> =>
     api
-      .get(`/api/v1/validators/${address}/blocks`, { params })
+      .get(`/api/validators/${address}/blocks`, { params })
       .then(res => res.data),
 }
 
 // Analytics API
 export const analyticsApi = {
   getNetworkStats: (): Promise<NetworkStats> =>
-    api.get('/api/v1/analytics/network').then(res => res.data),
+    api.get('/api/analytics/network').then(res => res.data),
 
   getRollupStats: (params?: {
     period?: '24h' | '7d' | '30d'
   }): Promise<RollupStats[]> =>
-    api.get('/api/v1/analytics/rollups', { params }).then(res => res.data),
+    api.get('/api/analytics/rollups', { params }).then(res => res.data),
 
   getGasTracker: (params?: {
     period?: '24h' | '7d'
   }): Promise<GasTrackerData[]> =>
-    api.get('/api/v1/analytics/gas', { params }).then(res => res.data),
+    api.get('/api/analytics/gas', { params }).then(res => res.data),
 
   getDataThroughput: (params?: {
     period?: '24h' | '7d' | '30d'
   }): Promise<DataThroughputData[]> =>
-    api.get('/api/v1/analytics/throughput', { params }).then(res => res.data),
+    api.get('/api/analytics/throughput', { params }).then(res => res.data),
 }
 
 // Search API
@@ -356,7 +356,7 @@ export const searchApi = {
     validators: Validator[]
   }> =>
     api
-      .get(`/api/v1/search?q=${encodeURIComponent(query)}`)
+      .get(`/api/search?q=${encodeURIComponent(query)}`)
       .then(res => res.data),
 }
 

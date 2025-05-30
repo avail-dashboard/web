@@ -15,7 +15,7 @@ The Avail Explorer web frontend has been successfully deployed as a Docker conta
 ## Configuration
 
 ### Environment Variables
-- `NEXT_PUBLIC_API_BASE_URL`: https://api.avail.naxatar.com/api/v1
+- `NEXT_PUBLIC_API_BASE_URL`: https://api.avail.naxatar.com/api
 - `NEXT_PUBLIC_WS_URL`: wss://api.avail.naxatar.com
 - `NEXT_PUBLIC_NODE_ENV`: production
 - `AVAIL_RPC_ENDPOINT`: wss://mainnet-rpc.avail.so/ws

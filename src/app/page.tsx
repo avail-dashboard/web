@@ -163,7 +163,9 @@ export default function Dashboard() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Latest Block:</span>
                     <span className="font-mono">
-                      {chainData
+                      {latestBlocks && latestBlocks.length > 0
+                        ? `#${formatNumber(latestBlocks[0].number)}`
+                        : chainData
                         ? `#${formatNumber(chainData.finalizedBlocks)}`
                         : 'Loading...'}
                     </span>

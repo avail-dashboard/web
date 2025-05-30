@@ -24,7 +24,7 @@ cp .env.example .env.local
 
 ```bash
 # Backend API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
 NEXT_PUBLIC_WS_URL=ws://localhost:3001
 NEXT_PUBLIC_NODE_ENV=development
 
@@ -37,7 +37,7 @@ AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
 
 ```bash
 # Backend API Configuration
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain.com/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain.com/api
 NEXT_PUBLIC_WS_URL=wss://your-backend-domain.com
 NEXT_PUBLIC_NODE_ENV=production
 
@@ -51,14 +51,14 @@ The integration expects the following endpoints from your backend server:
 
 ### Core Endpoints
 
-- `GET /api/v1/blocks` - Latest blocks with pagination
-- `GET /api/v1/blocks/:numberOrHash` - Specific block details
-- `GET /api/v1/chain/stats` - Chain statistics and metrics
-- `GET /api/v1/extrinsics` - Extrinsics with filtering
-- `GET /api/v1/validators` - Validators list
-- `GET /api/v1/accounts/:address` - Account details
-- `GET /api/v1/search` - Search functionality
-- `GET /api/v1/analytics` - Analytics data
+- `GET /api/blocks` - Latest blocks with pagination
+- `GET /api/blocks/:numberOrHash` - Specific block details
+- `GET /api/chain/stats` - Chain statistics and metrics
+- `GET /api/extrinsics` - Extrinsics with filtering
+- `GET /api/validators` - Validators list
+- `GET /api/accounts/:address` - Account details
+- `GET /api/search` - Search functionality
+- `GET /api/analytics` - Analytics data
 
 ### System Endpoints
 
@@ -285,7 +285,7 @@ origin: process.env.CORS_ORIGIN || 'http://localhost:3000'
 Set all required environment variables in your deployment platform:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com/api/v1
+NEXT_PUBLIC_API_BASE_URL=https://api.yourdomain.com/api
 NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com
 NEXT_PUBLIC_NODE_ENV=production
 ```

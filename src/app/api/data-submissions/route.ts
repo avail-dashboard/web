@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api/v1'
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

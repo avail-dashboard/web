@@ -72,7 +72,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 Create a `.env.local` file with:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
 NEXT_PUBLIC_WS_URL=ws://localhost:3001
 AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
 AVAIL_API_ENDPOINT=https://avail.api.subscan.io
