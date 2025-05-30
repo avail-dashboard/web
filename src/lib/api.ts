@@ -14,11 +14,11 @@ const api: AxiosInstance = axios.create({
 
 // Request interceptor for logging and auth
 api.interceptors.request.use(
-  (config) => {
+  config => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`)
     return config
   },
-  (error) => {
+  error => {
     console.error('API Request Error:', error)
     return Promise.reject(error)
   }
@@ -29,7 +29,7 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response
   },
-  (error) => {
+  error => {
     console.error('API Response Error:', error.response?.data || error.message)
     return Promise.reject(error)
   }
@@ -214,7 +214,9 @@ export const blocksApi = {
     api.get(`/api/v1/blocks/${identifier}`).then(res => res.data),
 
   getLatestBlocks: (limit = 10): Promise<Block[]> =>
-    api.get(`/api/v1/blocks/latest?limit=${limit}`).then(res => res.data),
+    api
+      .get('/api/v1/blocks', { params: { page: 1, limit } })
+      .then(res => res.data?.data || []),
 }
 
 // Extrinsics API
@@ -233,7 +235,9 @@ export const extrinsicsApi = {
     api.get(`/api/v1/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
-    api.get(`/api/v1/extrinsics/latest?limit=${limit}`).then(res => res.data),
+    api
+      .get('/api/v1/extrinsics', { params: { page: 1, limit } })
+      .then(res => res.data?.data || []),
 }
 
 // Accounts API
@@ -248,17 +252,27 @@ export const accountsApi = {
   getAccount: (address: string): Promise<Account> =>
     api.get(`/api/v1/accounts/${address}`).then(res => res.data),
 
-  getAccountExtrinsics: (address: string, params?: {
-    page?: number
-    limit?: number
-  }): Promise<PaginatedResponse<Extrinsic>> =>
-    api.get(`/api/v1/accounts/${address}/extrinsics`, { params }).then(res => res.data),
+  getAccountExtrinsics: (
+    address: string,
+    params?: {
+      page?: number
+      limit?: number
+    }
+  ): Promise<PaginatedResponse<Extrinsic>> =>
+    api
+      .get(`/api/v1/accounts/${address}/extrinsics`, { params })
+      .then(res => res.data),
 
-  getAccountTransfers: (address: string, params?: {
-    page?: number
-    limit?: number
-  }): Promise<PaginatedResponse<Transfer>> =>
-    api.get(`/api/v1/accounts/${address}/transfers`, { params }).then(res => res.data),
+  getAccountTransfers: (
+    address: string,
+    params?: {
+      page?: number
+      limit?: number
+    }
+  ): Promise<PaginatedResponse<Transfer>> =>
+    api
+      .get(`/api/v1/accounts/${address}/transfers`, { params })
+      .then(res => res.data),
 }
 
 // Data Submissions API
@@ -275,7 +289,9 @@ export const dataSubmissionsApi = {
     api.get(`/api/v1/data-submissions/${id}`).then(res => res.data),
 
   getLatestDataSubmissions: (limit = 10): Promise<DataSubmission[]> =>
-    api.get(`/api/v1/data-submissions/latest?limit=${limit}`).then(res => res.data),
+    api
+      .get(`/api/v1/data-submissions/latest?limit=${limit}`)
+      .then(res => res.data),
 }
 
 // Validators API
@@ -291,11 +307,16 @@ export const validatorsApi = {
   getValidator: (address: string): Promise<Validator> =>
     api.get(`/api/v1/validators/${address}`).then(res => res.data),
 
-  getValidatorBlocks: (address: string, params?: {
-    page?: number
-    limit?: number
-  }): Promise<PaginatedResponse<Block>> =>
-    api.get(`/api/v1/validators/${address}/blocks`, { params }).then(res => res.data),
+  getValidatorBlocks: (
+    address: string,
+    params?: {
+      page?: number
+      limit?: number
+    }
+  ): Promise<PaginatedResponse<Block>> =>
+    api
+      .get(`/api/v1/validators/${address}/blocks`, { params })
+      .then(res => res.data),
 }
 
 // Analytics API
@@ -321,13 +342,17 @@ export const analyticsApi = {
 
 // Search API
 export const searchApi = {
-  search: (query: string): Promise<{
+  search: (
+    query: string
+  ): Promise<{
     blocks: Block[]
     extrinsics: Extrinsic[]
     accounts: Account[]
     validators: Validator[]
   }> =>
-    api.get(`/api/v1/search?q=${encodeURIComponent(query)}`).then(res => res.data),
+    api
+      .get(`/api/v1/search?q=${encodeURIComponent(query)}`)
+      .then(res => res.data),
 }
 
 // Export the main api instance for custom requests
@@ -345,7 +370,7 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   getLatestBlocks: async (count: number = 10) => {
     try {
       const response = await blocksApi.getLatestBlocks(count)
@@ -355,7 +380,7 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   getBlock: async (numberOrHash: string | number) => {
     try {
       const response = await blocksApi.getBlock(numberOrHash.toString())
@@ -365,10 +390,17 @@ export const availAPI = {
       throw error
     }
   },
-  
-  getExtrinsics: async (blockNumber?: number, page: number = 0, limit: number = 10) => {
+
+  getExtrinsics: async (
+    blockNumber?: number,
+    page: number = 0,
+    limit: number = 10
+  ) => {
     try {
-      const params: { page: number; limit: number; block?: number } = { page, limit }
+      const params: { page: number; limit: number; block?: number } = {
+        page,
+        limit,
+      }
       if (blockNumber) {
         params.block = blockNumber
       }
@@ -379,17 +411,20 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   getValidators: async () => {
     try {
-      const response = await validatorsApi.getValidators({ page: 1, limit: 100 })
+      const response = await validatorsApi.getValidators({
+        page: 1,
+        limit: 100,
+      })
       return response.data || []
     } catch (error) {
       console.error('Failed to fetch validators:', error)
       throw error
     }
   },
-  
+
   getAccount: async (address: string) => {
     try {
       const response = await accountsApi.getAccount(address)
@@ -399,7 +434,7 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   search: async (query: string) => {
     try {
       const response = await searchApi.search(query)
@@ -409,7 +444,7 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   getAnalytics: async () => {
     try {
       const response = await analyticsApi.getNetworkStats()
@@ -419,7 +454,7 @@ export const availAPI = {
       throw error
     }
   },
-  
+
   refreshBackendStatus: async () => {
     try {
       const response = await fetch('/api/health')
@@ -428,7 +463,7 @@ export const availAPI = {
     } catch {
       return false
     }
-  }
+  },
 }
 
 // Mock WebSocket for now - this can be enhanced later
@@ -436,16 +471,16 @@ export const availWS = {
   connect: () => {
     console.log('WebSocket connection would be established here')
   },
-  
+
   disconnect: () => {
     console.log('WebSocket would be disconnected here')
   },
-  
+
   subscribe: (topic: string) => {
     console.log(`Would subscribe to topic: ${topic}`)
   },
-  
+
   unsubscribe: (topic: string) => {
     console.log(`Would unsubscribe from topic: ${topic}`)
-  }
+  },
 }
