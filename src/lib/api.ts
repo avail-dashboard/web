@@ -332,3 +332,120 @@ export const searchApi = {
 
 // Export the main api instance for custom requests
 export default api
+
+// Export the unified API interface that hooks expect
+export const availAPI = {
+  getChainData: async () => {
+    try {
+      const response = await fetch('/api/chain')
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Failed to fetch chain data:', error)
+      throw error
+    }
+  },
+  
+  getLatestBlocks: async (count: number = 10) => {
+    try {
+      const response = await blocksApi.getLatestBlocks(count)
+      return response || []
+    } catch (error) {
+      console.error('Failed to fetch latest blocks:', error)
+      throw error
+    }
+  },
+  
+  getBlock: async (numberOrHash: string | number) => {
+    try {
+      const response = await blocksApi.getBlock(numberOrHash.toString())
+      return response
+    } catch (error) {
+      console.error('Failed to fetch block:', error)
+      throw error
+    }
+  },
+  
+  getExtrinsics: async (blockNumber?: number, page: number = 0, limit: number = 10) => {
+    try {
+      const params: { page: number; limit: number; block?: number } = { page, limit }
+      if (blockNumber) {
+        params.block = blockNumber
+      }
+      const response = await extrinsicsApi.getExtrinsics(params)
+      return response.data || []
+    } catch (error) {
+      console.error('Failed to fetch extrinsics:', error)
+      throw error
+    }
+  },
+  
+  getValidators: async () => {
+    try {
+      const response = await validatorsApi.getValidators({ page: 1, limit: 100 })
+      return response.data || []
+    } catch (error) {
+      console.error('Failed to fetch validators:', error)
+      throw error
+    }
+  },
+  
+  getAccount: async (address: string) => {
+    try {
+      const response = await accountsApi.getAccount(address)
+      return response
+    } catch (error) {
+      console.error('Failed to fetch account:', error)
+      throw error
+    }
+  },
+  
+  search: async (query: string) => {
+    try {
+      const response = await searchApi.search(query)
+      return response || []
+    } catch (error) {
+      console.error('Failed to search:', error)
+      throw error
+    }
+  },
+  
+  getAnalytics: async () => {
+    try {
+      const response = await analyticsApi.getNetworkStats()
+      return response
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error)
+      throw error
+    }
+  },
+  
+  refreshBackendStatus: async () => {
+    try {
+      const response = await fetch('/api/health')
+      const data = await response.json()
+      return data?.backend?.available || false
+    } catch {
+      return false
+    }
+  }
+}
+
+// Mock WebSocket for now - this can be enhanced later
+export const availWS = {
+  connect: () => {
+    console.log('WebSocket connection would be established here')
+  },
+  
+  disconnect: () => {
+    console.log('WebSocket would be disconnected here')
+  },
+  
+  subscribe: (topic: string) => {
+    console.log(`Would subscribe to topic: ${topic}`)
+  },
+  
+  unsubscribe: (topic: string) => {
+    console.log(`Would unsubscribe from topic: ${topic}`)
+  }
+}

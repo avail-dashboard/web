@@ -22,10 +22,10 @@ export function TokenDistributionChart({
 }: TokenDistributionProps) {
   // Create labels with both amounts and percentages
   const labelsWithAmounts = [
-    `Circulating: ${data.circulating.amount} (${data.circulating.percentage.toFixed(2)}%)`,
-    `Staking: ${data.staking.amount} (${data.staking.percentage.toFixed(2)}%)`,
-    `Treasury: ${data.treasury.amount} (${data.treasury.percentage.toFixed(2)}%)`,
-    `Others: ${data.others.amount} (${data.others.percentage.toFixed(2)}%)`,
+    `Circulating: ${data.circulating?.amount || '0'} (${(data.circulating?.percentage || 0).toFixed(2)}%)`,
+    `Staking: ${data.staking?.amount || '0'} (${(data.staking?.percentage || 0).toFixed(2)}%)`,
+    `Treasury: ${data.treasury?.amount || '0'} (${(data.treasury?.percentage || 0).toFixed(2)}%)`,
+    `Others: ${data.others?.amount || '0'} (${(data.others?.percentage || 0).toFixed(2)}%)`,
   ]
 
   const chartData = {
@@ -33,10 +33,10 @@ export function TokenDistributionChart({
     datasets: [
       {
         data: [
-          data.circulating.percentage,
-          data.staking.percentage,
-          data.treasury.percentage,
-          data.others.percentage,
+          data.circulating?.percentage || 0,
+          data.staking?.percentage || 0,
+          data.treasury?.percentage || 0,
+          data.others?.percentage || 0,
         ],
         backgroundColor: [
           '#3B82F6', // Blue for circulating
