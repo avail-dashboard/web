@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Doughnut } from 'react-chartjs-2'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js'
 
@@ -64,24 +65,26 @@ export function TokenDistributionChart({
             size: 11,
           },
           // Custom label generation to handle long text
-          generateLabels: function (chart: any) {
+          generateLabels: function (chart: ChartJS) {
             const data = chart.data
-            if (data.labels.length && data.datasets.length) {
-              return data.labels.map((label: string, i: number) => {
-                const dataset = data.datasets[0]
-                const backgroundColor = dataset.backgroundColor[i]
-                const borderColor = dataset.borderColor[i]
+            if (data.labels?.length && data.datasets.length) {
+              return (data.labels as string[]).map(
+                (label: string, i: number) => {
+                  const dataset = data.datasets[0]
+                  const backgroundColor = dataset.backgroundColor?.[i]
+                  const borderColor = dataset.borderColor?.[i]
 
-                return {
-                  text: label,
-                  fillStyle: backgroundColor,
-                  strokeStyle: borderColor,
-                  lineWidth: dataset.borderWidth,
-                  pointStyle: 'circle',
-                  hidden: false,
-                  index: i,
+                  return {
+                    text: label,
+                    fillStyle: backgroundColor,
+                    strokeStyle: borderColor,
+                    lineWidth: dataset.borderWidth,
+                    pointStyle: 'circle',
+                    hidden: false,
+                    index: i,
+                  }
                 }
-              })
+              )
             }
             return []
           },
@@ -89,7 +92,7 @@ export function TokenDistributionChart({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context: { dataIndex: number; label: string }) {
             const dataIndex = context.dataIndex
             const categories = [
               'circulating',
