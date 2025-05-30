@@ -270,10 +270,18 @@ export function useWebSocket(options?: { autoConnect?: boolean }) {
       console.error('WebSocket error:', error)
     }
 
+    const handleConnectError = (error: unknown) => {
+      const errorMessage =
+        error instanceof Error ? error.message : 'WebSocket connection error'
+      setConnected(false)
+      setError(errorMessage)
+      console.error('WebSocket connect error:', error)
+    }
+
     // Set up event listeners
     availWS.on('connect', handleConnect)
     availWS.on('disconnect', handleDisconnect)
-    availWS.on('connect_error', handleError)
+    availWS.on('connect_error', handleConnectError)
 
     // Auto-connect if enabled (default: true)
     if (options?.autoConnect !== false) {
@@ -284,7 +292,7 @@ export function useWebSocket(options?: { autoConnect?: boolean }) {
     return () => {
       availWS.off('connect', handleConnect)
       availWS.off('disconnect', handleDisconnect)
-      availWS.off('connect_error', handleError)
+      availWS.off('connect_error', handleConnectError)
     }
   }, [options?.autoConnect])
 
