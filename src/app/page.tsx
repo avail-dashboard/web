@@ -36,7 +36,8 @@ export default function Dashboard() {
 
   const { isConnected } = useBackendStatus()
 
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num: number | undefined | null): string => {
+    if (!num || isNaN(num)) return '0'
     if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B'
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M'
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K'
@@ -114,13 +115,13 @@ export default function Dashboard() {
             {chainData && (
               <div className="text-right text-sm">
                 <div className="font-semibold">
-                  AVAIL ${chainData.tokenPrice.toFixed(8)}
+                  AVAIL ${chainData.tokenPrice?.toFixed(8) || '0.00000000'}
                 </div>
                 <div
-                  className={`text-xs ${chainData.priceChange < 0 ? 'text-red-500' : 'text-green-500'}`}
+                  className={`text-xs ${(chainData.priceChange || 0) < 0 ? 'text-red-500' : 'text-green-500'}`}
                 >
-                  {chainData.priceChange > 0 ? '+' : ''}
-                  {chainData.priceChange.toFixed(2)}%
+                  {(chainData.priceChange || 0) > 0 ? '+' : ''}
+                  {(chainData.priceChange || 0).toFixed(2)}%
                 </div>
               </div>
             )}
