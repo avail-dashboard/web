@@ -366,7 +366,13 @@ export default function Dashboard() {
               <h2 className="text-xl font-semibold mb-4">Block Activity</h2>
               <div className="bg-card p-6 rounded-lg border shadow-sm">
                 {latestBlocks && latestBlocks.length > 0 ? (
-                  <BlocksChart blocks={latestBlocks} />
+                  <BlocksChart
+                    blocks={latestBlocks.map(block => ({
+                      number: block.number,
+                      time: new Date(block.timestamp).getTime(),
+                      extrinsics: block.extrinsicsCount,
+                    }))}
+                  />
                 ) : (
                   <div className="h-80 flex items-center justify-center text-muted-foreground">
                     {blocksLoading
@@ -412,9 +418,13 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="text-right text-sm">
-                            <div>{formatTimeAgo(block.time)}</div>
+                            <div>
+                              {formatTimeAgo(
+                                new Date(block.timestamp).getTime()
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">
-                              {block.extrinsics} extrinsics
+                              {block.extrinsicsCount} extrinsics
                             </div>
                           </div>
                         </div>

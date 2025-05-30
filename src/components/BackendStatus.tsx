@@ -217,7 +217,9 @@ export function BackendStatus({
               <div className="space-y-1 text-sm text-gray-600">
                 <div>Backend URL: {healthData.backend.url}</div>
                 <div>Frontend Version: {healthData.frontend.version}</div>
-                <div>Last Checked: {lastChecked.toLocaleTimeString()}</div>
+                <div>
+                  Last Checked: {lastChecked?.toLocaleTimeString() || 'Never'}
+                </div>
               </div>
             </div>
 

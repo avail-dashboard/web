@@ -20,11 +20,12 @@ import {
 // Add missing interface
 interface DataSubmissionStats {
   totalSubmissions: number
-  totalSize: string
+  totalDataSize: number // in bytes
   uniqueApps: number
-  averageSize: string
+  uniqueSubmitters: number
+  averageSize: number
   submissionsToday: number
-  topApps: any[]
+  dataSizeToday: number
 }
 
 export default function DataSubmissionsPage() {
@@ -49,22 +50,52 @@ export default function DataSubmissionsPage() {
       setError(null)
 
       const [submissionsData, statsData] = await Promise.all([
-        availAPI.getDataSubmissions(
-          currentPage,
-          itemsPerPage,
-          appIdFilter ? parseInt(appIdFilter) : undefined,
-          submitterFilter || undefined
-        ),
-        availAPI.getDataSubmissionStats(),
+        availAPI
+          .getDataSubmissions(
+            currentPage,
+            itemsPerPage,
+            appIdFilter ? parseInt(appIdFilter) : undefined,
+            submitterFilter || undefined
+          )
+          .catch(err => {
+            console.error('Data submissions API failed:', err)
+            return [] // Return empty array on error
+          }),
+        availAPI.getDataSubmissionStats().catch(err => {
+          console.error('Data submission stats API failed:', err)
+          return {
+            totalSubmissions: 0,
+            totalDataSize: 0,
+            uniqueApps: 0,
+            uniqueSubmitters: 0,
+            averageSize: 0,
+            submissionsToday: 0,
+            dataSizeToday: 0,
+          } // Return default stats on error
+        }),
       ])
 
       setSubmissions(submissionsData)
       setStats(statsData)
       setInitialLoad(false)
     } catch (err) {
-      setError('Failed to fetch data submissions')
+      setError(
+        'Failed to fetch data submissions. The backend service may be experiencing issues.'
+      )
       console.error('Error fetching data submissions:', err)
       setInitialLoad(false)
+
+      // Set default values so the page can still render
+      setSubmissions([])
+      setStats({
+        totalSubmissions: 0,
+        totalDataSize: 0,
+        uniqueApps: 0,
+        uniqueSubmitters: 0,
+        averageSize: 0,
+        submissionsToday: 0,
+        dataSizeToday: 0,
+      })
     } finally {
       setLoading(false)
     }

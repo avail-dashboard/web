@@ -54,9 +54,11 @@ export interface Block {
   stateRoot: string
   extrinsicsRoot: string
   timestamp: string
+  time: number
   validator: string
   specVersion: number
   extrinsicsCount: number
+  extrinsics: number
   eventsCount: number
   size: number
   status: 'finalized' | 'pending'
@@ -70,6 +72,9 @@ export interface Extrinsic {
   index: number
   method: string
   section: string
+  module: string
+  call: string
+  extrinsicIndex?: number
   args: Record<string, unknown>[]
   signer: string
   nonce: number
@@ -119,22 +124,22 @@ export interface Transfer {
   to: string
   amount: string
   blockNumber: number
-  timestamp: string
+  timestamp: number
   extrinsicHash: string
   success: boolean
+  fee: number
 }
 
 export interface DataSubmission {
-  id: string
-  extrinsicHash: string
+  extrinsicId: string
   blockNumber: number
+  extrinsicIndex: number
   submitter: string
   appId: number
-  data: string
   dataHash: string
   size: number
-  timestamp: string
-  rollupName?: string
+  timestamp: number
+  success: boolean
 }
 
 export interface Validator {
@@ -455,15 +460,28 @@ export const availAPI = {
     }
   },
 
-  getDataSubmissions: async (page: number = 0, limit: number = 20, appId?: number, submitter?: string) => {
+  getDataSubmissions: async (
+    page: number = 0,
+    limit: number = 20,
+    appId?: number,
+    submitter?: string
+  ) => {
     try {
-      const response = await dataSubmissionsApi.getDataSubmissions({
-        page: page + 1, // Convert 0-based to 1-based pagination
-        limit,
-        appId,
-        submitter,
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
       })
-      return response.data || []
+      if (appId) params.append('appId', appId.toString())
+      if (submitter) params.append('submitter', submitter)
+
+      const response = await fetch(`/api/data-submissions?${params}`)
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch data submissions')
+      }
+
+      return data.data || []
     } catch (error) {
       console.error('Failed to fetch data submissions:', error)
       throw error
@@ -472,15 +490,14 @@ export const availAPI = {
 
   getDataSubmissionStats: async () => {
     try {
-      // For now, return mock stats since the backend might not have this endpoint yet
-      return {
-        totalSubmissions: 0,
-        totalSize: '0 B',
-        uniqueApps: 0,
-        averageSize: '0 B',
-        submissionsToday: 0,
-        topApps: [],
+      const response = await fetch('/api/data-submissions/stats')
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch data submission stats')
       }
+
+      return data.data
     } catch (error) {
       console.error('Failed to fetch data submission stats:', error)
       throw error
@@ -515,4 +532,43 @@ export const availWS = {
   unsubscribe: (topic: string) => {
     console.log(`Would unsubscribe from topic: ${topic}`)
   },
+}
+
+// Add ChainData interface that is expected by useAvailAPI.ts
+export interface ChainData {
+  bestNumber: number
+  bestHash: string
+  finalizedNumber: number
+  finalizedHash: string
+  peers: number
+  isSyncing: boolean
+  systemName: string
+  systemVersion: string
+  chainName: string
+  nodeName: string
+  nodeVersion: string
+  // Additional properties used in components
+  tokenPrice?: number
+  priceChange?: number
+  finalizedBlocks: number
+  signedExtrinsics: number
+  stakedAmount: string
+  bondedAmount: string
+  holders: number
+  totalAccounts: number
+  transfers: number
+  inflationRate: number
+  circulating: { amount: string; percentage: number }
+  staking: { amount: string; percentage: number }
+  treasury: { amount: string; percentage: number }
+  others: { amount: string; percentage: number }
+  totalIssuance: string
+}
+
+// Add SearchResult interface that is expected by useAvailAPI.ts
+export interface SearchResult {
+  blocks: Block[]
+  extrinsics: Extrinsic[]
+  accounts: Account[]
+  validators: Validator[]
 }
