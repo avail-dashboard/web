@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(30000),
       }
     )
 

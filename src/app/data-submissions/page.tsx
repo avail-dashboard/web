@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { availAPI } from '@/lib/api'
-import type { DataSubmission, DataSubmissionStats } from '@/lib/api'
+import type { DataSubmission } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
 import {
@@ -17,11 +17,22 @@ import {
   ExternalLink,
 } from 'lucide-react'
 
+// Add missing interface
+interface DataSubmissionStats {
+  totalSubmissions: number
+  totalSize: string
+  uniqueApps: number
+  averageSize: string
+  submissionsToday: number
+  topApps: any[]
+}
+
 export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
   const [stats, setStats] = useState<DataSubmissionStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   // Filters
   const [appIdFilter, setAppIdFilter] = useState<string>('')
@@ -49,9 +60,11 @@ export default function DataSubmissionsPage() {
 
       setSubmissions(submissionsData)
       setStats(statsData)
+      setInitialLoad(false)
     } catch (err) {
       setError('Failed to fetch data submissions')
       console.error('Error fetching data submissions:', err)
+      setInitialLoad(false)
     } finally {
       setLoading(false)
     }
@@ -93,7 +106,7 @@ export default function DataSubmissionsPage() {
     return colors[appId % colors.length]
   }
 
-  if (loading && submissions.length === 0) {
+  if (initialLoad && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
