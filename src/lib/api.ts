@@ -515,24 +515,8 @@ export const availAPI = {
   },
 }
 
-// Mock WebSocket for now - this can be enhanced later
-export const availWS = {
-  connect: () => {
-    console.log('WebSocket connection would be established here')
-  },
-
-  disconnect: () => {
-    console.log('WebSocket would be disconnected here')
-  },
-
-  subscribe: (topic: string) => {
-    console.log(`Would subscribe to topic: ${topic}`)
-  },
-
-  unsubscribe: (topic: string) => {
-    console.log(`Would unsubscribe from topic: ${topic}`)
-  },
-}
+// Real WebSocket implementation
+export { availWS } from './websocket'
 
 // Add ChainData interface that is expected by useAvailAPI.ts
 export interface ChainData {
