@@ -65,7 +65,7 @@ export default function ExtrinsicsPage() {
   const [blockFilter, setBlockFilter] = React.useState<string>(blockParam || "")
   const [signerFilter, setSignerFilter] = React.useState<string>("")
   const [methodFilter, setMethodFilter] = React.useState<string>("")
-  const [successFilter, setSuccessFilter] = React.useState<string>("")
+  const [successFilter, setSuccessFilter] = React.useState<string>("all")
 
   // Fetch extrinsics data
   const { data: extrinsicsData, isLoading, error } = useQuery({
@@ -76,7 +76,7 @@ export default function ExtrinsicsPage() {
       block: blockFilter ? Number(blockFilter) : undefined,
       signer: signerFilter || undefined,
       method: methodFilter || undefined,
-      success: successFilter ? successFilter === 'true' : undefined,
+      success: successFilter === "all" ? undefined : successFilter === 'true',
     }),
     refetchInterval: 10000, // Refetch every 10 seconds
     staleTime: 5000,
@@ -356,7 +356,7 @@ export default function ExtrinsicsPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="true">Success only</SelectItem>
                   <SelectItem value="false">Failed only</SelectItem>
                 </SelectContent>
