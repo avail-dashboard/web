@@ -211,12 +211,6 @@ npm run dev    # Start with SQLite database
 # Server starts on http://localhost:3001 with auto-created SQLite database
 ```
 
-**🎉 No PostgreSQL or Redis setup required for development!**
-
-- ✅ SQLite database auto-created at `./data/avail_explorer.db`
-- ✅ All tables created automatically
-- ✅ Ready to use immediately
-
 ### 2. Start Frontend
 
 ```bash
