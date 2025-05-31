@@ -12,8 +12,12 @@ WORKDIR /app
 
 # Copy package files for dependency installation
 COPY package.json package-lock.json* ./
+
+# Skip husky installation in production builds
+ENV HUSKY=0
+
 # Install dependencies with npm ci for faster, reliable, reproducible builds
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -24,8 +28,11 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy package files
 COPY package.json package-lock.json* ./
 
+# Skip husky installation in production builds
+ENV HUSKY=0
+
 # Install all dependencies (including devDependencies for build)
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY . .
