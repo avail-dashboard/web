@@ -44,8 +44,3 @@ services:
         reservations:
           memory: 256M
           cpus: '0.25'
-
-networks:
-  default:
-    name: avail-network
-    external: true 
