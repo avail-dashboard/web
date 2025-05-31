@@ -72,10 +72,9 @@ Open [http://localhost:3000](http://localhost:3000) to view the dashboard.
 Create a `.env.local` file with:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
-NEXT_PUBLIC_WS_URL=ws://localhost:3001
-AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
-AVAIL_API_ENDPOINT=https://avail.api.subscan.io
+NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
+NEXT_PUBLIC_NODE_ENV=development
 ```
 
 ## Contributing
@@ -142,12 +141,10 @@ MIT License - see LICENSE file for details.
    Create a `.env.local` file:
 
    ```env
-   # Avail Network Configuration
-   AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
-   AVAIL_API_ENDPOINT=https://avail.api.subscan.io
-
-   # Optional: Add API keys if needed
-   # SUBSCAN_API_KEY=your_api_key_here
+   # API Configuration
+   NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+   NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
+   NEXT_PUBLIC_NODE_ENV=development
    ```
 
 4. **Run the development server**
@@ -185,7 +182,7 @@ src/
 
 ### 1. Chain Statistics Cards
 
-The dashboard displays key metrics like avail.subscan.io:
+The dashboard displays key metrics:
 
 - Finalized blocks count
 - Signed extrinsics
@@ -249,22 +246,21 @@ npm start
 ### Connecting to Avail Network
 
 ```typescript
-// Example: Connecting to Avail RPC
-import { ApiPromise, WsProvider } from '@polkadot/api'
+// Example: Using the unified API endpoint
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.avail.naxatar.com/api'
 
-const provider = new WsProvider('wss://mainnet-rpc.avail.so/ws')
-const api = await ApiPromise.create({ provider })
+// Fetch chain statistics
+const chainStats = await fetch(`${API_BASE_URL}/chain/stats`)
+const data = await chainStats.json()
 ```
 
-### Using Subscan API
+### Using WebSocket Connection
 
 ```typescript
-// Example: Fetching block data
-const response = await fetch('https://avail.api.subscan.io/api/scan/blocks', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ row: 10, page: 0 }),
-})
+// Example: WebSocket connection for real-time updates
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://api.avail.naxatar.com'
+const ws = new WebSocket(WS_URL)
 ```
 
 ## 📊 Advanced Features to Add
@@ -282,7 +278,6 @@ const response = await fetch('https://avail.api.subscan.io/api/scan/blocks', {
 ### Data Sources
 
 - **Primary**: Avail RPC endpoints
-- **Secondary**: Subscan API for indexed data
 - **Custom**: SubQuery indexer for complex queries
 - **Price Data**: CoinGecko/CoinMarketCap APIs
 
@@ -321,8 +316,6 @@ This project is licensed under the MIT License.
 ## 🔗 Related Resources
 
 - [Avail Documentation](https://docs.availproject.org/)
-- [Subscan API Docs](https://docs.api.subscan.io/)
-- [Polkadot.js API](https://polkadot.js.org/docs/)
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 

@@ -24,25 +24,18 @@ cp .env.example .env.local
 
 ```bash
 # Backend API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
-NEXT_PUBLIC_WS_URL=ws://localhost:3001
+NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
 NEXT_PUBLIC_NODE_ENV=development
-
-# Optional: Direct API keys for fallback
-SUBSCAN_API_KEY=your-subscan-api-key
-AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
 ```
 
 ### Production Setup
 
 ```bash
 # Backend API Configuration
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-domain.com/api
-NEXT_PUBLIC_WS_URL=wss://your-backend-domain.com
+NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
 NEXT_PUBLIC_NODE_ENV=production
-
-# Direct API keys (for fallback only)
-SUBSCAN_API_KEY=your-production-subscan-key
 ```
 
 ## Backend API Endpoints

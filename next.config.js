@@ -2,7 +2,7 @@
 const nextConfig = {
   // Enable standalone output for Docker optimization
   output: 'standalone',
-  
+
   images: {
     domains: ['localhost'],
   },
@@ -14,10 +14,6 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001',
     NEXT_PUBLIC_NODE_ENV:
       process.env.NEXT_PUBLIC_NODE_ENV || process.env.NODE_ENV || 'development',
-    AVAIL_RPC_ENDPOINT:
-      process.env.AVAIL_RPC_ENDPOINT || 'wss://mainnet-rpc.avail.so/ws',
-    AVAIL_API_ENDPOINT:
-      process.env.AVAIL_API_ENDPOINT || 'https://avail.api.subscan.io',
   },
 }
 
