@@ -25,13 +25,10 @@ export async function GET() {
 
   try {
     // Check backend health
-    const backendResponse = await fetch(
-      `${BACKEND_API_URL.replace('/api', '')}/health`,
-      {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      }
-    )
+    const backendResponse = await fetch(`${BACKEND_API_URL}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3000),
+    })
 
     if (backendResponse.ok) {
       const backendHealth = await backendResponse.json()
