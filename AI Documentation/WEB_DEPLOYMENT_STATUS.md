@@ -4,6 +4,8 @@
 
 The Avail Explorer web frontend has been successfully deployed as a Docker container and is accessible at `https://avail.naxatar.com`. The frontend communicates with the backend API at `https://api.avail.naxatar.com`.
 
+**Last Deployment**: May 31, 2025 07:54 UTC ✅
+
 ## Components Deployed
 
 ### Web Frontend
@@ -13,6 +15,17 @@ The Avail Explorer web frontend has been successfully deployed as a Docker conta
 - **Port**: 3000
 - **Domain**: https://avail.naxatar.com
 - **Image**: Custom Next.js application
+- **Container ID**: a5dce21e8f6f
+- **Health Status**: Degraded (expected - backend API unreachable)
+
+## Recent Deployment Notes
+
+### May 31, 2025 Deployment
+- **Issue Resolved**: Fixed husky script execution during Docker build by adding `--ignore-scripts` flag
+- **Build Status**: ✅ Successful
+- **Environment Variables**: Properly configured with production API endpoints
+- **Application Status**: Frontend serving correctly, showing fallback behavior when backend is unavailable
+- **Health Endpoint**: Returns 503 (degraded) due to backend API being unreachable, which is expected behavior
 
 ## Configuration
 
@@ -44,19 +57,31 @@ CORS issues are prevented by:
 
 ## Deployment Files
 
-- `Dockerfile`: Multi-stage build for the Next.js application
+- `Dockerfile`: Multi-stage build for the Next.js application (updated with --ignore-scripts)
 - `docker-compose.yml`: Container orchestration
 - `setup-web-nginx.sh`: NGINX configuration script
 - `web-avail.conf`: NGINX site configuration
 
 ## Troubleshooting Notes
 
+- **Husky Issue**: Resolved by adding `--ignore-scripts` flag to npm ci commands in Dockerfile
 - During the build process, there were warnings about chain stats and data submission API errors. These are expected when the backend is not fully operational during the build.
 - The frontend application is built with fallback capabilities to use Next.js API routes when the backend is unavailable.
 - The frontend successfully connects to Subscan API for chain statistics when the backend is unavailable.
+- Health endpoint correctly reports "degraded" status when backend is unreachable
 
 ## Next Steps
 
-1. Monitor the health of the frontend container using `docker ps` and the built-in healthcheck
-2. Ensure the backend is stable and providing data to the frontend
-3. Set up monitoring and logging for the frontend application
+1. ✅ Frontend deployment completed successfully
+2. Monitor the health of the frontend container using `docker ps` and the built-in healthcheck
+3. Ensure the backend is stable and providing data to the frontend
+4. Set up monitoring and logging for the frontend application
+
+## Future Deployment Prevention Guide
+
+To avoid similar issues in future deployments:
+
+1. **Husky Scripts**: Always use `--ignore-scripts` flag during production Docker builds to skip development-only scripts
+2. **Environment Variables**: Ensure all required environment variables are properly set before deployment
+3. **Health Checks**: The 503 status from health endpoint is expected when backend is unavailable - this is correct behavior
+4. **Build Warnings**: API connection warnings during build are expected and don't indicate deployment failure

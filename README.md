@@ -218,27 +218,109 @@ Live network monitoring:
 - Current token price
 - Price change indicators
 
-## 🚀 Deployment Options
+## 🚀 Deployment
 
-### Vercel (Recommended)
+### Production Deployment with Docker Compose (Recommended)
+
+1. **Set up environment variables**
+   
+   Copy the production environment template:
+   ```bash
+   cp env.production.template .env.production
+   ```
+   
+   Edit `.env.production` with your configuration:
+   ```env
+   # API Configuration
+   NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+   NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
+   NEXT_PUBLIC_NODE_ENV=production
+
+   # Application Configuration  
+   NODE_ENV=production
+   PORT=3000
+   HOSTNAME=0.0.0.0
+   NEXT_TELEMETRY_DISABLED=1
+
+   # Docker Configuration
+   FRONTEND_PORT=3000
+   ```
+
+2. **Deploy the frontend**
+   
+   ```bash
+   # Deploy with environment variables
+   NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api \
+   NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com \
+   NEXT_PUBLIC_NODE_ENV=production \
+   docker-compose up -d frontend
+   ```
+
+3. **Verify deployment**
+   
+   ```bash
+   # Check container status
+   docker ps
+   
+   # Check logs
+   docker logs avail-frontend
+   
+   # Test health endpoint
+   curl http://localhost:3000/api/health
+   
+   # Test main page
+   curl http://localhost:3000/
+   ```
+
+
+#### Docker (Manual Build)
 
 ```bash
-npm install -g vercel
-vercel --prod
-```
-
-### Docker
-
-```bash
+# Build the image
 docker build -t avail-explorer .
-docker run -p 3000:3000 avail-explorer
+
+# Run the container
+docker run -p 3000:3000 \
+  -e NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api \
+  -e NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com \
+  -e NEXT_PUBLIC_NODE_ENV=production \
+  avail-explorer
 ```
 
-### Manual Build
+#### Manual Build (Without Docker)
 
 ```bash
+# Install dependencies
+npm ci --only=production
+
+# Build the application
 npm run build
+
+# Start the production server
 npm start
+```
+
+### Production Checklist
+
+- [ ] Environment variables configured in `.env.production`
+- [ ] Docker container running successfully
+- [ ] Health endpoint responding (503 is acceptable if backend is unavailable)
+- [ ] Frontend serving content on port 3000
+- [ ] NGINX proxy configured (if using custom domain)
+- [ ] SSL certificates configured (if using HTTPS)
+
+### Monitoring
+
+```bash
+# Monitor container health
+docker ps
+docker logs avail-frontend --follow
+
+# Check resource usage
+docker stats avail-frontend
+
+# Restart if needed
+docker-compose restart frontend
 ```
 
 ## 🔗 API Integration
