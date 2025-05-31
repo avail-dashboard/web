@@ -59,35 +59,18 @@ export function TransfersTable({
         )
         .slice(0, limit)
         .map(ext => {
-          // Mock transfer data - in reality this would come from the extrinsic events
-          const mockTransfers = [
-            {
-              from: ext.signer,
-              to: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-              amount: '15.172',
-            },
-            {
-              from: ext.signer,
-              to: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
-              amount: '2.134',
-            },
-            {
-              from: ext.signer,
-              to: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
-              amount: '3.971',
-            },
-          ]
+          // TODO: Replace with actual transfer data extraction from extrinsic events
+          // In a real implementation, this would parse the extrinsic events to extract
+          // the actual transfer details (from, to, amount) from Transfer events
 
-          const randomTransfer =
-            mockTransfers[Math.floor(Math.random() * mockTransfers.length)]
-
+          // For now, return a basic structure with available data
           return {
             hash: ext.hash,
             blockNumber: ext.blockNumber,
             timestamp: new Date(ext.timestamp).getTime(),
-            from: randomTransfer.from,
-            to: randomTransfer.to,
-            amount: randomTransfer.amount,
+            from: ext.signer, // This is known from the extrinsic
+            to: 'Unknown', // This would come from parsing events
+            amount: '0', // This would come from parsing events
             success: ext.success,
             fee: parseFloat(ext.fee),
           }

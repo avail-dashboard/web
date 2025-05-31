@@ -37,69 +37,10 @@ export function StakingInfo({ address }: StakingInfoProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Mock staking data
-    const generateMockData = (): StakingData => {
-      const isStaking = Math.random() > 0.3 // 70% chance of staking
-
-      if (!isStaking) {
-        return {
-          isStaking: false,
-          stakedAmount: '0',
-          nominations: [],
-          rewards: [],
-          totalRewards: '0',
-          unbondingPeriod: 28,
-        }
-      }
-
-      const nominations: Nomination[] = [
-        {
-          validatorAddress: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-          validatorName: 'Validator Alpha',
-          stakedAmount: '1000.5',
-          isActive: true,
-          commission: 5,
-        },
-        {
-          validatorAddress: '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
-          validatorName: 'Validator Beta',
-          stakedAmount: '750.25',
-          isActive: true,
-          commission: 3,
-        },
-        {
-          validatorAddress: '5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy',
-          validatorName: 'Validator Gamma',
-          stakedAmount: '500.0',
-          isActive: false,
-          commission: 7,
-        },
-      ]
-
-      const rewards: StakingReward[] = Array.from({ length: 10 }, (_, i) => ({
-        date: new Date(
-          Date.now() - i * 24 * 60 * 60 * 1000
-        ).toLocaleDateString(),
-        amount: (Math.random() * 10 + 1).toFixed(6),
-        validator:
-          nominations[Math.floor(Math.random() * nominations.length)]
-            .validatorName || 'Unknown',
-        era: 1000 - i,
-      }))
-
-      return {
-        isStaking: true,
-        stakedAmount: '2250.75',
-        nominations,
-        rewards,
-        totalRewards: '125.456789',
-        unbondingPeriod: 28,
-      }
-    }
-
-    // Simulate API call
+    // TODO: Replace with actual API call to fetch staking information
+    // For now, simulate loading and then show no data state
     setTimeout(() => {
-      setStakingData(generateMockData())
+      setStakingData(null) // No mock data
       setLoading(false)
     }, 1000)
   }, [address])
@@ -125,13 +66,15 @@ export function StakingInfo({ address }: StakingInfoProps) {
   if (!stakingData) {
     return (
       <div className="text-center py-8">
-        <div className="text-red-500 text-4xl mb-4">⚠️</div>
-        <h3 className="text-lg font-semibold mb-2">
-          Failed to Load Staking Data
-        </h3>
-        <p className="text-muted-foreground">
-          Unable to fetch staking information for this account.
+        <div className="text-muted-foreground text-4xl mb-4">🏦</div>
+        <h3 className="text-lg font-semibold mb-2">Staking Data Unavailable</h3>
+        <p className="text-muted-foreground mb-4">
+          Staking information requires API integration to fetch real data.
         </p>
+        <div className="text-sm text-muted-foreground">
+          Connect to the Avail API to view staking details, nominations, and
+          rewards.
+        </div>
       </div>
     )
   }

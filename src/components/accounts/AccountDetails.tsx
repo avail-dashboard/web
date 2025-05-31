@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import { useAccount } from '@/lib/hooks/useAvailAPI'
-import { formatTimeAgo } from '@/lib/utils'
 import { TransactionHistory } from './TransactionHistory'
 import { BalanceChart } from './BalanceChart'
 import { StakingInfo } from './StakingInfo'
@@ -49,15 +48,8 @@ export function AccountDetails({ address }: AccountDetailsProps) {
     return `${addr.slice(0, 8)}...${addr.slice(-8)}`
   }
 
-  // Mock additional account data
-  const mockAccountData = {
-    totalTransactions: 1247,
-    firstSeen: Date.now() - 86400000 * 30, // 30 days ago
-    lastActivity: Date.now() - 3600000, // 1 hour ago
-    stakingRewards: '125.456789',
-    isValidator: false,
-    nominations: 3,
-  }
+  // TODO: Replace with actual API call to fetch additional account metadata
+  // Additional account data would come from API integration
 
   if (loading && !account) {
     return (
@@ -176,11 +168,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             </h3>
             <Activity className="h-4 w-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-bold text-blue-600">
-            {mockAccountData.totalTransactions.toLocaleString()}
-          </div>
+          <div className="text-2xl font-bold text-blue-600">N/A</div>
           <div className="text-sm text-muted-foreground mt-1">
-            Last: {formatTimeAgo(mockAccountData.lastActivity)}
+            Requires API integration
           </div>
         </div>
 
@@ -192,10 +182,10 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             </h3>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </div>
-          <div className="text-2xl font-bold text-green-600">
-            {mockAccountData.stakingRewards} AVAIL
+          <div className="text-2xl font-bold text-green-600">N/A</div>
+          <div className="text-sm text-muted-foreground mt-1">
+            Requires API integration
           </div>
-          <div className="text-sm text-muted-foreground mt-1">Total earned</div>
         </div>
       </div>
 
@@ -259,19 +249,15 @@ export function AccountDetails({ address }: AccountDetailsProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">First Seen:</span>
-                  <span>
-                    {new Date(mockAccountData.firstSeen).toLocaleDateString()}
-                  </span>
+                  <span>N/A</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Last Activity:</span>
-                  <span>{formatTimeAgo(mockAccountData.lastActivity)}</span>
+                  <span>N/A</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Account Type:</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                    {mockAccountData.isValidator ? 'Validator' : 'Regular'}
-                  </span>
+                  <span>N/A</span>
                 </div>
               </div>
             </div>

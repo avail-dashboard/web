@@ -18,35 +18,10 @@ export function BalanceChart({ address }: BalanceChartProps) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Mock balance history data
-    const generateMockData = () => {
-      const data: BalanceDataPoint[] = []
-      const now = Date.now()
-      const daysBack = 30
-
-      let currentBalance = 1000 + Math.random() * 5000 // Starting balance
-
-      for (let i = daysBack; i >= 0; i--) {
-        const timestamp = now - i * 24 * 60 * 60 * 1000
-        const date = new Date(timestamp).toLocaleDateString()
-
-        // Add some random variation
-        const change = (Math.random() - 0.5) * 200
-        currentBalance = Math.max(0, currentBalance + change)
-
-        data.push({
-          date,
-          balance: currentBalance,
-          timestamp,
-        })
-      }
-
-      return data
-    }
-
-    // Simulate API call
+    // TODO: Replace with actual API call to fetch balance history
+    // For now, simulate loading and then show no data state
     setTimeout(() => {
-      setBalanceData(generateMockData())
+      setBalanceData([]) // No mock data
       setLoading(false)
     }, 1000)
   }, [address])
@@ -74,7 +49,12 @@ export function BalanceChart({ address }: BalanceChartProps) {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="text-muted-foreground text-4xl mb-4">📊</div>
-          <p className="text-muted-foreground">No balance history available</p>
+          <p className="text-muted-foreground mb-2">
+            No balance history available
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Balance history requires API integration to fetch historical data.
+          </p>
         </div>
       </div>
     )

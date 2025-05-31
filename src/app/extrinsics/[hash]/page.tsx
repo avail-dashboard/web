@@ -13,14 +13,14 @@ interface ExtrinsicPageProps {
 
 export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
   const router = useRouter()
-  const [extrinsic, setExtrinsic] = useState<Extrinsic | null>(null)
+  const [extrinsic] = useState<Extrinsic | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const extrinsicHash = params.hash
 
   useEffect(() => {
-    // Mock extrinsic data - in reality this would come from an API call
+    // TODO: Replace with actual API call to fetch extrinsic details
     const fetchExtrinsic = async () => {
       try {
         setLoading(true)
@@ -28,31 +28,15 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000))
 
-        // Mock extrinsic data
-        const mockExtrinsic: Extrinsic = {
-          id: extrinsicHash,
-          hash: extrinsicHash,
-          blockNumber: 999999,
-          blockHash:
-            '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          index: 2,
-          method: 'transfer',
-          section: 'balances',
-          module: 'balances',
-          call: 'transfer',
-          success: true,
-          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago as string
-          signer: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-          fee: '1000000000000000', // 0.001 AVAIL as string
-          extrinsicIndex: 2,
-          args: [],
-          nonce: 0,
-          signature: '0x1234567890abcdef',
-          tip: '0',
-          events: [],
-        }
+        // TODO: Implement actual API call here
+        // const response = await fetch(`/api/extrinsics/${extrinsicHash}`)
+        // const data = await response.json()
+        // setExtrinsic(data)
 
-        setExtrinsic(mockExtrinsic)
+        // For now, indicate that API integration is needed
+        setError(
+          'Extrinsic details require API integration to fetch real data.'
+        )
       } catch {
         setError('Failed to load extrinsic details')
       } finally {
