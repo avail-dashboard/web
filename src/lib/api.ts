@@ -213,14 +213,14 @@ export const blocksApi = {
     validator?: string
     status?: string
   }): Promise<PaginatedResponse<Block>> =>
-    api.get('/api/blocks', { params }).then(res => res.data),
+    api.get('/blocks', { params }).then(res => res.data),
 
   getBlock: (identifier: string): Promise<Block> =>
-    api.get(`/api/blocks/${identifier}`).then(res => res.data),
+    api.get(`/blocks/${identifier}`).then(res => res.data),
 
   getLatestBlocks: (limit = 10): Promise<Block[]> =>
     api
-      .get('/api/blocks', { params: { page: 1, limit } })
+      .get('/blocks', { params: { page: 1, limit } })
       .then(res => res.data?.data || []),
 }
 
@@ -234,14 +234,14 @@ export const extrinsicsApi = {
     method?: string
     success?: boolean
   }): Promise<PaginatedResponse<Extrinsic>> =>
-    api.get('/api/extrinsics', { params }).then(res => res.data),
+    api.get('/extrinsics', { params }).then(res => res.data),
 
   getExtrinsic: (hash: string): Promise<Extrinsic> =>
-    api.get(`/api/extrinsics/${hash}`).then(res => res.data),
+    api.get(`/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
     api
-      .get('/api/extrinsics', { params: { page: 1, limit } })
+      .get('/extrinsics', { params: { page: 1, limit } })
       .then(res => res.data?.data || []),
 }
 
@@ -252,10 +252,10 @@ export const accountsApi = {
     limit?: number
     orderBy?: string
   }): Promise<PaginatedResponse<Account>> =>
-    api.get('/api/accounts', { params }).then(res => res.data),
+    api.get('/accounts', { params }).then(res => res.data),
 
   getAccount: (address: string): Promise<Account> =>
-    api.get(`/api/accounts/${address}`).then(res => res.data),
+    api.get(`/accounts/${address}`).then(res => res.data),
 
   getAccountExtrinsics: (
     address: string,
@@ -265,7 +265,7 @@ export const accountsApi = {
     }
   ): Promise<PaginatedResponse<Extrinsic>> =>
     api
-      .get(`/api/accounts/${address}/extrinsics`, { params })
+      .get(`/accounts/${address}/extrinsics`, { params })
       .then(res => res.data),
 
   getAccountTransfers: (
@@ -275,9 +275,7 @@ export const accountsApi = {
       limit?: number
     }
   ): Promise<PaginatedResponse<Transfer>> =>
-    api
-      .get(`/api/accounts/${address}/transfers`, { params })
-      .then(res => res.data),
+    api.get(`/accounts/${address}/transfers`, { params }).then(res => res.data),
 }
 
 // Data Submissions API
@@ -288,15 +286,13 @@ export const dataSubmissionsApi = {
     appId?: number
     submitter?: string
   }): Promise<PaginatedResponse<DataSubmission>> =>
-    api.get('/api/data-submissions', { params }).then(res => res.data),
+    api.get('/data-submissions', { params }).then(res => res.data),
 
   getDataSubmission: (id: string): Promise<DataSubmission> =>
-    api.get(`/api/data-submissions/${id}`).then(res => res.data),
+    api.get(`/data-submissions/${id}`).then(res => res.data),
 
   getLatestDataSubmissions: (limit = 10): Promise<DataSubmission[]> =>
-    api
-      .get(`/api/data-submissions/latest?limit=${limit}`)
-      .then(res => res.data),
+    api.get(`/data-submissions/latest?limit=${limit}`).then(res => res.data),
 }
 
 // Validators API
@@ -307,10 +303,10 @@ export const validatorsApi = {
     active?: boolean
     orderBy?: string
   }): Promise<PaginatedResponse<Validator>> =>
-    api.get('/api/validators', { params }).then(res => res.data),
+    api.get('/validators', { params }).then(res => res.data),
 
   getValidator: (address: string): Promise<Validator> =>
-    api.get(`/api/validators/${address}`).then(res => res.data),
+    api.get(`/validators/${address}`).then(res => res.data),
 
   getValidatorBlocks: (
     address: string,
@@ -319,30 +315,28 @@ export const validatorsApi = {
       limit?: number
     }
   ): Promise<PaginatedResponse<Block>> =>
-    api
-      .get(`/api/validators/${address}/blocks`, { params })
-      .then(res => res.data),
+    api.get(`/validators/${address}/blocks`, { params }).then(res => res.data),
 }
 
 // Analytics API
 export const analyticsApi = {
   getNetworkStats: (): Promise<NetworkStats> =>
-    api.get('/api/analytics/network').then(res => res.data),
+    api.get('/analytics/network').then(res => res.data),
 
   getRollupStats: (params?: {
     period?: '24h' | '7d' | '30d'
   }): Promise<RollupStats[]> =>
-    api.get('/api/analytics/rollups', { params }).then(res => res.data),
+    api.get('/analytics/rollups', { params }).then(res => res.data),
 
   getGasTracker: (params?: {
     period?: '24h' | '7d'
   }): Promise<GasTrackerData[]> =>
-    api.get('/api/analytics/gas', { params }).then(res => res.data),
+    api.get('/analytics/gas', { params }).then(res => res.data),
 
   getDataThroughput: (params?: {
     period?: '24h' | '7d' | '30d'
   }): Promise<DataThroughputData[]> =>
-    api.get('/api/analytics/throughput', { params }).then(res => res.data),
+    api.get('/analytics/throughput', { params }).then(res => res.data),
 }
 
 // Search API
@@ -354,8 +348,7 @@ export const searchApi = {
     extrinsics: Extrinsic[]
     accounts: Account[]
     validators: Validator[]
-  }> =>
-    api.get(`/api/search?q=${encodeURIComponent(query)}`).then(res => res.data),
+  }> => api.get(`/search?q=${encodeURIComponent(query)}`).then(res => res.data),
 }
 
 // Export the main api instance for custom requests
