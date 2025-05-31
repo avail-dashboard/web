@@ -22,8 +22,6 @@ docker build \
     --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api \
     --build-arg NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com \
     --build-arg NEXT_PUBLIC_NODE_ENV=production \
-    --build-arg AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws \
-    --build-arg AVAIL_API_ENDPOINT=https://avail.api.subscan.io \
     -t avail-frontend-optimized:test \
     .
 

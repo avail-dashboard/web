@@ -409,8 +409,9 @@ npm install -g vercel
 vercel --prod
 
 # Set environment variables in Vercel dashboard
-AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
-SUBSCAN_API_KEY=your-api-key
+NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
+NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
+NEXT_PUBLIC_NODE_ENV=development
 ```
 
 ### **Option 2: Docker + AWS/GCP**

@@ -69,8 +69,6 @@ This led to:
 | `NEXT_PUBLIC_API_BASE_URL` | API base URL              | `https://api.avail.naxatar.com/api` |
 | `NEXT_PUBLIC_WS_URL`       | WebSocket URL             | `wss://api.avail.naxatar.com`       |
 | `NEXT_PUBLIC_NODE_ENV`     | Node environment          | `production`                        |
-| `AVAIL_RPC_ENDPOINT`       | Avail RPC endpoint        | `wss://mainnet-rpc.avail.so/ws`     |
-| `AVAIL_API_ENDPOINT`       | Avail API endpoint        | `https://avail.api.subscan.io`      |
 | `NODE_ENV`                 | Node environment          | `production`                        |
 | `PORT`                     | Application port          | `3000`                              |
 | `HOSTNAME`                 | Application hostname      | `0.0.0.0`                           |

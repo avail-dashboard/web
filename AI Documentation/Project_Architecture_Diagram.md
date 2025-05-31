@@ -10,8 +10,6 @@ This document contains the mermaid diagrams explaining the architecture of the A
 graph TB
     %% External Data Sources
     subgraph "External Data Sources"
-        AVAIL[Avail Mainnet RPC<br/>wss://mainnet-rpc.avail.so/ws]
-        SUBSCAN[Subscan API<br/>avail.api.subscan.io]
         PRICE[Price APIs<br/>CoinGecko/CoinMarketCap]
     end
 
@@ -78,9 +76,6 @@ graph TB
     end
 
     %% Data Flow Connections
-    AVAIL --> BACKEND
-    SUBSCAN --> BACKEND
-    PRICE --> BACKEND
     INDEXER --> BACKEND
 
     BACKEND --> API_CLIENT
@@ -115,7 +110,7 @@ graph TB
     classDef tools fill:#fff3e0
     classDef deployment fill:#fce4ec
 
-    class AVAIL,SUBSCAN,PRICE,INDEXER external
+    class PRICE,INDEXER external
     class BACKEND,WS backend
     class HOME,BLOCKS_PAGE,EXTRINSICS_PAGE,ACCOUNTS_PAGE,API_ROUTES,DASHBOARD_COMP,CHARTS,UI,BLOCKS_COMP,TRANSFERS,API_CLIENT,HOOKS,UTILS,ZUSTAND,REACT_QUERY frontend
     class TYPESCRIPT,ESLINT,PRETTIER,JEST,PLAYWRIGHT,HUSKY,TAILWIND,SHADCN,LUCIDE,RECHARTS tools
@@ -214,10 +209,7 @@ sequenceDiagram
     API_Client->>Backend: Health check
 
     alt Backend Available
-        Backend->>Avail_RPC: Fetch chain data
-        Backend->>Subscan: Fetch indexed data
-        Avail_RPC-->>Backend: Chain statistics
-        Subscan-->>Backend: Block data
+        Backend->>Backend: Fetch chain data
         Backend-->>API_Client: Aggregated data
     else Backend Unavailable
         API_Client->>API_Client: Use fallback data
@@ -340,8 +332,6 @@ graph LR
     end
 
     subgraph "External Services"
-        AVAIL_NET[Avail Mainnet<br/>wss://mainnet-rpc.avail.so]
-        SUBSCAN_API[Subscan API<br/>avail.api.subscan.io]
         PRICE_API[Price APIs<br/>Market Data]
     end
 
@@ -352,12 +342,7 @@ graph LR
     QUALITY --> DOCKER_PROD
     QUALITY --> STATIC
 
-    VERCEL_PROD --> AVAIL_NET
-    VERCEL_PROD --> SUBSCAN_API
     VERCEL_PROD --> PRICE_API
-
-    DOCKER_PROD --> AVAIL_NET
-    DOCKER_PROD --> SUBSCAN_API
     DOCKER_PROD --> PRICE_API
 
     classDef dev fill:#e3f2fd
@@ -368,7 +353,7 @@ graph LR
     class DEV,BACKEND_DEV dev
     class GIT,ACTIONS,QUALITY cicd
     class VERCEL_PROD,DOCKER_PROD,STATIC prod
-    class AVAIL_NET,SUBSCAN_API,PRICE_API external
+    class PRICE_API external
 ```
 
 ## Key Features & Capabilities

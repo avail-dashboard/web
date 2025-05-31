@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const limit = searchParams.get('limit') || '10'
 
   try {
-    // Try to fetch from backend first
+    // Fetch from backend API only
     const backendResponse = await fetch(
       `${BACKEND_API_URL}/blocks?page=${page}&limit=${limit}`,
       {
@@ -17,8 +17,8 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Add timeout for backend requests
-        signal: AbortSignal.timeout(5000),
+        // Increased timeout since we're not using fallback
+        signal: AbortSignal.timeout(10000),
       }
     )
 
@@ -27,48 +27,8 @@ export async function GET(request: Request) {
       return NextResponse.json(data)
     }
 
-    // If backend fails, fall back to direct Subscan API call
-    console.warn('Backend not available, falling back to Subscan API')
-
-    const fallbackResponse = await fetch(
-      'https://avail.api.subscan.io/api/scan/blocks',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Avail-Explorer/1.0',
-          'X-API-Key': process.env.SUBSCAN_API_KEY || '',
-        },
-        body: JSON.stringify({
-          row: parseInt(limit),
-          page: parseInt(page),
-        }),
-      }
-    )
-
-    if (!fallbackResponse.ok) {
-      throw new Error(`Subscan API error: ${fallbackResponse.status}`)
-    }
-
-    const fallbackData = await fallbackResponse.json()
-
-    // Transform data to match our Block interface
-    const blocks =
-      fallbackData.data?.blocks?.map((block: any) => ({
-        number: block.block_num,
-        hash: block.hash,
-        time: block.block_timestamp * 1000,
-        extrinsics: block.extrinsics_count || 0,
-        parentHash: block.parent_hash,
-        stateRoot: block.state_root,
-      })) || []
-
-    // Return in same format as backend
-    return NextResponse.json({
-      success: true,
-      data: blocks,
-      timestamp: new Date().toISOString(),
-    })
+    // If backend fails, return error instead of fallback
+    throw new Error(`Backend API error: ${backendResponse.status}`)
   } catch (error) {
     console.error('Blocks API error:', error)
 

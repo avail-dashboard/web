@@ -38,15 +38,11 @@ ENV NODE_ENV=production
 ARG NEXT_PUBLIC_API_BASE_URL=https://api.avail.naxatar.com/api
 ARG NEXT_PUBLIC_WS_URL=wss://api.avail.naxatar.com
 ARG NEXT_PUBLIC_NODE_ENV=production
-ARG AVAIL_RPC_ENDPOINT=wss://mainnet-rpc.avail.so/ws
-ARG AVAIL_API_ENDPOINT=https://avail.api.subscan.io
 
 # Set environment variables from build args
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_NODE_ENV=$NEXT_PUBLIC_NODE_ENV
-ENV AVAIL_RPC_ENDPOINT=$AVAIL_RPC_ENDPOINT
-ENV AVAIL_API_ENDPOINT=$AVAIL_API_ENDPOINT
 
 # Build the application with optimizations
 RUN npm run build

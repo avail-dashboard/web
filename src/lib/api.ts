@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
@@ -355,9 +355,7 @@ export const searchApi = {
     accounts: Account[]
     validators: Validator[]
   }> =>
-    api
-      .get(`/api/search?q=${encodeURIComponent(query)}`)
-      .then(res => res.data),
+    api.get(`/api/search?q=${encodeURIComponent(query)}`).then(res => res.data),
 }
 
 // Export the main api instance for custom requests
