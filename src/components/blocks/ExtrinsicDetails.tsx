@@ -58,27 +58,9 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
     return colors[module as keyof typeof colors] || colors.default
   }
 
-  // Mock events data - in reality this would come from the API
-  const mockEvents = [
-    {
-      eventIndex: 0,
-      module: 'system',
-      event: 'ExtrinsicSuccess',
-      phase: 'ApplyExtrinsic',
-      data: { weight: '195000000' },
-    },
-    {
-      eventIndex: 1,
-      module: 'balances',
-      event: 'Transfer',
-      phase: 'ApplyExtrinsic',
-      data: {
-        from: extrinsic.signer,
-        to: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
-        amount: '1000000000000000000',
-      },
-    },
-  ]
+  // TODO: Replace with actual events data from API
+  // Events would come from the extrinsic data when properly fetched
+  const events = extrinsic.events || []
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -246,39 +228,40 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
       <div className="bg-card p-6 rounded-lg border shadow-sm mb-8">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Activity className="h-5 w-5 mr-2 text-avail-600" />
-          Events ({mockEvents.length})
+          Events ({events.length})
         </h2>
-        <div className="space-y-3">
-          {mockEvents.map((event, index) => (
-            <div key={index} className="border rounded-lg p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm font-mono text-muted-foreground">
+        {events.length > 0 ? (
+          <div className="space-y-3">
+            {events.map((event, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-3">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                      {event.section}
+                    </span>
+                    <span className="font-medium">{event.method}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
                     #{event.eventIndex}
                   </span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(event.module)}`}
-                  >
-                    {event.module}
-                  </span>
-                  <span className="font-medium">{event.event}</span>
                 </div>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                  {event.phase}
-                </span>
-              </div>
-
-              {/* Event data */}
-              <div className="bg-muted/50 rounded p-3 mt-3">
-                <div className="text-sm font-mono">
-                  <pre className="whitespace-pre-wrap text-xs">
+                <div className="text-sm text-muted-foreground">
+                  Phase: {event.phase}
+                </div>
+                {event.data && (
+                  <div className="mt-2 p-2 bg-muted/30 rounded text-xs font-mono">
                     {JSON.stringify(event.data, null, 2)}
-                  </pre>
-                </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            No events available. Events require API integration to fetch real
+            data.
+          </div>
+        )}
       </div>
 
       {/* Raw Data Section */}

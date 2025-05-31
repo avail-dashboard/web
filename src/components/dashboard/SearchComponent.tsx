@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Search, Loader2 } from 'lucide-react'
 
 interface SearchResult {
   type: 'block' | 'transaction' | 'account'
   id: string
-  data: any
+  data: Record<string, unknown>
 }
 
 interface SearchComponentProps {
@@ -15,33 +15,27 @@ interface SearchComponentProps {
 
 export function SearchComponent({ onSearch }: SearchComponentProps) {
   const [query, setQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [results, setResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const detectSearchType = (
     input: string
   ): 'block' | 'transaction' | 'account' | 'unknown' => {
-    // Remove whitespace
-    const clean = input.trim()
+    const trimmed = input.trim()
 
     // Block number (numeric)
-    if (/^\d+$/.test(clean)) {
+    if (/^\d+$/.test(trimmed)) {
       return 'block'
     }
 
-    // Hash (0x + 64 hex chars)
-    if (/^0x[a-fA-F0-9]{64}$/.test(clean)) {
+    // Transaction hash or block hash (0x followed by hex)
+    if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) {
       return 'transaction'
     }
 
-    // Block hash or transaction hash
-    if (/^0x[a-fA-F0-9]{32,64}$/.test(clean)) {
-      return 'block'
-    }
-
-    // Account address (various substrate formats)
-    if (clean.length >= 47 && clean.length <= 49) {
+    // Account address (starts with 5 and is 48 characters)
+    if (/^5[a-zA-Z0-9]{47}$/.test(trimmed)) {
       return 'account'
     }
 
@@ -57,76 +51,21 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
 
     try {
       const searchType = detectSearchType(searchQuery)
-      const searchResults: SearchResult[] = []
 
-      switch (searchType) {
-        case 'block':
-          // Search for block by number or hash
-          if (/^\d+$/.test(searchQuery)) {
-            // Block by number
-            searchResults.push({
-              type: 'block',
-              id: searchQuery,
-              data: {
-                number: parseInt(searchQuery),
-                hash: '0x' + 'a'.repeat(64), // Mock hash
-                timestamp: Date.now() - Math.random() * 86400000,
-                extrinsics: Math.floor(Math.random() * 10),
-              },
-            })
-          } else {
-            // Block by hash
-            searchResults.push({
-              type: 'block',
-              id: searchQuery,
-              data: {
-                number: Math.floor(Math.random() * 1000000),
-                hash: searchQuery,
-                timestamp: Date.now() - Math.random() * 86400000,
-                extrinsics: Math.floor(Math.random() * 10),
-              },
-            })
-          }
-          break
-
-        case 'transaction':
-          // Search for transaction by hash
-          searchResults.push({
-            type: 'transaction',
-            id: searchQuery,
-            data: {
-              hash: searchQuery,
-              blockNumber: Math.floor(Math.random() * 1000000),
-              success: Math.random() > 0.1,
-              timestamp: Date.now() - Math.random() * 86400000,
-              from: '5' + 'A'.repeat(47),
-              to: '5' + 'B'.repeat(47),
-              value: (Math.random() * 1000).toFixed(4),
-            },
-          })
-          break
-
-        case 'account':
-          // Search for account by address
-          searchResults.push({
-            type: 'account',
-            id: searchQuery,
-            data: {
-              address: searchQuery,
-              balance: (Math.random() * 10000).toFixed(4),
-              nonce: Math.floor(Math.random() * 100),
-              transactions: Math.floor(Math.random() * 500),
-            },
-          })
-          break
-
-        default:
-          setError(`Unrecognized search format: ${searchQuery}`)
-          return
+      if (searchType === 'unknown') {
+        setError(
+          'Invalid search format. Please enter a valid block number, transaction hash, or account address.'
+        )
+        return
       }
 
-      setResults(searchResults)
-      onSearch?.(searchQuery, searchResults)
+      // TODO: Replace with actual API call
+      // For now, show a message that API integration is needed
+      setError(
+        'Search functionality requires backend API integration. Please implement the search endpoint.'
+      )
+
+      onSearch?.(searchQuery, [])
     } catch (err) {
       console.error('Search error:', err)
       setError('Search failed. Please try again.')
@@ -138,14 +77,6 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     performSearch(query)
-  }
-
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-6)}`
-  }
-
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
   }
 
   return (
@@ -176,27 +107,12 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
 
       {/* Search Tips */}
       <div className="mt-2 text-xs text-muted-foreground">
-        <span>Try: </span>
-        <button
-          onClick={() => setQuery('1000000')}
-          className="text-avail-600 hover:underline"
-        >
-          Block #1000000
-        </button>
+        <span>Examples: </span>
+        <span className="text-avail-600">Block #1000000</span>
         <span> • </span>
-        <button
-          onClick={() => setQuery('0x' + 'a'.repeat(64))}
-          className="text-avail-600 hover:underline"
-        >
-          Transaction hash
-        </button>
+        <span className="text-avail-600">0x1234...abcd (Transaction hash)</span>
         <span> • </span>
-        <button
-          onClick={() => setQuery('5' + 'C'.repeat(47))}
-          className="text-avail-600 hover:underline"
-        >
-          Account address
-        </button>
+        <span className="text-avail-600">5ABC...XYZ (Account address)</span>
       </div>
 
       {/* Error Display */}
@@ -217,65 +133,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
                   {result.type.charAt(0).toUpperCase() + result.type.slice(1)}
                 </span>
               </div>
-
-              {result.type === 'block' && (
-                <div>
-                  <div className="font-semibold">
-                    Block #{result.data.number.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground font-mono">
-                    {result.data.hash}
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span>Time: {formatTime(result.data.timestamp)}</span>
-                    <span className="ml-4">
-                      Extrinsics: {result.data.extrinsics}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {result.type === 'transaction' && (
-                <div>
-                  <div className="font-semibold text-sm font-mono">
-                    {result.data.hash}
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span>
-                      Block: #{result.data.blockNumber.toLocaleString()}
-                    </span>
-                    <span className="ml-4">Status: </span>
-                    <span
-                      className={
-                        result.data.success ? 'text-green-600' : 'text-red-600'
-                      }
-                    >
-                      {result.data.success ? 'Success' : 'Failed'}
-                    </span>
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span>Value: {result.data.value} AVAIL</span>
-                    <span className="ml-4">
-                      Time: {formatTime(result.data.timestamp)}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {result.type === 'account' && (
-                <div>
-                  <div className="font-semibold text-sm font-mono">
-                    {formatAddress(result.data.address)}
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span>Balance: {result.data.balance} AVAIL</span>
-                    <span className="ml-4">Nonce: {result.data.nonce}</span>
-                  </div>
-                  <div className="text-sm mt-1">
-                    <span>Transactions: {result.data.transactions}</span>
-                  </div>
-                </div>
-              )}
+              {/* Search results would be rendered here when API is integrated */}
             </div>
           ))}
         </div>

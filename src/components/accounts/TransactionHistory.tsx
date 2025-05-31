@@ -26,9 +26,10 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
     if (allExtrinsics) {
       // Filter extrinsics related to this address
       const accountExtrinsics = allExtrinsics.filter(ext => {
-        // In a real implementation, this would check if the address is involved
-        // in the transaction (as sender, receiver, or in events)
-        return ext.signer === address || Math.random() > 0.7 // Mock filter
+        // TODO: In a real implementation, this would check if the address is involved
+        // in the transaction (as sender, receiver, or in events) by examining the
+        // extrinsic events and parameters
+        return ext.signer === address
       })
 
       // Apply additional filters
@@ -36,7 +37,9 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
       if (filter === 'sent') {
         filtered = accountExtrinsics.filter(ext => ext.signer === address)
       } else if (filter === 'received') {
-        filtered = accountExtrinsics.filter(ext => ext.signer !== address)
+        // TODO: Implement proper received transaction filtering
+        // This would require checking transfer events to see if this address was a recipient
+        filtered = []
       }
 
       setFilteredExtrinsics(filtered)

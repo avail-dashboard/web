@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useBlocks } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
+import { Block } from '@/lib/api'
 import {
   ChevronLeft,
   ChevronRight,
@@ -58,9 +59,9 @@ export function BlockList({
     return num.toLocaleString()
   }
 
-  const getBlockStatus = () => {
-    // Mock logic - in reality this would come from the API
-    return 'Finalized'
+  const getBlockStatus = (block: Block) => {
+    // TODO: Use actual block status from API data
+    return block.status || 'Finalized'
   }
 
   if (loading && !blocks) {
@@ -202,7 +203,7 @@ export function BlockList({
                 {/* Status */}
                 <div className="flex items-center justify-end space-x-2">
                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    {getBlockStatus()}
+                    {getBlockStatus(block)}
                   </span>
                 </div>
 
@@ -240,7 +241,7 @@ export function BlockList({
         ))}
       </div>
 
-      {/* Pagination - Mock for now */}
+      {/* Pagination - TODO: Implement proper pagination with API */}
       <div className="flex items-center justify-between pt-6">
         <div className="text-sm text-muted-foreground">
           Showing latest {blocks.length} blocks
