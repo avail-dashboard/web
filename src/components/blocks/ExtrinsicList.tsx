@@ -32,7 +32,7 @@ export function ExtrinsicList({
   const [copied, setCopied] = useState<string | null>(null)
 
   // Get unique modules for filtering
-  const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.section)))
+  const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.module)))
 
   // Filter extrinsics
   const filteredExtrinsics = extrinsics.filter(extrinsic => {
@@ -42,7 +42,7 @@ export function ExtrinsicList({
       (filter === 'failed' && !extrinsic.success)
 
     const moduleMatch =
-      moduleFilter === 'all' || extrinsic.section === moduleFilter
+      moduleFilter === 'all' || extrinsic.module === moduleFilter
 
     return statusMatch && moduleMatch
   })
@@ -189,12 +189,12 @@ export function ExtrinsicList({
                 {/* Module and Call */}
                 <div className="flex items-center space-x-3">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.section)}`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
                   >
-                    {extrinsic.section}
+                    {extrinsic.module}
                   </span>
                   <span className="text-sm font-medium">
-                    {extrinsic.method}
+                    {extrinsic.call}
                   </span>
                 </div>
 

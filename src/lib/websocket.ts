@@ -246,9 +246,15 @@ export class AvailWebSocket {
   }
 }
 
+// Validate required environment variables
+const wsUrl = process.env.NEXT_PUBLIC_WS_URL
+if (!wsUrl) {
+  throw new Error('NEXT_PUBLIC_WS_URL environment variable is required but not set')
+}
+
 // Create and export WebSocket instance
 const wsConfig: WebSocketConfig = {
-  url: process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001',
+  url: wsUrl,
   autoConnect: false, // We'll connect manually
   reconnection: true,
   reconnectionAttempts: 5,

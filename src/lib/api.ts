@@ -1,7 +1,10 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+}
 
 // Create axios instance with default config
 const api: AxiosInstance = axios.create({
@@ -24,9 +27,21 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor for error handling
+// Response interceptor for error handling and standardized response format
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Handle the standardized API response format
+    if (response.data && typeof response.data === 'object') {
+      if (response.data.success === false) {
+        throw new Error(response.data.error?.message || 'API request failed')
+      }
+      // Return the data field for successful responses
+      return {
+        ...response,
+        data: response.data.data,
+        meta: response.data.meta
+      }
+    }
     return response
   },
   error => {
@@ -35,55 +50,67 @@ api.interceptors.response.use(
   }
 )
 
-// Types for API responses
-export interface PaginatedResponse<T> {
-  data: T[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
+// Types for API responses based on the backend documentation
+export interface ApiResponse<T> {
+  success: boolean
+  data: T
+  meta?: {
+    page?: number
+    limit?: number
+    total?: number
+    source: 'rpc' | 'database'
+    note?: string
+  }
+  error?: {
+    code: string
+    message: string
   }
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: {
+    page: number
+    limit: number
+    total: number
+    source: 'rpc' | 'database'
+  }
+}
+
+// Updated interfaces to match backend API documentation
 export interface Block {
-  id: string
   number: number
   hash: string
-  parentHash: string
-  stateRoot: string
-  extrinsicsRoot: string
-  timestamp: string
-  time: number
-  validator: string
-  specVersion: number
-  extrinsicsCount: number
+  parent_hash: string
+  timestamp: number
   extrinsics: number
-  eventsCount: number
+  time: string
+  state_root: string
+  extrinsics_root: string
+  author_id: string
   size: number
-  status: 'finalized' | 'pending'
+  weight: number
+  spec: number
+  finalized: boolean
+  extrinsics_count?: number
 }
 
 export interface Extrinsic {
-  id: string
   hash: string
   blockNumber: number
-  blockHash: string
-  index: number
-  method: string
-  section: string
+  extrinsicIndex: number
   module: string
   call: string
-  extrinsicIndex?: number
-  args: Record<string, unknown>[]
-  signer: string
-  nonce: number
-  signature: string
-  tip: string
-  fee: string
   success: boolean
-  timestamp: string
+  timestamp: number
+  signer: string
+  fee: number
+  tip: number
+  signature: string
+  args: Record<string, unknown>
   events: Event[]
+  isSigned: boolean
+  isUserTransaction: boolean
 }
 
 export interface Event {
@@ -100,21 +127,14 @@ export interface Event {
 
 export interface Account {
   address: string
-  balance: {
-    free: string
-    reserved: string
-    frozen: string
-  }
+  balance: number
   nonce: number
-  extrinsicsCount: number
-  transfersCount: number
-  identity?: {
-    display?: string
-    legal?: string
-    web?: string
-    riot?: string
-    email?: string
-    twitter?: string
+  lastUpdated: string
+  accountInfo: {
+    free: number
+    reserved: number
+    frozen: number
+    flags: number
   }
 }
 
@@ -134,33 +154,63 @@ export interface DataSubmission {
   extrinsicId: string
   blockNumber: number
   extrinsicIndex: number
-  submitter: string
   appId: number
-  dataHash: string
   size: number
+  dataHash: string
+  submitter: string
   timestamp: number
   success: boolean
 }
 
 export interface Validator {
   address: string
-  identity?: {
-    display?: string
-    legal?: string
-    web?: string
-    riot?: string
-    email?: string
-    twitter?: string
-  }
+  active: boolean
   commission: string
   totalStake: string
   ownStake: string
-  nominatorsCount: number
-  blocksProduced: number
-  active: boolean
-  waiting: boolean
-  slashed: boolean
-  sessionKeys: string[]
+  nominators: number
+  identity?: {
+    display?: string
+    web?: string
+  }
+}
+
+export interface ChainStats {
+  finalizedBlocks: number
+  signedExtrinsics: number
+  stakedAmount: string
+  bondedAmount: string
+  holders: number
+  totalAccounts: number
+  transfers: number
+  inflationRate: number
+  tokenPrice: number
+  priceChange: number
+  totalIssuance: string
+  circulating: {
+    amount: string
+    percentage: number
+  }
+  staking: {
+    amount: string
+    percentage: number
+  }
+  treasury: {
+    amount: string
+    percentage: number
+  }
+  others: {
+    amount: string
+    percentage: number
+  }
+  marketCap: number
+  totalSupply: number
+  circulatingSupply: number
+  stakingRatio: number
+  inflation: number
+  activeValidators: number
+  blockTime: number
+  lastBlockTimestamp: number
 }
 
 export interface NetworkStats {
@@ -210,10 +260,8 @@ export const blocksApi = {
   getBlocks: (params?: {
     page?: number
     limit?: number
-    validator?: string
-    status?: string
-  }): Promise<PaginatedResponse<Block>> =>
-    api.get('/blocks', { params }).then(res => res.data),
+  }): Promise<Block[]> =>
+    api.get('/blocks', { params }).then(res => res.data || []),
 
   getBlock: (identifier: string): Promise<Block> =>
     api.get(`/blocks/${identifier}`).then(res => res.data),
@@ -221,62 +269,31 @@ export const blocksApi = {
   getLatestBlocks: (limit = 10): Promise<Block[]> =>
     api
       .get('/blocks', { params: { page: 1, limit } })
-      .then(res => res.data?.data || []),
+      .then(res => res.data || []),
 }
 
 // Extrinsics API
 export const extrinsicsApi = {
   getExtrinsics: (params?: {
+    page?: number
+    limit?: number
     block?: number
-    signer?: string
-    method?: string
-    success?: boolean
   }): Promise<Extrinsic[]> =>
     api
       .get('/extrinsics', { params })
-      .then(res => res.data?.data || res.data || []),
+      .then(res => res.data || []),
 
   getExtrinsic: (hash: string): Promise<Extrinsic> =>
     api.get(`/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
-    api.get('/extrinsics').then(res => {
-      const allExtrinsics = res.data?.data || res.data || []
-      return Array.isArray(allExtrinsics) ? allExtrinsics.slice(0, limit) : []
-    }),
+    api.get('/extrinsics', { params: { page: 1, limit } }).then(res => res.data || []),
 }
 
 // Accounts API
 export const accountsApi = {
-  getAccounts: (params?: {
-    page?: number
-    limit?: number
-    orderBy?: string
-  }): Promise<PaginatedResponse<Account>> =>
-    api.get('/accounts', { params }).then(res => res.data),
-
   getAccount: (address: string): Promise<Account> =>
     api.get(`/accounts/${address}`).then(res => res.data),
-
-  getAccountExtrinsics: (
-    address: string,
-    params?: {
-      page?: number
-      limit?: number
-    }
-  ): Promise<PaginatedResponse<Extrinsic>> =>
-    api
-      .get(`/accounts/${address}/extrinsics`, { params })
-      .then(res => res.data),
-
-  getAccountTransfers: (
-    address: string,
-    params?: {
-      page?: number
-      limit?: number
-    }
-  ): Promise<PaginatedResponse<Transfer>> =>
-    api.get(`/accounts/${address}/transfers`, { params }).then(res => res.data),
 }
 
 // Data Submissions API
@@ -286,14 +303,13 @@ export const dataSubmissionsApi = {
     limit?: number
     appId?: number
     submitter?: string
-  }): Promise<PaginatedResponse<DataSubmission>> =>
-    api.get('/data-submissions', { params }).then(res => res.data),
+    orderBy?: string
+    order?: string
+  }): Promise<DataSubmission[]> =>
+    api.get('/data-submissions', { params }).then(res => res.data || []),
 
-  getDataSubmission: (id: string): Promise<DataSubmission> =>
-    api.get(`/data-submissions/${id}`).then(res => res.data),
-
-  getLatestDataSubmissions: (limit = 10): Promise<DataSubmission[]> =>
-    api.get(`/data-submissions/latest?limit=${limit}`).then(res => res.data),
+  getDataSubmissionStats: () =>
+    api.get('/data-submissions/stats').then(res => res.data),
 }
 
 // Validators API
@@ -301,55 +317,81 @@ export const validatorsApi = {
   getValidators: (params?: {
     page?: number
     limit?: number
-    active?: boolean
-    orderBy?: string
-  }): Promise<PaginatedResponse<Validator>> =>
-    api.get('/validators', { params }).then(res => res.data),
+  }) =>
+    api.get('/validators', { params }).then(res => res.data?.validators || []),
 
   getValidator: (address: string): Promise<Validator> =>
     api.get(`/validators/${address}`).then(res => res.data),
 
-  getValidatorBlocks: (
-    address: string,
-    params?: {
-      page?: number
-      limit?: number
-    }
-  ): Promise<PaginatedResponse<Block>> =>
-    api.get(`/validators/${address}/blocks`, { params }).then(res => res.data),
+  getStakingOverview: () =>
+    api.get('/validators/staking/overview').then(res => res.data),
+
+  getNominationPools: () =>
+    api.get('/validators/nomination-pools').then(res => res.data?.data || []),
+}
+
+// Chain API
+export const chainApi = {
+  getChainStats: (): Promise<ChainStats> =>
+    api.get('/chain/stats').then(res => res.data),
 }
 
 // Analytics API
 export const analyticsApi = {
-  getNetworkStats: (): Promise<NetworkStats> =>
-    api.get('/analytics/network').then(res => res.data),
+  getNetworkAnalytics: (params?: { period?: string }) =>
+    api.get('/analytics/network', { params }).then(res => res.data),
 
-  getRollupStats: (params?: {
-    period?: '24h' | '7d' | '30d'
-  }): Promise<RollupStats[]> =>
-    api.get('/analytics/rollups', { params }).then(res => res.data),
-
-  getGasTracker: (params?: {
-    period?: '24h' | '7d'
-  }): Promise<GasTrackerData[]> =>
+  getGasAnalytics: (params?: { period?: string; granularity?: string }) =>
     api.get('/analytics/gas', { params }).then(res => res.data),
 
-  getDataThroughput: (params?: {
-    period?: '24h' | '7d' | '30d'
-  }): Promise<DataThroughputData[]> =>
-    api.get('/analytics/throughput', { params }).then(res => res.data),
+  getRollupAnalytics: (params?: { period?: string }) =>
+    api.get('/analytics/rollups', { params }).then(res => res.data),
+
+  getDataThroughputAnalytics: (params?: { period?: string; granularity?: string }) =>
+    api.get('/analytics/data-throughput', { params }).then(res => res.data),
+
+  getValidatorAnalytics: () =>
+    api.get('/analytics/validators').then(res => res.data),
+}
+
+// Rollups API
+export const rollupsApi = {
+  getRollupLeaderboard: (params?: { period?: string; metric?: string }) =>
+    api.get('/rollups/leaderboard', { params }).then(res => res.data),
+
+  getRollups: (params?: {
+    page?: number
+    limit?: number
+    search?: string
+    status?: string
+    sortBy?: string
+    sortOrder?: string
+  }) =>
+    api.get('/rollups', { params }).then(res => res.data?.rollups || []),
+
+  getRollup: (appId: number) =>
+    api.get(`/rollups/${appId}`).then(res => res.data),
+
+  getRollupSubmissions: (appId: number, params?: { page?: number; limit?: number }) =>
+    api.get(`/rollups/${appId}/submissions`, { params }).then(res => res.data?.submissions || []),
+
+  getRollupBlobs: (appId: number, params?: { page?: number; limit?: number }) =>
+    api.get(`/rollups/${appId}/blobs`, { params }).then(res => res.data?.blobs || []),
+
+  getRollupAnalytics: (appId: number, params?: { period?: string }) =>
+    api.get(`/rollups/${appId}/analytics`, { params }).then(res => res.data),
 }
 
 // Search API
 export const searchApi = {
-  search: (
-    query: string
-  ): Promise<{
-    blocks: Block[]
-    extrinsics: Extrinsic[]
-    accounts: Account[]
-    validators: Validator[]
-  }> => api.get(`/search?q=${encodeURIComponent(query)}`).then(res => res.data),
+  search: (query: string) =>
+    api.get(`/search?q=${encodeURIComponent(query)}`).then(res => res.data || []),
+}
+
+// Health API
+export const healthApi = {
+  getHealth: () =>
+    api.get('/health').then(res => res.data),
 }
 
 // Export the main api instance for custom requests
@@ -357,31 +399,27 @@ export default api
 
 // Export the unified API interface that hooks expect
 export const availAPI = {
-  getChainData: async () => {
+  getChainData: async (): Promise<ChainStats> => {
     try {
-      const response = await fetch('/api/chain')
-      const data = await response.json()
-      return data
+      return await chainApi.getChainStats()
     } catch (error) {
       console.error('Failed to fetch chain data:', error)
       throw error
     }
   },
 
-  getLatestBlocks: async (count: number = 10) => {
+  getLatestBlocks: async (count: number = 10): Promise<Block[]> => {
     try {
-      const response = await blocksApi.getLatestBlocks(count)
-      return response || []
+      return await blocksApi.getLatestBlocks(count)
     } catch (error) {
       console.error('Failed to fetch latest blocks:', error)
       throw error
     }
   },
 
-  getBlock: async (numberOrHash: string | number) => {
+  getBlock: async (numberOrHash: string | number): Promise<Block> => {
     try {
-      const response = await blocksApi.getBlock(numberOrHash.toString())
-      return response
+      return await blocksApi.getBlock(numberOrHash.toString())
     } catch (error) {
       console.error('Failed to fetch block:', error)
       throw error
@@ -390,42 +428,33 @@ export const availAPI = {
 
   getExtrinsics: async (
     blockNumber?: number,
-    page: number = 0,
+    page: number = 1,
     limit: number = 10
-  ) => {
+  ): Promise<Extrinsic[]> => {
     try {
-      const params: { block?: number } = {}
+      const params: { block?: number; page?: number; limit?: number } = { page, limit }
       if (blockNumber) {
         params.block = blockNumber
       }
-      const response = await extrinsicsApi.getExtrinsics(params)
-      // Since we now get all extrinsics, slice for the requested limit if needed
-      return Array.isArray(response)
-        ? response.slice(page * limit, (page + 1) * limit)
-        : []
+      return await extrinsicsApi.getExtrinsics(params)
     } catch (error) {
       console.error('Failed to fetch extrinsics:', error)
       throw error
     }
   },
 
-  getValidators: async () => {
+  getValidators: async (): Promise<Validator[]> => {
     try {
-      const response = await validatorsApi.getValidators({
-        page: 1,
-        limit: 100,
-      })
-      return response.data || []
+      return await validatorsApi.getValidators({ page: 1, limit: 100 })
     } catch (error) {
       console.error('Failed to fetch validators:', error)
       throw error
     }
   },
 
-  getAccount: async (address: string) => {
+  getAccount: async (address: string): Promise<Account> => {
     try {
-      const response = await accountsApi.getAccount(address)
-      return response
+      return await accountsApi.getAccount(address)
     } catch (error) {
       console.error('Failed to fetch account:', error)
       throw error
@@ -434,8 +463,7 @@ export const availAPI = {
 
   search: async (query: string) => {
     try {
-      const response = await searchApi.search(query)
-      return response || []
+      return await searchApi.search(query)
     } catch (error) {
       console.error('Failed to search:', error)
       throw error
@@ -444,8 +472,7 @@ export const availAPI = {
 
   getAnalytics: async () => {
     try {
-      const response = await analyticsApi.getNetworkStats()
-      return response
+      return await analyticsApi.getNetworkAnalytics()
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
       throw error
@@ -453,27 +480,18 @@ export const availAPI = {
   },
 
   getDataSubmissions: async (
-    page: number = 0,
+    page: number = 1,
     limit: number = 20,
     appId?: number,
     submitter?: string
-  ) => {
+  ): Promise<DataSubmission[]> => {
     try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
+      return await dataSubmissionsApi.getDataSubmissions({
+        page,
+        limit,
+        appId,
+        submitter
       })
-      if (appId) params.append('appId', appId.toString())
-      if (submitter) params.append('submitter', submitter)
-
-      const response = await fetch(`/api/data-submissions?${params}`)
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch data submissions')
-      }
-
-      return data.data || []
     } catch (error) {
       console.error('Failed to fetch data submissions:', error)
       throw error
@@ -482,25 +500,17 @@ export const availAPI = {
 
   getDataSubmissionStats: async () => {
     try {
-      const response = await fetch('/api/data-submissions/stats')
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch data submission stats')
-      }
-
-      return data.data
+      return await dataSubmissionsApi.getDataSubmissionStats()
     } catch (error) {
       console.error('Failed to fetch data submission stats:', error)
       throw error
     }
   },
 
-  refreshBackendStatus: async () => {
+  refreshBackendStatus: async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/health')
-      const data = await response.json()
-      return data?.backend?.available || false
+      await healthApi.getHealth()
+      return true
     } catch {
       return false
     }
@@ -510,38 +520,9 @@ export const availAPI = {
 // Real WebSocket implementation
 export { availWS } from './websocket'
 
-// Add ChainData interface that is expected by useAvailAPI.ts
-export interface ChainData {
-  bestNumber: number
-  bestHash: string
-  finalizedNumber: number
-  finalizedHash: string
-  peers: number
-  isSyncing: boolean
-  systemName: string
-  systemVersion: string
-  chainName: string
-  nodeName: string
-  nodeVersion: string
-  // Additional properties used in components
-  tokenPrice?: number
-  priceChange?: number
-  finalizedBlocks: number
-  signedExtrinsics: number
-  stakedAmount: string
-  bondedAmount: string
-  holders: number
-  totalAccounts: number
-  transfers: number
-  inflationRate: number
-  circulating: { amount: string; percentage: number }
-  staking: { amount: string; percentage: number }
-  treasury: { amount: string; percentage: number }
-  others: { amount: string; percentage: number }
-  totalIssuance: string
-}
+// Legacy interfaces for backward compatibility
+export type ChainData = ChainStats
 
-// Add SearchResult interface that is expected by useAvailAPI.ts
 export interface SearchResult {
   blocks: Block[]
   extrinsics: Extrinsic[]

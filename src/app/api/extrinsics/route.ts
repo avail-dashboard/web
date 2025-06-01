@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -28,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     const backendResponse = await fetch(
-      `${BACKEND_API_URL}/extrinsics${params.toString() ? `?${params}` : ''}`,
+      `${API_BASE_URL}/extrinsics${params.toString() ? `?${params}` : ''}`,
       {
         method: 'GET',
         headers: {

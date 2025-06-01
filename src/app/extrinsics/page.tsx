@@ -37,7 +37,7 @@ import {
 import { Input } from '@/components/ui/input'
 
 // Format timestamp to relative time
-const formatTimeAgo = (timestamp: string) => {
+const formatTimeAgo = (timestamp: string | number) => {
   const now = new Date()
   const time = new Date(timestamp)
   const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
@@ -49,26 +49,23 @@ const formatTimeAgo = (timestamp: string) => {
 }
 
 // Format fee amount
-const formatFee = (fee: string) => {
-  const feeNum = parseFloat(fee)
+const formatFee = (fee: string | number) => {
+  const feeNum = typeof fee === 'string' ? parseFloat(fee) : fee
   if (feeNum === 0) return '0'
-  if (feeNum < 0.001) return '<0.001'
-  return feeNum.toFixed(6)
+  return (feeNum / 1e18).toFixed(6)
 }
 
-// Get method color based on section
-const getMethodColor = (section: string) => {
+// Get color for method section
+const getMethodColor = (module: string) => {
   const colors: Record<string, string> = {
+    timestamp: 'bg-blue-100 text-blue-800',
     balances: 'bg-green-100 text-green-800',
-    system: 'bg-blue-100 text-blue-800',
-    timestamp: 'bg-gray-100 text-gray-800',
-    dataAvailability: 'bg-purple-100 text-purple-800',
-    staking: 'bg-orange-100 text-orange-800',
-    session: 'bg-yellow-100 text-yellow-800',
-    grandpa: 'bg-red-100 text-red-800',
-    sudo: 'bg-pink-100 text-pink-800',
+    system: 'bg-gray-100 text-gray-800',
+    staking: 'bg-purple-100 text-purple-800',
+    dataAvailability: 'bg-orange-100 text-orange-800',
+    vector: 'bg-red-100 text-red-800',
   }
-  return colors[section] || 'bg-gray-100 text-gray-800'
+  return colors[module] || 'bg-gray-100 text-gray-800'
 }
 
 export default function ExtrinsicsPage() {
@@ -83,23 +80,14 @@ export default function ExtrinsicsPage() {
 
   // Fetch all extrinsics data without pagination
   const {
-    data: extrinsics,
+    data: extrinsics = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: [
-      'extrinsics',
-      blockFilter,
-      signerFilter,
-      methodFilter,
-      successFilter,
-    ],
+    queryKey: ['extrinsics', blockFilter],
     queryFn: () =>
       extrinsicsApi.getExtrinsics({
         block: blockFilter ? Number(blockFilter) : undefined,
-        signer: signerFilter || undefined,
-        method: methodFilter || undefined,
-        success: successFilter === 'all' ? undefined : successFilter === 'true',
       }),
     refetchInterval: 10000, // Refetch every 10 seconds
     staleTime: 5000,
@@ -127,19 +115,19 @@ export default function ExtrinsicsPage() {
     const successRate = (successful / latestExtrinsics.length) * 100
 
     const totalFees = latestExtrinsics.reduce(
-      (sum, ext) => sum + parseFloat(ext.fee || '0'),
+      (sum, ext) => sum + (typeof ext.fee === 'string' ? parseFloat(ext.fee) : ext.fee),
       0
     )
     const averageFee = totalFees / latestExtrinsics.length
 
     const methods = new Set(
-      latestExtrinsics.map(ext => `${ext.section}.${ext.method}`)
+      latestExtrinsics.map(ext => `${ext.module}.${ext.call}`)
     )
     const uniqueMethods = methods.size
 
     const methodBreakdown = latestExtrinsics.reduce(
       (acc, ext) => {
-        const key = ext.section
+        const key = ext.module
         acc[key] = (acc[key] || 0) + 1
         return acc
       },
@@ -212,12 +200,12 @@ export default function ExtrinsicsPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Badge
-            className={`text-xs ${getMethodColor(row.original.section)}`}
+            className={`text-xs ${getMethodColor(row.original.module)}`}
             variant="secondary"
           >
-            {row.original.section}
+            {row.original.module}
           </Badge>
-          <span className="font-mono text-sm">{row.original.method}</span>
+          <span className="font-mono text-sm">{row.original.call}</span>
         </div>
       ),
     },

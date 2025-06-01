@@ -64,10 +64,10 @@ export function GlobalSearch({
     if (!searchResults) return []
 
     const results: SearchResult[] = [
-      ...searchResults.blocks.map(block => ({ type: 'block' as const, data: block })),
-      ...searchResults.extrinsics.map(extrinsic => ({ type: 'extrinsic' as const, data: extrinsic })),
-      ...searchResults.accounts.map(account => ({ type: 'account' as const, data: account })),
-      ...searchResults.validators.map(validator => ({ type: 'validator' as const, data: validator })),
+      ...searchResults.blocks.map((block: Block) => ({ type: 'block' as const, data: block })),
+      ...searchResults.extrinsics.map((extrinsic: Extrinsic) => ({ type: 'extrinsic' as const, data: extrinsic })),
+      ...searchResults.accounts.map((account: Account) => ({ type: 'account' as const, data: account })),
+      ...searchResults.validators.map((validator: Validator) => ({ type: 'validator' as const, data: validator })),
     ]
 
     // Use Fuse.js for better fuzzy search scoring
@@ -191,11 +191,11 @@ export function GlobalSearch({
       }
       case 'extrinsic': {
         const extrinsic = result.data as Extrinsic
-        return `${extrinsic.section}.${extrinsic.method}`
+        return `${extrinsic.module}.${extrinsic.call}`
       }
       case 'account': {
         const account = result.data as Account
-        return account.identity?.display || `${account.address.slice(0, 8)}...${account.address.slice(-8)}`
+        return `${account.address.slice(0, 8)}...${account.address.slice(-8)}`
       }
       case 'validator': {
         const validator = result.data as Validator
@@ -210,7 +210,7 @@ export function GlobalSearch({
     switch (result.type) {
       case 'block': {
         const block = result.data as Block
-        return `${block.extrinsicsCount} extrinsics • ${block.status}`
+        return `${block.extrinsics_count || block.extrinsics || 0} extrinsics • Finalized`
       }
       case 'extrinsic': {
         const extrinsic = result.data as Extrinsic
@@ -218,11 +218,11 @@ export function GlobalSearch({
       }
       case 'account': {
         const account = result.data as Account
-        return `${account.extrinsicsCount} extrinsics • ${account.transfersCount} transfers`
+        return `Balance: ${account.balance} • Nonce: ${account.nonce}`
       }
       case 'validator': {
         const validator = result.data as Validator
-        return `${validator.blocksProduced} blocks • ${validator.active ? 'Active' : 'Inactive'}`
+        return `${validator.active ? 'Active' : 'Inactive'} • ${validator.commission} commission`
       }
       default:
         return ''

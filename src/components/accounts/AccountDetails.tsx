@@ -35,13 +35,9 @@ export function AccountDetails({ address }: AccountDetailsProps) {
     }
   }
 
-  const formatBalance = (balance: string) => {
-    // Convert from smallest unit to AVAIL (assuming 18 decimals)
-    const avail = parseFloat(balance) / Math.pow(10, 18)
-    return avail.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
-    })
+  const formatBalance = (balance: string | number) => {
+    const balanceNum = typeof balance === 'string' ? parseFloat(balance) : balance
+    return (balanceNum / 1e18).toFixed(6)
   }
 
   const formatAddress = (addr: string) => {
@@ -133,11 +129,11 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             <Wallet className="h-4 w-4 text-avail-600" />
           </div>
           <div className="text-2xl font-bold text-avail-600">
-            {formatBalance(account.balance.free)} AVAIL
+            {formatBalance(account.accountInfo.free)} AVAIL
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             ≈ $
-            {(parseFloat(formatBalance(account.balance.free)) * 0.15).toFixed(
+            {(parseFloat(formatBalance(account.accountInfo.free)) * 0.15).toFixed(
               2
             )}{' '}
             USD
@@ -153,7 +149,7 @@ export function AccountDetails({ address }: AccountDetailsProps) {
             <Shield className="h-4 w-4 text-orange-600" />
           </div>
           <div className="text-2xl font-bold text-orange-600">
-            {formatBalance(account.balance.reserved)} AVAIL
+            {formatBalance(account.accountInfo.reserved)} AVAIL
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             Locked for staking/governance
