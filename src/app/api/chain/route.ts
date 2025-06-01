@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+}
 
 export async function GET() {
   try {
     // Fetch from backend API only
-    const backendResponse = await fetch(`${BACKEND_API_URL}/chain/stats`, {
+    const backendResponse = await fetch(`${API_BASE_URL}/chain/stats`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

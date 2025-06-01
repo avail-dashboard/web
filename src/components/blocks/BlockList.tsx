@@ -59,9 +59,9 @@ export function BlockList({
     return num.toLocaleString()
   }
 
-  const getBlockStatus = (block: Block) => {
+  const getBlockStatus = () => {
     // TODO: Use actual block status from API data
-    return block.status || 'Finalized'
+    return 'Finalized'
   }
 
   if (loading && !blocks) {
@@ -193,8 +193,8 @@ export function BlockList({
                   <div className="flex items-center space-x-2">
                     <Activity className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {block.extrinsicsCount} extrinsic
-                      {block.extrinsicsCount !== 1 ? 's' : ''}
+                      {block.extrinsics_count} extrinsic
+                      {block.extrinsics_count !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -205,7 +205,7 @@ export function BlockList({
                 {/* Status */}
                 <div className="flex items-center justify-end space-x-2">
                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                    {getBlockStatus(block)}
+                    {getBlockStatus()}
                   </span>
                 </div>
 
@@ -226,17 +226,17 @@ export function BlockList({
             </div>
 
             {/* Additional info for non-compact view */}
-            {!compact && block.parentHash && (
+            {!compact && block.parent_hash && (
               <div className="mt-4 pt-4 border-t">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground font-mono">
                   <span>Parent:</span>
                   <Link
                     href={`/blocks/${block.number - 1}`}
-                    className="font-mono text-avail-600 hover:text-avail-700"
+                    className="text-avail-600 hover:underline"
                   >
-                    {block.parentHash
-                      ? `${block.parentHash.slice(0, 10)}...${block.parentHash.slice(-8)}`
-                      : 'Parent hash not available'}
+                    {block.parent_hash
+                      ? `${block.parent_hash.slice(0, 10)}...${block.parent_hash.slice(-8)}`
+                      : 'Hash not available'}
                   </Link>
                 </div>
               </div>

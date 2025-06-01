@@ -133,25 +133,25 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
               </Link>
             </div>
 
-            {extrinsic.index !== undefined && (
+            {extrinsic.extrinsicIndex !== undefined && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Index:</span>
-                <span className="font-mono">{extrinsic.index}</span>
+                <span className="font-mono">{extrinsic.extrinsicIndex}</span>
               </div>
             )}
 
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Module:</span>
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.section)}`}
+                className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
               >
-                {extrinsic.section}
+                {extrinsic.module}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Call:</span>
-              <span className="font-medium">{extrinsic.method}</span>
+              <span className="font-medium">{extrinsic.call}</span>
             </div>
 
             <div className="flex justify-between items-center">
@@ -202,7 +202,7 @@ export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
               <div className="flex items-center space-x-1">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <span className="font-mono">
-                  {formatFee(parseFloat(extrinsic.fee))}
+                  {formatFee(extrinsic.fee)}
                 </span>
               </div>
             </div>

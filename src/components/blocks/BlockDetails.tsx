@@ -172,7 +172,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
                 )}
               </div>
             </div>
-            {block.parentHash && (
+            {block.parent_hash && (
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">Parent Hash:</span>
                 <div className="flex items-center space-x-2">
@@ -180,7 +180,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
                     href={`/blocks/${block.number - 1}`}
                     className="font-mono text-sm text-avail-600 hover:text-avail-700 break-all"
                   >
-                    {block.parentHash}
+                    {block.parent_hash}
                   </Link>
                   <ExternalLink className="h-3 w-3 text-avail-600" />
                 </div>
@@ -210,19 +210,19 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Extrinsics:</span>
               <span className="font-semibold text-avail-600">
-                {block.extrinsicsCount}
+                {block.extrinsics_count}
               </span>
             </div>
-            {block.stateRoot && (
+            {block.state_root && (
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">State Root:</span>
                 <div className="flex items-center space-x-2">
                   <span className="font-mono text-sm break-all">
-                    {block.stateRoot}
+                    {block.state_root}
                   </span>
                   <button
                     onClick={() =>
-                      copyToClipboard(block.stateRoot!, 'stateRoot')
+                      copyToClipboard(block.state_root!, 'stateRoot')
                     }
                     className="p-1 hover:bg-muted rounded"
                     title="Copy state root"
@@ -253,7 +253,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       <div className="bg-card p-6 rounded-lg border shadow-sm">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Users className="h-5 w-5 mr-2 text-avail-600" />
-          Extrinsics ({block.extrinsicsCount})
+          Extrinsics ({block.extrinsics_count})
         </h2>
         {extrinsicsLoading ? (
           <div className="flex items-center justify-center py-8">

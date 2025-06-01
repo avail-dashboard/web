@@ -150,7 +150,7 @@ export function ExampleAPIUsage() {
                 </div>
                 <div className="text-right">
                   <div className="text-sm">
-                    {block.extrinsicsCount} extrinsics
+                    {block.extrinsics_count} extrinsics
                   </div>
                   <div className="text-sm text-gray-500">
                     {new Date(block.timestamp).toLocaleTimeString()}
@@ -214,7 +214,7 @@ export function SimpleBlockDisplay() {
             ? `${latestBlock.hash.slice(0, 20)}...`
             : 'Hash not available'}
         </div>
-        <div>Extrinsics: {latestBlock.extrinsicsCount}</div>
+        <div>Extrinsics: {latestBlock.extrinsics_count}</div>
         <div>Time: {new Date(latestBlock.timestamp).toLocaleString()}</div>
       </div>
     </div>

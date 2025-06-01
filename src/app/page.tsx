@@ -372,7 +372,7 @@ export default function Dashboard() {
                     blocks={latestBlocks.map(block => ({
                       number: block.number,
                       time: new Date(block.timestamp).getTime(),
-                      extrinsics: block.extrinsicsCount,
+                      extrinsics: block.extrinsics_count || block.extrinsics,
                     }))}
                   />
                 ) : (
@@ -428,7 +428,7 @@ export default function Dashboard() {
                               )}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {block.extrinsicsCount} extrinsics
+                              {block.extrinsics_count || block.extrinsics} extrinsics
                             </div>
                           </div>
                         </div>

@@ -47,10 +47,10 @@ export function TransfersTable({
       const transferExtrinsics = extrinsics
         .filter(
           ext =>
-            ext.section === 'balances' &&
-            (ext.method === 'transfer' ||
-              ext.method === 'transfer_keep_alive' ||
-              ext.method === 'transfer_all')
+            ext.module === 'balances' &&
+            (ext.call === 'transfer' ||
+              ext.call === 'transfer_keep_alive' ||
+              ext.call === 'transfer_all')
         )
         .slice(0, limit)
         .map(ext => {
@@ -67,7 +67,7 @@ export function TransfersTable({
             to: 'Unknown', // This would come from parsing events
             amount: '0', // This would come from parsing events
             success: ext.success,
-            fee: parseFloat(ext.fee),
+            fee: ext.fee,
           }
         })
 

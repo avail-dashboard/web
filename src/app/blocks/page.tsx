@@ -7,9 +7,7 @@ import {
   ArrowUpDown,
   Clock,
   Hash,
-  User,
   CheckCircle,
-  XCircle,
   Filter,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -32,10 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 
 // Format timestamp to relative time
-const formatTimeAgo = (timestamp: string) => {
+const formatTimeAgo = (timestamp: number | string) => {
   const now = new Date()
   const time = new Date(timestamp)
   const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
@@ -56,22 +53,18 @@ const formatSize = (bytes: number) => {
 export default function BlocksPage() {
   const [page, setPage] = React.useState(1)
   const [limit, setLimit] = React.useState(20)
-  const [statusFilter, setStatusFilter] = React.useState<string>('all')
-  const [validatorFilter, setValidatorFilter] = React.useState<string>('')
 
   // Fetch blocks data
   const {
-    data: blocksData,
+    data: blocks = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['blocks', page, limit, statusFilter, validatorFilter],
+    queryKey: ['blocks', page, limit],
     queryFn: () =>
       blocksApi.getBlocks({
         page,
         limit,
-        status: statusFilter === 'all' ? undefined : statusFilter || undefined,
-        validator: validatorFilter || undefined,
       }),
     refetchInterval: 6000, // Refetch every 6 seconds for real-time updates
     staleTime: 3000,
@@ -103,7 +96,7 @@ export default function BlocksPage() {
         : 0
 
     const averageExtrinsics =
-      latestBlocks.reduce((sum, block) => sum + block.extrinsicsCount, 0) /
+      latestBlocks.reduce((sum, block) => sum + (block.extrinsics_count || block.extrinsics), 0) /
       latestBlocks.length
     const averageSize =
       latestBlocks.reduce((sum, block) => sum + block.size, 0) /
@@ -156,12 +149,12 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: 'extrinsicsCount',
+      accessorKey: 'extrinsics',
       header: 'Extrinsics',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <span className="font-medium">{row.original.extrinsicsCount}</span>
-          {row.original.extrinsicsCount > 0 && (
+          <span className="font-medium">{row.original.extrinsics_count || row.original.extrinsics}</span>
+          {(row.original.extrinsics_count || row.original.extrinsics) > 0 && (
             <Link
               href={`/extrinsics?block=${row.original.number}`}
               className="text-xs text-blue-600 hover:underline"
@@ -173,27 +166,14 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: 'validator',
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          className="h-8 px-2"
-        >
-          <User className="mr-2 h-4 w-4" />
-          Validator
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
+      accessorKey: 'author_id',
+      header: 'Author',
       cell: ({ row }) => (
-        <Link
-          href={`/validators/${row.original.validator}`}
-          className="font-mono text-sm text-blue-600 hover:underline"
-        >
-          {row.original.validator
-            ? `${row.original.validator.slice(0, 8)}...${row.original.validator.slice(-8)}`
+        <span className="font-mono text-sm">
+          {row.original.author_id
+            ? `${row.original.author_id.slice(0, 8)}...${row.original.author_id.slice(-8)}`
             : 'Unknown'}
-        </Link>
+        </span>
       ),
     },
     {
@@ -204,19 +184,15 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: 'status',
+      accessorKey: 'finalized',
       header: 'Status',
       cell: ({ row }) => (
         <Badge
-          variant={row.original.status === 'finalized' ? 'success' : 'warning'}
+          variant={row.original.finalized ? 'success' : 'warning'}
           className="text-xs"
         >
-          {row.original.status === 'finalized' ? (
-            <CheckCircle className="mr-1 h-3 w-3" />
-          ) : (
-            <XCircle className="mr-1 h-3 w-3" />
-          )}
-          {row.original.status}
+          <CheckCircle className="mr-1 h-3 w-3" />
+          {row.original.finalized ? 'Finalized' : 'Pending'}
         </Badge>
       ),
     },
@@ -291,39 +267,16 @@ export default function BlocksPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Controls */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
+          <CardTitle className="text-lg">Settings</CardTitle>
           <CardDescription>
-            Filter blocks by status, validator, or other criteria
+            Configure the blocks display
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="finalized">Finalized</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">
-                Validator
-              </label>
-              <Input
-                placeholder="Enter validator address..."
-                value={validatorFilter}
-                onChange={e => setValidatorFilter(e.target.value)}
-              />
-            </div>
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">Per Page</label>
               <Select
@@ -350,19 +303,13 @@ export default function BlocksPage() {
         <CardHeader>
           <CardTitle className="text-lg">Recent Blocks</CardTitle>
           <CardDescription>
-            {blocksData?.pagination && (
-              <>
-                Showing {(page - 1) * limit + 1} to{' '}
-                {Math.min(page * limit, blocksData.pagination.total)} of{' '}
-                {blocksData.pagination.total.toLocaleString()} blocks
-              </>
-            )}
+            Showing {blocks.length} blocks
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
-            data={blocksData?.data || []}
+            data={blocks || []}
             loading={isLoading}
             searchable={false}
             filterable={true}
@@ -374,31 +321,29 @@ export default function BlocksPage() {
           />
 
           {/* Custom Pagination */}
-          {blocksData?.pagination && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {blocksData.pagination.totalPages}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page <= 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => prev + 1)}
-                  disabled={page >= blocksData.pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-muted-foreground">
+              Page {page}
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                disabled={page <= 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(prev => prev + 1)}
+                disabled={blocks.length < limit}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
