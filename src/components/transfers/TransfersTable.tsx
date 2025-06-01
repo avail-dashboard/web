@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useExtrinsics } from '@/lib/hooks/useAvailAPI'
+import { useState, useEffect, useCallback } from 'react'
 import { formatTimeAgo } from '@/lib/utils'
+import Link from 'next/link'
 import {
   ArrowUpRight,
   ArrowDownLeft,
   Copy,
   ExternalLink,
-  RefreshCw,
   Coins,
+  RefreshCw,
 } from 'lucide-react'
-import Link from 'next/link'
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 
 interface Transfer {
   hash: string
@@ -36,44 +36,34 @@ export function TransfersTable({
   compact = false,
 }: TransfersTableProps) {
   const [transfers, setTransfers] = useState<Transfer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
 
-  // Get recent extrinsics and filter for transfers
-  const { data: extrinsics, loading, error } = useExtrinsics()
+  const fetchTransfers = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // TODO: Replace with actual API call
+      // For now, return empty array to satisfy the component structure
+      setTransfers([])
+
+      // Show a message that API integration is needed
+      setError('Transfer data requires API integration to fetch real data.')
+    } catch {
+      setError('Failed to load transfer data')
+    } finally {
+      setLoading(false)
+    }
+  }, [limit])
 
   useEffect(() => {
-    if (extrinsics) {
-      // Filter for balance transfer extrinsics
-      const transferExtrinsics = extrinsics
-        .filter(
-          ext =>
-            ext.module === 'balances' &&
-            (ext.call === 'transfer' ||
-              ext.call === 'transfer_keep_alive' ||
-              ext.call === 'transfer_all')
-        )
-        .slice(0, limit)
-        .map(ext => {
-          // TODO: Replace with actual transfer data extraction from extrinsic events
-          // In a real implementation, this would parse the extrinsic events to extract
-          // the actual transfer details (from, to, amount) from Transfer events
-
-          // For now, return a basic structure with available data
-          return {
-            hash: ext.hash,
-            blockNumber: ext.blockNumber,
-            timestamp: new Date(ext.timestamp).getTime(),
-            from: ext.signer, // This is known from the extrinsic
-            to: 'Unknown', // This would come from parsing events
-            amount: '0', // This would come from parsing events
-            success: ext.success,
-            fee: ext.fee,
-          }
-        })
-
-      setTransfers(transferExtrinsics)
-    }
-  }, [extrinsics, limit])
+    fetchTransfers()
+  }, [fetchTransfers])
 
   const copyToClipboard = async (text: string, type: string) => {
     try {
@@ -115,19 +105,11 @@ export function TransfersTable({
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <div className="text-red-500 text-4xl mb-4">⚠️</div>
-        <h3 className="text-lg font-semibold mb-2">Failed to Load Transfers</h3>
-        <p className="text-muted-foreground mb-4">
-          Unable to fetch transfer data.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-avail-600 text-white rounded hover:bg-avail-700"
-        >
-          Try Again
-        </button>
-      </div>
+      <ErrorDisplay
+        error={new Error(error)}
+        onRetry={fetchTransfers}
+        className="my-8"
+      />
     )
   }
 
@@ -140,7 +122,7 @@ export function TransfersTable({
             <h3 className="text-lg font-semibold">Recent Transfers</h3>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={fetchTransfers}
             disabled={loading}
             className="flex items-center space-x-2 px-3 py-2 text-sm border rounded hover:bg-muted disabled:opacity-50"
           >

@@ -1,6 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { availAPI, Block, ChainData } from '../api'
 import { availWS, SubscriptionOptions } from '@/lib/websocket'
+import { AxiosError } from 'axios'
+
+// Interface for API error response
+interface ApiErrorResponse {
+  error?: {
+    message?: string
+    code?: string
+  }
+  message?: string
+}
 
 // Generic hook for API requests with loading and error states
 export function useAPIRequest<T>(
@@ -16,7 +26,9 @@ export function useAPIRequest<T>(
 ) {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<Error | null>(null)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
 
   const {
     enabled = true,
@@ -29,47 +41,135 @@ export function useAPIRequest<T>(
   // Memoize the API call to prevent infinite loops
   const memoizedApiCall = useCallback(apiCall, dependencies)
 
-  const fetchData = useCallback(async () => {
-    if (!enabled) return
+  const fetchData = useCallback(
+    async (isManualRefetch = false) => {
+      if (!enabled) return
 
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await memoizedApiCall()
-      setData(result)
-      onSuccess?.(result)
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error')
-      setError(error)
-      // Only reset data if preserveDataOnError is false
-      if (!preserveDataOnError) {
-        setData(null)
+      // For initial load or manual refetch, show loading
+      // For automatic refetch, show refreshing instead
+      if (isInitialLoad || isManualRefetch) {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
       }
-      onError?.(error)
-    } finally {
-      setLoading(false)
-    }
-  }, [memoizedApiCall, enabled, preserveDataOnError, onSuccess, onError])
+      setError(null)
+
+      try {
+        const result = await memoizedApiCall()
+        setData(result)
+        setIsInitialLoad(false)
+        onSuccess?.(result)
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error')
+
+        // Enhanced error information
+        let enhancedError = error
+        if (err && typeof err === 'object') {
+          const axiosError = err as AxiosError
+          if (axiosError.code === 'ECONNABORTED') {
+            enhancedError = new Error(
+              `Request timeout: The server took too long to respond (${axiosError.config?.timeout || 30000}ms)`
+            )
+          } else if (axiosError.code === 'ECONNREFUSED') {
+            enhancedError = new Error(
+              'Connection refused: Unable to connect to the backend server'
+            )
+          } else if (axiosError.response) {
+            const status = axiosError.response.status
+            const statusText = axiosError.response.statusText
+            const data = axiosError.response.data as ApiErrorResponse
+
+            if (status === 404) {
+              enhancedError = new Error(
+                'Data not found: The requested resource could not be located'
+              )
+            } else if (status === 500) {
+              enhancedError = new Error(
+                `Server error (${status}): ${data?.error?.message || statusText || 'Internal server error'}`
+              )
+            } else if (status === 503) {
+              enhancedError = new Error(
+                'Service unavailable: The backend service is temporarily offline'
+              )
+            } else if (status >= 400 && status < 500) {
+              enhancedError = new Error(
+                `Client error (${status}): ${data?.error?.message || statusText || 'Bad request'}`
+              )
+            } else if (status >= 500) {
+              enhancedError = new Error(
+                `Server error (${status}): ${data?.error?.message || statusText || 'Server error'}`
+              )
+            }
+          } else if (axiosError.request) {
+            enhancedError = new Error(
+              'Network error: No response received from server. Check your internet connection.'
+            )
+          }
+        }
+
+        setError(enhancedError)
+
+        // Log detailed error information for debugging
+        if (process.env.NODE_ENV === 'development') {
+          console.group('🔴 API Error Details')
+          console.error('Enhanced Error:', enhancedError.message)
+          console.error('Original Error:', error)
+          if (err && typeof err === 'object') {
+            const axiosError = err as AxiosError
+            if (axiosError.response) {
+              console.error('Response Status:', axiosError.response.status)
+              console.error('Response Data:', axiosError.response.data)
+            }
+            if (axiosError.config) {
+              console.error('Request URL:', axiosError.config.url)
+              console.error('Request Method:', axiosError.config.method)
+            }
+          }
+          console.groupEnd()
+        }
+
+        // Only reset data if preserveDataOnError is false
+        if (!preserveDataOnError) {
+          setData(null)
+        }
+        onError?.(enhancedError)
+      } finally {
+        setLoading(false)
+        setRefreshing(false)
+      }
+    },
+    [
+      memoizedApiCall,
+      enabled,
+      preserveDataOnError,
+      onSuccess,
+      onError,
+      isInitialLoad,
+    ]
+  )
+
+  // Manual refetch function
+  const refetch = useCallback(() => fetchData(true), [fetchData])
 
   // Fetch data on mount and when dependencies change
   useEffect(() => {
-    fetchData()
+    fetchData(false)
   }, [fetchData])
 
   // Set up interval if specified
   useEffect(() => {
     if (!refetchInterval || !enabled) return
 
-    const interval = setInterval(fetchData, refetchInterval)
+    const interval = setInterval(() => fetchData(false), refetchInterval)
     return () => clearInterval(interval)
   }, [fetchData, refetchInterval, enabled])
 
   return {
     data,
     loading,
+    refreshing,
     error,
-    refetch: fetchData,
+    refetch,
   }
 }
 
@@ -111,6 +211,7 @@ export function useBlocks(
 export function useChainData(options?: { refetchInterval?: number }): {
   data: ChainData | null
   loading: boolean
+  refreshing: boolean
   error: Error | null
   refetch: () => Promise<void>
 } {
