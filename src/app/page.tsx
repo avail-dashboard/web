@@ -11,14 +11,19 @@ import { TokenDistributionChart } from '@/components/charts/TokenDistributionCha
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { TransfersTable } from '@/components/transfers/TransfersTable'
+import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import Link from 'next/link'
 import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
+  const router = useRouter()
   // Using the new API hooks
   const {
     data: chainData,
     loading: chainLoading,
+    refreshing: chainRefreshing,
     error: chainError,
     refetch: refetchChain,
   } = useChainData({
@@ -28,6 +33,7 @@ export default function Dashboard() {
   const {
     data: latestBlocks,
     loading: blocksLoading,
+    refreshing: blocksRefreshing,
     error: blocksError,
     refetch: refetchBlocks,
   } = useBlocks(5, {
@@ -54,7 +60,11 @@ export default function Dashboard() {
   }
 
   const isLoading = chainLoading || blocksLoading
+  const isRefreshing = chainRefreshing || blocksRefreshing
   const hasError = chainError || blocksError
+
+  // Get the primary error for display
+  const primaryError = chainError || blocksError
 
   if (isLoading && !chainData) {
     return (
@@ -98,10 +108,16 @@ export default function Dashboard() {
               </div>
             )}
             {hasError && (
-              <div className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded">
-                Data loading error
-              </div>
+              <ErrorDisplay
+                error={primaryError}
+                onRetry={() => {
+                  refetchChain()
+                  refetchBlocks()
+                }}
+                compact={true}
+              />
             )}
+            <RefreshIndicator isRefreshing={isRefreshing} />
             <button
               onClick={() => {
                 refetchChain()
@@ -241,7 +257,7 @@ export default function Dashboard() {
                         e.target as HTMLInputElement
                       ).value.trim()
                       if (address) {
-                        window.location.href = `/accounts/${address}`
+                        router.push(`/accounts/${address}`)
                       }
                     }
                   }}
@@ -428,7 +444,8 @@ export default function Dashboard() {
                               )}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {block.extrinsics_count || block.extrinsics} extrinsics
+                              {block.extrinsics_count || block.extrinsics}{' '}
+                              extrinsics
                             </div>
                           </div>
                         </div>

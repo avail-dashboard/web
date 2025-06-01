@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { availAPI } from '@/lib/api'
 import type { DataSubmission } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
+import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import Link from 'next/link'
 import {
   Filter,
@@ -32,6 +33,7 @@ export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
   const [stats, setStats] = useState<DataSubmissionStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [initialLoad, setInitialLoad] = useState(true)
 
@@ -44,77 +46,103 @@ export default function DataSubmissionsPage() {
   // UI state
   const [showFilters, setShowFilters] = useState(false)
 
-  const fetchData = async () => {
-    try {
-      console.log('🔄 fetchData: Starting data fetch...')
-      setLoading(true)
-      setError(null)
+  const fetchData = useCallback(
+    async (isManualRefetch = false) => {
+      try {
+        console.log('🔄 fetchData: Starting data fetch...')
 
-      console.log('📡 fetchData: Making API calls...')
-      const [submissionsResult, statsResult] = await Promise.allSettled([
-        availAPI.getDataSubmissions(
-          currentPage,
-          itemsPerPage,
-          appIdFilter ? parseInt(appIdFilter) : undefined,
-          submitterFilter || undefined
-        ),
-        availAPI.getDataSubmissionStats(),
-      ])
+        // Show loading for initial load or manual refresh, refreshing for background updates
+        if (initialLoad || isManualRefetch) {
+          setLoading(true)
+        } else {
+          setRefreshing(true)
+        }
+        setError(null)
 
-      console.log('✅ fetchData: API calls completed')
+        console.log('📡 fetchData: Making API calls...')
+        const [submissionsResult, statsResult] = await Promise.allSettled([
+          availAPI.getDataSubmissions(
+            currentPage,
+            itemsPerPage,
+            appIdFilter ? parseInt(appIdFilter) : undefined,
+            submitterFilter || undefined
+          ),
+          availAPI.getDataSubmissionStats(),
+        ])
 
-      // Only update data on successful responses
-      if (submissionsResult.status === 'fulfilled') {
-        setSubmissions(submissionsResult.value)
-        console.log(
-          '✅ Submissions data updated:',
-          submissionsResult.value.length
-        )
-      } else {
-        console.error('❌ Submissions API failed:', submissionsResult.reason)
+        console.log('✅ fetchData: API calls completed')
+
+        // Only update data on successful responses
+        if (submissionsResult.status === 'fulfilled') {
+          setSubmissions(submissionsResult.value)
+          console.log(
+            '✅ Submissions data updated:',
+            submissionsResult.value.length
+          )
+        } else {
+          console.error('❌ Submissions API failed:', submissionsResult.reason)
+        }
+
+        if (statsResult.status === 'fulfilled') {
+          setStats(statsResult.value)
+          console.log('✅ Stats data updated')
+        } else {
+          console.error('❌ Stats API failed:', statsResult.reason)
+        }
+
+        // Set error only if both calls failed
+        if (
+          submissionsResult.status === 'rejected' &&
+          statsResult.status === 'rejected'
+        ) {
+          setError(
+            'Failed to fetch data submissions. The backend service may be experiencing issues.'
+          )
+        } else if (submissionsResult.status === 'rejected') {
+          setError('Failed to fetch submissions data.')
+        } else if (statsResult.status === 'rejected') {
+          setError('Failed to fetch statistics.')
+        }
+
+        setInitialLoad(false)
+        console.log('✅ fetchData: State updated successfully')
+      } catch (err) {
+        console.error('❌ fetchData: Unexpected error:', err)
+        setError('An unexpected error occurred.')
+        setInitialLoad(false)
+      } finally {
+        console.log('🏁 fetchData: Setting loading to false')
+        setLoading(false)
+        setRefreshing(false)
       }
-
-      if (statsResult.status === 'fulfilled') {
-        setStats(statsResult.value)
-        console.log('✅ Stats data updated')
-      } else {
-        console.error('❌ Stats API failed:', statsResult.reason)
-      }
-
-      // Set error only if both calls failed
-      if (
-        submissionsResult.status === 'rejected' &&
-        statsResult.status === 'rejected'
-      ) {
-        setError(
-          'Failed to fetch data submissions. The backend service may be experiencing issues.'
-        )
-      } else if (submissionsResult.status === 'rejected') {
-        setError('Failed to fetch submissions data.')
-      } else if (statsResult.status === 'rejected') {
-        setError('Failed to fetch statistics.')
-      }
-
-      setInitialLoad(false)
-      console.log('✅ fetchData: State updated successfully')
-    } catch (err) {
-      console.error('❌ fetchData: Unexpected error:', err)
-      setError('An unexpected error occurred.')
-      setInitialLoad(false)
-    } finally {
-      console.log('🏁 fetchData: Setting loading to false')
-      setLoading(false)
-    }
-  }
+    },
+    [currentPage, itemsPerPage, appIdFilter, submitterFilter, initialLoad]
+  )
 
   useEffect(() => {
-    fetchData()
-  }, [currentPage, appIdFilter, submitterFilter])
+    fetchData(false)
+  }, [fetchData])
+
+  // Set up automatic refresh interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Only auto-refresh if not currently loading and no filters are applied
+      if (!loading && !refreshing && !appIdFilter && !submitterFilter) {
+        fetchData(false)
+      }
+    }, 30000) // Refresh every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [loading, refreshing, appIdFilter, submitterFilter, fetchData])
 
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(0) // Reset to first page when filtering
-    fetchData()
+    fetchData(true) // Manual refetch
+  }
+
+  const handleRefresh = () => {
+    fetchData(true) // Manual refetch
   }
 
   const clearFilters = () => {
@@ -176,8 +204,9 @@ export default function DataSubmissionsPage() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <RefreshIndicator isRefreshing={refreshing} />
             <button
-              onClick={fetchData}
+              onClick={handleRefresh}
               disabled={loading}
               className="flex items-center space-x-2 px-3 py-2 bg-avail-600 text-white rounded hover:bg-avail-700 disabled:opacity-50"
             >
@@ -201,7 +230,7 @@ export default function DataSubmissionsPage() {
               <p className="text-sm text-yellow-700">
                 {error}
                 <button
-                  onClick={fetchData}
+                  onClick={handleRefresh}
                   className="ml-2 text-yellow-800 underline hover:text-yellow-900"
                 >
                   Try again
@@ -328,7 +357,7 @@ export default function DataSubmissionsPage() {
                 <div className="flex items-center space-x-4">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || refreshing}
                     className="px-4 py-2 bg-avail-600 text-white rounded hover:bg-avail-700 disabled:opacity-50"
                   >
                     Apply Filters
@@ -454,7 +483,7 @@ export default function DataSubmissionsPage() {
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                    disabled={currentPage === 0 || loading}
+                    disabled={currentPage === 0 || loading || refreshing}
                     className="flex items-center space-x-1 px-3 py-2 border rounded hover:bg-muted disabled:opacity-50"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -462,7 +491,9 @@ export default function DataSubmissionsPage() {
                   </button>
                   <button
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={submissions.length < itemsPerPage || loading}
+                    disabled={
+                      submissions.length < itemsPerPage || loading || refreshing
+                    }
                     className="flex items-center space-x-1 px-3 py-2 border rounded hover:bg-muted disabled:opacity-50"
                   >
                     <span>Next</span>
