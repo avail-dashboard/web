@@ -5,19 +5,30 @@ const BACKEND_API_URL =
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const page = searchParams.get('page') || '0'
-  const limit = searchParams.get('limit') || '10'
+  // Remove pagination parameters - get all extrinsics
   const block = searchParams.get('block')
+  const signer = searchParams.get('signer')
+  const method = searchParams.get('method')
+  const success = searchParams.get('success')
 
   try {
-    // Fetch from backend API
-    const params = new URLSearchParams({ page, limit })
+    // Fetch from backend API without pagination
+    const params = new URLSearchParams()
     if (block) {
       params.append('block', block)
     }
+    if (signer) {
+      params.append('signer', signer)
+    }
+    if (method) {
+      params.append('method', method)
+    }
+    if (success) {
+      params.append('success', success)
+    }
 
     const backendResponse = await fetch(
-      `${BACKEND_API_URL}/extrinsics?${params}`,
+      `${BACKEND_API_URL}/extrinsics${params.toString() ? `?${params}` : ''}`,
       {
         method: 'GET',
         headers: {
@@ -29,7 +40,7 @@ export async function GET(request: Request) {
 
     if (backendResponse.ok) {
       const data = await backendResponse.json()
-      console.log('✅ Backend extrinsics data received:', data.meta)
+      console.log('✅ Backend extrinsics data received (all results)')
       return NextResponse.json(data)
     }
 
@@ -40,12 +51,6 @@ export async function GET(request: Request) {
         success: false,
         error: 'Backend service unavailable - no extrinsics data available',
         data: [],
-        meta: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: 0,
-          source: 'error',
-        },
       },
       { status: 503 }
     )

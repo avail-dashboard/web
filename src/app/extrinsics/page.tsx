@@ -1,32 +1,47 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { useQuery } from "@tanstack/react-query"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Clock, Hash, User, CheckCircle, XCircle, Filter, Activity } from "lucide-react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ColumnDef } from '@tanstack/react-table'
+import {
+  ArrowUpDown,
+  Clock,
+  Hash,
+  User,
+  CheckCircle,
+  XCircle,
+  Filter,
+  Activity,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
-import { extrinsicsApi, Extrinsic } from "@/lib/api"
-import { DataTable } from "@/components/ui/data-table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { extrinsicsApi, Extrinsic } from '@/lib/api'
+import { DataTable } from '@/components/ui/data-table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
+} from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
 
 // Format timestamp to relative time
 const formatTimeAgo = (timestamp: string) => {
   const now = new Date()
   const time = new Date(timestamp)
   const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
-  
+
   if (diffInSeconds < 60) return `${diffInSeconds}s ago`
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
@@ -36,48 +51,56 @@ const formatTimeAgo = (timestamp: string) => {
 // Format fee amount
 const formatFee = (fee: string) => {
   const feeNum = parseFloat(fee)
-  if (feeNum === 0) return "0"
-  if (feeNum < 0.001) return "<0.001"
+  if (feeNum === 0) return '0'
+  if (feeNum < 0.001) return '<0.001'
   return feeNum.toFixed(6)
 }
 
 // Get method color based on section
 const getMethodColor = (section: string) => {
   const colors: Record<string, string> = {
-    balances: "bg-green-100 text-green-800",
-    system: "bg-blue-100 text-blue-800", 
-    timestamp: "bg-gray-100 text-gray-800",
-    dataAvailability: "bg-purple-100 text-purple-800",
-    staking: "bg-orange-100 text-orange-800",
-    session: "bg-yellow-100 text-yellow-800",
-    grandpa: "bg-red-100 text-red-800",
-    sudo: "bg-pink-100 text-pink-800",
+    balances: 'bg-green-100 text-green-800',
+    system: 'bg-blue-100 text-blue-800',
+    timestamp: 'bg-gray-100 text-gray-800',
+    dataAvailability: 'bg-purple-100 text-purple-800',
+    staking: 'bg-orange-100 text-orange-800',
+    session: 'bg-yellow-100 text-yellow-800',
+    grandpa: 'bg-red-100 text-red-800',
+    sudo: 'bg-pink-100 text-pink-800',
   }
-  return colors[section] || "bg-gray-100 text-gray-800"
+  return colors[section] || 'bg-gray-100 text-gray-800'
 }
 
 export default function ExtrinsicsPage() {
   const searchParams = useSearchParams()
   const blockParam = searchParams.get('block')
-  
-  const [page, setPage] = React.useState(1)
-  const [limit, setLimit] = React.useState(20)
-  const [blockFilter, setBlockFilter] = React.useState<string>(blockParam || "")
-  const [signerFilter, setSignerFilter] = React.useState<string>("")
-  const [methodFilter, setMethodFilter] = React.useState<string>("")
-  const [successFilter, setSuccessFilter] = React.useState<string>("all")
 
-  // Fetch extrinsics data
-  const { data: extrinsicsData, isLoading, error } = useQuery({
-    queryKey: ['extrinsics', page, limit, blockFilter, signerFilter, methodFilter, successFilter],
-    queryFn: () => extrinsicsApi.getExtrinsics({
-      page,
-      limit,
-      block: blockFilter ? Number(blockFilter) : undefined,
-      signer: signerFilter || undefined,
-      method: methodFilter || undefined,
-      success: successFilter === "all" ? undefined : successFilter === 'true',
-    }),
+  // Remove pagination state - we now load all extrinsics
+  const [blockFilter, setBlockFilter] = React.useState<string>(blockParam || '')
+  const [signerFilter, setSignerFilter] = React.useState<string>('')
+  const [methodFilter, setMethodFilter] = React.useState<string>('')
+  const [successFilter, setSuccessFilter] = React.useState<string>('all')
+
+  // Fetch all extrinsics data without pagination
+  const {
+    data: extrinsics,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: [
+      'extrinsics',
+      blockFilter,
+      signerFilter,
+      methodFilter,
+      successFilter,
+    ],
+    queryFn: () =>
+      extrinsicsApi.getExtrinsics({
+        block: blockFilter ? Number(blockFilter) : undefined,
+        signer: signerFilter || undefined,
+        method: methodFilter || undefined,
+        success: successFilter === 'all' ? undefined : successFilter === 'true',
+      }),
     refetchInterval: 10000, // Refetch every 10 seconds
     staleTime: 5000,
   })
@@ -92,23 +115,36 @@ export default function ExtrinsicsPage() {
   // Calculate stats
   const stats = React.useMemo(() => {
     if (!latestExtrinsics || latestExtrinsics.length === 0) {
-      return { successRate: 0, averageFee: 0, uniqueMethods: 0, methodBreakdown: {} }
+      return {
+        successRate: 0,
+        averageFee: 0,
+        uniqueMethods: 0,
+        methodBreakdown: {},
+      }
     }
 
     const successful = latestExtrinsics.filter(ext => ext.success).length
     const successRate = (successful / latestExtrinsics.length) * 100
 
-    const totalFees = latestExtrinsics.reduce((sum, ext) => sum + parseFloat(ext.fee || '0'), 0)
+    const totalFees = latestExtrinsics.reduce(
+      (sum, ext) => sum + parseFloat(ext.fee || '0'),
+      0
+    )
     const averageFee = totalFees / latestExtrinsics.length
 
-    const methods = new Set(latestExtrinsics.map(ext => `${ext.section}.${ext.method}`))
+    const methods = new Set(
+      latestExtrinsics.map(ext => `${ext.section}.${ext.method}`)
+    )
     const uniqueMethods = methods.size
 
-    const methodBreakdown = latestExtrinsics.reduce((acc, ext) => {
-      const key = ext.section
-      acc[key] = (acc[key] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const methodBreakdown = latestExtrinsics.reduce(
+      (acc, ext) => {
+        const key = ext.section
+        acc[key] = (acc[key] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     return { successRate, averageFee, uniqueMethods, methodBreakdown }
   }, [latestExtrinsics])
@@ -116,23 +152,25 @@ export default function ExtrinsicsPage() {
   // Define table columns
   const columns: ColumnDef<Extrinsic>[] = [
     {
-      accessorKey: "hash",
-      header: "Hash",
+      accessorKey: 'hash',
+      header: 'Hash',
       cell: ({ row }) => (
-        <Link 
+        <Link
           href={`/extrinsics/${row.original.hash}`}
           className="font-mono text-blue-600 hover:text-blue-800 hover:underline text-sm"
         >
-          {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-10)}
+          {row.original.hash
+            ? `${row.original.hash.slice(0, 10)}...${row.original.hash.slice(-10)}`
+            : 'Hash not available'}
         </Link>
       ),
     },
     {
-      accessorKey: "blockNumber",
+      accessorKey: 'blockNumber',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <Hash className="mr-2 h-4 w-4" />
@@ -141,7 +179,7 @@ export default function ExtrinsicsPage() {
         </Button>
       ),
       cell: ({ row }) => (
-        <Link 
+        <Link
           href={`/blocks/${row.original.blockNumber}`}
           className="font-mono text-blue-600 hover:underline"
         >
@@ -150,11 +188,11 @@ export default function ExtrinsicsPage() {
       ),
     },
     {
-      accessorKey: "timestamp",
+      accessorKey: 'timestamp',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <Clock className="mr-2 h-4 w-4" />
@@ -169,11 +207,11 @@ export default function ExtrinsicsPage() {
       ),
     },
     {
-      accessorKey: "method",
-      header: "Method",
+      accessorKey: 'method',
+      header: 'Method',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Badge 
+          <Badge
             className={`text-xs ${getMethodColor(row.original.section)}`}
             variant="secondary"
           >
@@ -184,11 +222,11 @@ export default function ExtrinsicsPage() {
       ),
     },
     {
-      accessorKey: "signer",
+      accessorKey: 'signer',
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-8 px-2"
         >
           <User className="mr-2 h-4 w-4" />
@@ -197,17 +235,19 @@ export default function ExtrinsicsPage() {
         </Button>
       ),
       cell: ({ row }) => (
-        <Link 
+        <Link
           href={`/accounts/${row.original.signer}`}
           className="font-mono text-sm text-blue-600 hover:underline"
         >
-          {row.original.signer.slice(0, 8)}...{row.original.signer.slice(-8)}
+          {row.original.signer
+            ? `${row.original.signer.slice(0, 8)}...${row.original.signer.slice(-8)}`
+            : 'Signer not available'}
         </Link>
       ),
     },
     {
-      accessorKey: "fee",
-      header: "Fee",
+      accessorKey: 'fee',
+      header: 'Fee',
       cell: ({ row }) => (
         <span className="text-sm font-mono">
           {formatFee(row.original.fee)} AVAIL
@@ -215,10 +255,10 @@ export default function ExtrinsicsPage() {
       ),
     },
     {
-      accessorKey: "success",
-      header: "Status",
+      accessorKey: 'success',
+      header: 'Status',
       cell: ({ row }) => (
-        <Badge 
+        <Badge
           variant={row.original.success ? 'success' : 'destructive'}
           className="text-xs"
         >
@@ -232,8 +272,8 @@ export default function ExtrinsicsPage() {
       ),
     },
     {
-      accessorKey: "events",
-      header: "Events",
+      accessorKey: 'events',
+      header: 'Events',
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {row.original.events?.length || 0}
@@ -265,9 +305,7 @@ export default function ExtrinsicsPage() {
             <div className="text-2xl font-bold text-green-600">
               {stats.successRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              Last 20 extrinsics
-            </p>
+            <p className="text-xs text-muted-foreground">Last 20 extrinsics</p>
           </CardContent>
         </Card>
         <Card>
@@ -279,20 +317,18 @@ export default function ExtrinsicsPage() {
             <div className="text-2xl font-bold">
               {formatFee(stats.averageFee.toString())}
             </div>
-            <p className="text-xs text-muted-foreground">
-              AVAIL per extrinsic
-            </p>
+            <p className="text-xs text-muted-foreground">AVAIL per extrinsic</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unique Methods</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Unique Methods
+            </CardTitle>
             <Hash className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.uniqueMethods}
-            </div>
+            <div className="text-2xl font-bold">{stats.uniqueMethods}</div>
             <p className="text-xs text-muted-foreground">
               Different call types
             </p>
@@ -305,11 +341,11 @@ export default function ExtrinsicsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Object.entries(stats.methodBreakdown).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'}
+              {Object.entries(stats.methodBreakdown).sort(
+                ([, a], [, b]) => b - a
+              )[0]?.[0] || 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Most active section
-            </p>
+            <p className="text-xs text-muted-foreground">Most active section</p>
           </CardContent>
         </Card>
       </div>
@@ -323,13 +359,15 @@ export default function ExtrinsicsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Block Number</label>
+              <label className="text-sm font-medium mb-2 block">
+                Block Number
+              </label>
               <Input
                 placeholder="Enter block number..."
                 value={blockFilter}
-                onChange={(e) => setBlockFilter(e.target.value)}
+                onChange={e => setBlockFilter(e.target.value)}
                 type="number"
               />
             </div>
@@ -338,7 +376,7 @@ export default function ExtrinsicsPage() {
               <Input
                 placeholder="Enter signer address..."
                 value={signerFilter}
-                onChange={(e) => setSignerFilter(e.target.value)}
+                onChange={e => setSignerFilter(e.target.value)}
               />
             </div>
             <div>
@@ -346,7 +384,7 @@ export default function ExtrinsicsPage() {
               <Input
                 placeholder="e.g. transfer, submit_data..."
                 value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value)}
+                onChange={e => setMethodFilter(e.target.value)}
               />
             </div>
             <div>
@@ -362,20 +400,6 @@ export default function ExtrinsicsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Per Page</label>
-              <Select value={limit.toString()} onValueChange={(value: string) => setLimit(Number(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -385,53 +409,26 @@ export default function ExtrinsicsPage() {
         <CardHeader>
           <CardTitle className="text-lg">Recent Extrinsics</CardTitle>
           <CardDescription>
-            {extrinsicsData?.pagination && (
-              <>
-                Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, extrinsicsData.pagination.total)} of {extrinsicsData.pagination.total.toLocaleString()} extrinsics
-              </>
+            {extrinsics && (
+              <>Showing all {extrinsics.length.toLocaleString()} extrinsics</>
             )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
-            data={extrinsicsData?.data || []}
+            data={extrinsics || []}
             loading={isLoading}
             searchable={false}
             filterable={true}
             pagination={{
-              pageSize: limit,
+              pageSize: 20,
               showSizeSelector: false,
             }}
-            emptyMessage={error ? "Failed to load extrinsics" : "No extrinsics found"}
+            emptyMessage={
+              error ? 'Failed to load extrinsics' : 'No extrinsics found'
+            }
           />
-          
-          {/* Custom Pagination */}
-          {extrinsicsData?.pagination && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Page {page} of {extrinsicsData.pagination.totalPages}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                  disabled={page <= 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(prev => prev + 1)}
-                  disabled={page >= extrinsicsData.pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

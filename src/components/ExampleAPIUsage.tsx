@@ -143,7 +143,9 @@ export function ExampleAPIUsage() {
                 <div>
                   <div className="font-medium">Block #{block.number}</div>
                   <div className="text-sm text-gray-500">
-                    {block.hash.slice(0, 20)}...
+                    {block.hash
+                      ? `${block.hash.slice(0, 20)}...`
+                      : 'Hash not available'}
                   </div>
                 </div>
                 <div className="text-right">
@@ -206,7 +208,12 @@ export function SimpleBlockDisplay() {
       <h3 className="font-semibold">Latest Block</h3>
       <div className="mt-2">
         <div>Number: {latestBlock.number}</div>
-        <div>Hash: {latestBlock.hash.slice(0, 20)}...</div>
+        <div>
+          Hash:{' '}
+          {latestBlock.hash
+            ? `${latestBlock.hash.slice(0, 20)}...`
+            : 'Hash not available'}
+        </div>
         <div>Extrinsics: {latestBlock.extrinsicsCount}</div>
         <div>Time: {new Date(latestBlock.timestamp).toLocaleString()}</div>
       </div>

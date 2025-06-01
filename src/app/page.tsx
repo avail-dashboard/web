@@ -166,8 +166,8 @@ export default function Dashboard() {
                       {latestBlocks && latestBlocks.length > 0
                         ? `#${formatNumber(latestBlocks[0].number)}`
                         : chainData
-                        ? `#${formatNumber(chainData.finalizedBlocks)}`
-                        : 'Loading...'}
+                          ? `#${formatNumber(chainData.finalizedBlocks)}`
+                          : 'Loading...'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -416,7 +416,9 @@ export default function Dashboard() {
                               #{block.number.toLocaleString()}
                             </div>
                             <div className="text-xs text-muted-foreground font-mono">
-                              {block.hash.slice(0, 20)}...{block.hash.slice(-8)}
+                              {block.hash
+                                ? `${block.hash.slice(0, 20)}...${block.hash.slice(-8)}`
+                                : 'Hash not available'}
                             </div>
                           </div>
                           <div className="text-right text-sm">

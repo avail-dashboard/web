@@ -423,14 +423,16 @@ export default function DataSubmissionsPage() {
                             href={`/accounts/${submission.submitter}`}
                             className="text-avail-600 hover:text-avail-700 font-mono text-sm"
                           >
-                            {submission.submitter.slice(0, 8)}...
-                            {submission.submitter.slice(-8)}
+                            {submission.submitter
+                              ? `${submission.submitter.slice(0, 8)}...${submission.submitter.slice(-8)}`
+                              : 'Submitter not available'}
                           </Link>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="font-mono text-sm text-muted-foreground">
-                            {submission.dataHash.slice(0, 10)}...
-                            {submission.dataHash.slice(-8)}
+                            {submission.dataHash
+                              ? `${submission.dataHash.slice(0, 10)}...${submission.dataHash.slice(-8)}`
+                              : 'Hash not available'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">

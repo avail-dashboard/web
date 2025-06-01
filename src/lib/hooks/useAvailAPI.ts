@@ -141,15 +141,11 @@ export function useBlock(numberOrHash: string | number | null) {
   )
 }
 
-export function useExtrinsics(
-  blockNumber?: number,
-  page: number = 0,
-  limit: number = 10
-) {
+export function useExtrinsics(blockNumber?: number) {
   // Memoize the API call function
   const apiCall = useCallback(
-    () => availAPI.getExtrinsics(blockNumber, page, limit),
-    [blockNumber, page, limit]
+    () => availAPI.getExtrinsics(blockNumber, 0, 0), // Pass 0 for page and limit since we get all results
+    [blockNumber]
   )
 
   return useAPIRequest(

@@ -28,9 +28,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
     refetch,
   } = useBlock(blockNumber)
   const { data: extrinsics, loading: extrinsicsLoading } = useExtrinsics(
-    typeof blockNumber === 'number'
-      ? blockNumber
-      : parseInt(blockNumber.toString())
+    typeof blockNumber === 'string' ? parseInt(blockNumber) : blockNumber
   )
 
   const [copied, setCopied] = useState<string | null>(null)
