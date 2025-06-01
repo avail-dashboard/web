@@ -51,60 +51,56 @@ export default function DataSubmissionsPage() {
       setError(null)
 
       console.log('📡 fetchData: Making API calls...')
-      const [submissionsData, statsData] = await Promise.all([
-        availAPI
-          .getDataSubmissions(
-            currentPage,
-            itemsPerPage,
-            appIdFilter ? parseInt(appIdFilter) : undefined,
-            submitterFilter || undefined
-          )
-          .catch(err => {
-            console.error('Data submissions API failed:', err)
-            return [] // Return empty array on error
-          }),
-        availAPI.getDataSubmissionStats().catch(err => {
-          console.error('Data submission stats API failed:', err)
-          return {
-            totalSubmissions: 0,
-            totalDataSize: 0,
-            uniqueApps: 0,
-            uniqueSubmitters: 0,
-            averageSize: 0,
-            submissionsToday: 0,
-            dataSizeToday: 0,
-          } // Return default stats on error
-        }),
+      const [submissionsResult, statsResult] = await Promise.allSettled([
+        availAPI.getDataSubmissions(
+          currentPage,
+          itemsPerPage,
+          appIdFilter ? parseInt(appIdFilter) : undefined,
+          submitterFilter || undefined
+        ),
+        availAPI.getDataSubmissionStats(),
       ])
 
-      console.log('✅ fetchData: API calls completed', { 
-        submissionsCount: submissionsData.length, 
-        statsData 
-      })
+      console.log('✅ fetchData: API calls completed')
 
-      setSubmissions(submissionsData)
-      setStats(statsData)
+      // Only update data on successful responses
+      if (submissionsResult.status === 'fulfilled') {
+        setSubmissions(submissionsResult.value)
+        console.log(
+          '✅ Submissions data updated:',
+          submissionsResult.value.length
+        )
+      } else {
+        console.error('❌ Submissions API failed:', submissionsResult.reason)
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value)
+        console.log('✅ Stats data updated')
+      } else {
+        console.error('❌ Stats API failed:', statsResult.reason)
+      }
+
+      // Set error only if both calls failed
+      if (
+        submissionsResult.status === 'rejected' &&
+        statsResult.status === 'rejected'
+      ) {
+        setError(
+          'Failed to fetch data submissions. The backend service may be experiencing issues.'
+        )
+      } else if (submissionsResult.status === 'rejected') {
+        setError('Failed to fetch submissions data.')
+      } else if (statsResult.status === 'rejected') {
+        setError('Failed to fetch statistics.')
+      }
+
       setInitialLoad(false)
       console.log('✅ fetchData: State updated successfully')
     } catch (err) {
-      console.error('❌ fetchData: Error in try block:', err)
-      setError(
-        'Failed to fetch data submissions. The backend service may be experiencing issues.'
-      )
-      console.error('Error fetching data submissions:', err)
+      console.error('❌ fetchData: Unexpected error:', err)
+      setError('An unexpected error occurred.')
       setInitialLoad(false)
-
-      // Set default values so the page can still render
-      setSubmissions([])
-      setStats({
-        totalSubmissions: 0,
-        totalDataSize: 0,
-        uniqueApps: 0,
-        uniqueSubmitters: 0,
-        averageSize: 0,
-        submissionsToday: 0,
-        dataSizeToday: 0,
-      })
     } finally {
       console.log('🏁 fetchData: Setting loading to false')
       setLoading(false)
@@ -193,6 +189,28 @@ export default function DataSubmissionsPage() {
           </div>
         </div>
       </header>
+
+      {/* Error Banner - shows without clearing data */}
+      {error && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-yellow-400">⚠️</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                {error}
+                <button
+                  onClick={fetchData}
+                  className="ml-2 text-yellow-800 underline hover:text-yellow-900"
+                >
+                  Try again
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8">
         {/* Statistics Cards */}
@@ -340,21 +358,7 @@ export default function DataSubmissionsPage() {
               </div>
             </div>
 
-            {error ? (
-              <div className="p-6 text-center">
-                <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                <h3 className="text-xl font-semibold mb-2 text-red-600">
-                  Error Loading Data
-                </h3>
-                <p className="text-muted-foreground mb-4">{error}</p>
-                <button
-                  onClick={fetchData}
-                  className="px-4 py-2 bg-avail-600 text-white rounded hover:bg-avail-700"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : submissions.length === 0 ? (
+            {submissions.length === 0 && !loading && !initialLoad ? (
               <div className="p-6 text-center">
                 <div className="text-muted-foreground text-6xl mb-4">📄</div>
                 <h3 className="text-xl font-semibold mb-2">
@@ -364,7 +368,7 @@ export default function DataSubmissionsPage() {
                   No data submissions match your current filters.
                 </p>
               </div>
-            ) : (
+            ) : submissions.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-muted/50">
@@ -437,7 +441,7 @@ export default function DataSubmissionsPage() {
                   </tbody>
                 </table>
               </div>
-            )}
+            ) : null}
 
             {/* Pagination */}
             {submissions.length > 0 && (
