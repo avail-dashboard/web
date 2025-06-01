@@ -227,22 +227,23 @@ export const blocksApi = {
 // Extrinsics API
 export const extrinsicsApi = {
   getExtrinsics: (params?: {
-    page?: number
-    limit?: number
     block?: number
     signer?: string
     method?: string
     success?: boolean
-  }): Promise<PaginatedResponse<Extrinsic>> =>
-    api.get('/extrinsics', { params }).then(res => res.data),
+  }): Promise<Extrinsic[]> =>
+    api
+      .get('/extrinsics', { params })
+      .then(res => res.data?.data || res.data || []),
 
   getExtrinsic: (hash: string): Promise<Extrinsic> =>
     api.get(`/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
-    api
-      .get('/extrinsics', { params: { page: 1, limit } })
-      .then(res => res.data?.data || []),
+    api.get('/extrinsics').then(res => {
+      const allExtrinsics = res.data?.data || res.data || []
+      return Array.isArray(allExtrinsics) ? allExtrinsics.slice(0, limit) : []
+    }),
 }
 
 // Accounts API
@@ -393,15 +394,15 @@ export const availAPI = {
     limit: number = 10
   ) => {
     try {
-      const params: { page: number; limit: number; block?: number } = {
-        page,
-        limit,
-      }
+      const params: { block?: number } = {}
       if (blockNumber) {
         params.block = blockNumber
       }
       const response = await extrinsicsApi.getExtrinsics(params)
-      return response.data || []
+      // Since we now get all extrinsics, slice for the requested limit if needed
+      return Array.isArray(response)
+        ? response.slice(page * limit, (page + 1) * limit)
+        : []
     } catch (error) {
       console.error('Failed to fetch extrinsics:', error)
       throw error

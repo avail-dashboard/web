@@ -225,7 +225,9 @@ export default function BlocksPage() {
       header: 'Hash',
       cell: ({ row }) => (
         <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-          {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-10)}
+          {row.original.hash
+            ? `${row.original.hash.slice(0, 10)}...${row.original.hash.slice(-10)}`
+            : 'Hash not available'}
         </code>
       ),
     },

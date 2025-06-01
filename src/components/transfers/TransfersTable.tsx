@@ -39,12 +39,7 @@ export function TransfersTable({
   const [copied, setCopied] = useState<string | null>(null)
 
   // Get recent extrinsics and filter for transfers
-  const {
-    data: extrinsics,
-    loading,
-    error,
-    refetch,
-  } = useExtrinsics(undefined, 0, 50)
+  const { data: extrinsics, loading, error } = useExtrinsics()
 
   useEffect(() => {
     if (extrinsics) {
@@ -127,7 +122,7 @@ export function TransfersTable({
           Unable to fetch transfer data.
         </p>
         <button
-          onClick={() => refetch()}
+          onClick={() => window.location.reload()}
           className="px-4 py-2 bg-avail-600 text-white rounded hover:bg-avail-700"
         >
           Try Again
@@ -145,7 +140,7 @@ export function TransfersTable({
             <h3 className="text-lg font-semibold">Recent Transfers</h3>
           </div>
           <button
-            onClick={() => refetch()}
+            onClick={() => window.location.reload()}
             disabled={loading}
             className="flex items-center space-x-2 px-3 py-2 text-sm border rounded hover:bg-muted disabled:opacity-50"
           >

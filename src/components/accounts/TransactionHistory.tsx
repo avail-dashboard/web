@@ -17,15 +17,15 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
 
   // Get all extrinsics and filter by address
   const {
-    data: allExtrinsics,
+    data: extrinsics,
     loading: extrinsicsLoading,
-    refetch,
-  } = useExtrinsics(undefined, 0, 50)
+    error,
+  } = useExtrinsics()
 
   useEffect(() => {
-    if (allExtrinsics) {
+    if (extrinsics) {
       // Filter extrinsics related to this address
-      const accountExtrinsics = allExtrinsics.filter(ext => {
+      const accountExtrinsics = extrinsics.filter(ext => {
         // TODO: In a real implementation, this would check if the address is involved
         // in the transaction (as sender, receiver, or in events) by examining the
         // extrinsic events and parameters
@@ -45,22 +45,28 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
       setFilteredExtrinsics(filtered)
     }
     setLoading(extrinsicsLoading)
-  }, [allExtrinsics, extrinsicsLoading, address, filter])
+  }, [extrinsics, extrinsicsLoading, address, filter])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-center">
-          <div className="loading-dots">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-          </div>
-          <p className="mt-4 text-muted-foreground">
-            Loading transaction history...
-          </p>
+        <div className="loading-dots">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
         </div>
+        <span className="ml-4 text-muted-foreground">
+          Loading transactions...
+        </span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-600">
+        Failed to load transaction history
       </div>
     )
   }
@@ -89,7 +95,9 @@ export function TransactionHistory({ address }: TransactionHistoryProps) {
         </div>
 
         <button
-          onClick={() => refetch()}
+          onClick={() => {
+            // Implement refresh logic
+          }}
           disabled={loading}
           className="flex items-center space-x-2 px-3 py-2 text-sm border rounded hover:bg-muted disabled:opacity-50"
         >

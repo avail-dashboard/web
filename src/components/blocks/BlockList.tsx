@@ -182,8 +182,10 @@ export function BlockList({
                       className="font-mono text-sm text-avail-600 hover:text-avail-700"
                     >
                       {compact
-                        ? `${block.hash.slice(0, 10)}...${block.hash.slice(-8)}`
-                        : block.hash}
+                        ? block.hash
+                          ? `${block.hash.slice(0, 10)}...${block.hash.slice(-8)}`
+                          : 'Hash not available'
+                        : block.hash || 'Hash not available'}
                     </Link>
                   </div>
 
@@ -232,7 +234,9 @@ export function BlockList({
                     href={`/blocks/${block.number - 1}`}
                     className="font-mono text-avail-600 hover:text-avail-700"
                   >
-                    {`${block.parentHash.slice(0, 10)}...${block.parentHash.slice(-8)}`}
+                    {block.parentHash
+                      ? `${block.parentHash.slice(0, 10)}...${block.parentHash.slice(-8)}`
+                      : 'Parent hash not available'}
                   </Link>
                 </div>
               </div>
