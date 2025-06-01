@@ -9,6 +9,7 @@ export function useAPIRequest<T>(
   options: {
     enabled?: boolean
     refetchInterval?: number
+    preserveDataOnError?: boolean
     onSuccess?: (data: T) => void
     onError?: (error: Error) => void
   } = {}
@@ -17,7 +18,13 @@ export function useAPIRequest<T>(
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
-  const { enabled = true, refetchInterval, onSuccess, onError } = options
+  const {
+    enabled = true,
+    refetchInterval,
+    preserveDataOnError = true,
+    onSuccess,
+    onError,
+  } = options
 
   // Memoize the API call to prevent infinite loops
   const memoizedApiCall = useCallback(apiCall, dependencies)
@@ -35,11 +42,15 @@ export function useAPIRequest<T>(
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Unknown error')
       setError(error)
+      // Only reset data if preserveDataOnError is false
+      if (!preserveDataOnError) {
+        setData(null)
+      }
       onError?.(error)
     } finally {
       setLoading(false)
     }
-  }, [memoizedApiCall, enabled, onSuccess, onError])
+  }, [memoizedApiCall, enabled, preserveDataOnError, onSuccess, onError])
 
   // Fetch data on mount and when dependencies change
   useEffect(() => {
