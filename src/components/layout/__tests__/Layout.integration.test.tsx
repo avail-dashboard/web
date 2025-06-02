@@ -103,6 +103,7 @@ describe('Layout Integration Tests', () => {
     })
     mockUseBackendStatus.mockReturnValue({
       isConnected: true,
+      isChecking: false,
       lastChecked: new Date(),
       checkStatus: jest.fn(),
     })
@@ -234,6 +235,7 @@ describe('Layout Integration Tests', () => {
   it('shows backend status correctly across layout', () => {
     mockUseBackendStatus.mockReturnValue({
       isConnected: false,
+      isChecking: false,
       lastChecked: new Date(),
       checkStatus: jest.fn(),
     })

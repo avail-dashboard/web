@@ -67,6 +67,7 @@ const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>
 
 const mockBackendStatus = {
   isConnected: true,
+  isChecking: false,
   lastChecked: new Date(),
   checkStatus: jest.fn(),
 }
