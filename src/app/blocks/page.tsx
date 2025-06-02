@@ -3,13 +3,7 @@
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ColumnDef } from '@tanstack/react-table'
-import {
-  ArrowUpDown,
-  Clock,
-  Hash,
-  CheckCircle,
-  Filter,
-} from 'lucide-react'
+import { ArrowUpDown, Clock, Hash, CheckCircle, Filter } from 'lucide-react'
 import Link from 'next/link'
 
 import { blocksApi, Block } from '@/lib/api'
@@ -96,8 +90,10 @@ export default function BlocksPage() {
         : 0
 
     const averageExtrinsics =
-      latestBlocks.reduce((sum, block) => sum + (block.extrinsics_count || block.extrinsics), 0) /
-      latestBlocks.length
+      latestBlocks.reduce(
+        (sum, block) => sum + (block.extrinsics_count || block.extrinsics),
+        0
+      ) / latestBlocks.length
     const averageSize =
       latestBlocks.reduce((sum, block) => sum + block.size, 0) /
       latestBlocks.length
@@ -153,7 +149,9 @@ export default function BlocksPage() {
       header: 'Extrinsics',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <span className="font-medium">{row.original.extrinsics_count || row.original.extrinsics}</span>
+          <span className="font-medium">
+            {row.original.extrinsics_count || row.original.extrinsics}
+          </span>
           {(row.original.extrinsics_count || row.original.extrinsics) > 0 && (
             <Link
               href={`/extrinsics?block=${row.original.number}`}
@@ -201,7 +199,7 @@ export default function BlocksPage() {
       header: 'Hash',
       cell: ({ row }) => (
         <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-          {row.original.hash
+          {row.original.hash && row.original.hash.trim()
             ? `${row.original.hash.slice(0, 10)}...${row.original.hash.slice(-10)}`
             : 'Hash not available'}
         </code>
@@ -271,9 +269,7 @@ export default function BlocksPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Settings</CardTitle>
-          <CardDescription>
-            Configure the blocks display
-          </CardDescription>
+          <CardDescription>Configure the blocks display</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -302,9 +298,7 @@ export default function BlocksPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Recent Blocks</CardTitle>
-          <CardDescription>
-            Showing {blocks.length} blocks
-          </CardDescription>
+          <CardDescription>Showing {blocks.length} blocks</CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
@@ -322,9 +316,7 @@ export default function BlocksPage() {
 
           {/* Custom Pagination */}
           <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-muted-foreground">
-              Page {page}
-            </div>
+            <div className="text-sm text-muted-foreground">Page {page}</div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

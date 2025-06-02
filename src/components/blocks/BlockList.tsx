@@ -1,18 +1,18 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useBlocks } from '@/lib/hooks/useAvailAPI'
-import { formatTimeAgo } from '@/lib/utils'
-import { Block } from '@/lib/api'
+import Link from 'next/link'
 import {
-  ChevronLeft,
-  ChevronRight,
   RefreshCw,
-  Clock,
   Hash,
   Activity,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
-import Link from 'next/link'
+
+import { useBlocks } from '@/lib/hooks/useAvailAPI'
+import { formatTimeAgo } from '@/lib/utils'
 
 interface BlockListProps {
   initialPage?: number
@@ -182,10 +182,11 @@ export function BlockList({
                       className="font-mono text-sm text-avail-600 hover:text-avail-700"
                     >
                       {compact
-                        ? block.hash
+                        ? block.hash && block.hash.trim()
                           ? `${block.hash.slice(0, 10)}...${block.hash.slice(-8)}`
                           : 'Hash not available'
-                        : block.hash || 'Hash not available'}
+                        : (block.hash && block.hash.trim()) ||
+                          'Hash not available'}
                     </Link>
                   </div>
 
@@ -234,7 +235,7 @@ export function BlockList({
                     href={`/blocks/${block.number - 1}`}
                     className="text-avail-600 hover:underline"
                   >
-                    {block.parent_hash
+                    {block.parent_hash && block.parent_hash.trim()
                       ? `${block.parent_hash.slice(0, 10)}...${block.parent_hash.slice(-8)}`
                       : 'Hash not available'}
                   </Link>

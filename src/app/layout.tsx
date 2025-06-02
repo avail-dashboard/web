@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { StagewiseToolbar } from '@/components/StagewiseToolbar'
 import { Providers } from '@/lib/providers'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
   title: 'Avail Explorer',
@@ -19,7 +21,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
           <div className="relative flex min-h-screen flex-col">
-            <div className="flex-1">{children}</div>
+            <Header />
+            <main className="flex-1 bg-gradient-to-br from-background to-muted/50">
+              {children}
+            </main>
+            <Footer />
           </div>
           <StagewiseToolbar />
         </Providers>
