@@ -21,215 +21,264 @@ interface ExtrinsicDetailsProps {
   onBack?: () => void
 }
 
+// Helper function to format fee/tip values
+const formatFeeValue = (value: number | string | undefined): string => {
+  if (value === undefined || value === null) return 'Not available'
+  if (typeof value === 'string') return value
+  return value.toString()
+}
+
+// Helper function to get extrinsic index
+const getExtrinsicIndex = (extrinsic: Extrinsic): number => {
+  return extrinsic.extrinsic_index ?? extrinsic.extrinsicIndex ?? 0
+}
+
+// Helper function to get block number
+const getBlockNumber = (extrinsic: Extrinsic): number => {
+  // Extract from ID if available (format: "blockNumber-index")
+  if (extrinsic.id) {
+    const parts = extrinsic.id.split('-')
+    if (parts.length >= 2) {
+      return parseInt(parts[0], 10)
+    }
+  }
+  return extrinsic.blockNumber ?? 0
+}
+
 export function ExtrinsicDetails({ extrinsic, onBack }: ExtrinsicDetailsProps) {
   const [copied, setCopied] = useState<string | null>(null)
 
-  const copyToClipboard = async (text: string, type: string) => {
+  const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      setCopied(type)
+      setCopied(label)
       setTimeout(() => setCopied(null), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      console.error('Failed to copy text: ', err)
     }
   }
 
-  const formatFee = (fee?: number) => {
-    if (!fee) return 'N/A'
-    // Convert from smallest unit to AVAIL (assuming 18 decimals)
-    const avail = fee / Math.pow(10, 18)
-    return `${avail.toFixed(6)} AVAIL`
-  }
-
-  const getStatusColor = (success: boolean) => {
-    return success
-      ? 'text-green-600 bg-green-50 border-green-200'
-      : 'text-red-600 bg-red-50 border-red-200'
-  }
-
-  const getModuleColor = (module: string) => {
-    const colors = {
-      system: 'bg-blue-100 text-blue-800',
-      balances: 'bg-green-100 text-green-800',
-      staking: 'bg-purple-100 text-purple-800',
-      utility: 'bg-orange-100 text-orange-800',
-      default: 'bg-gray-100 text-gray-800',
-    }
-    return colors[module as keyof typeof colors] || colors.default
-  }
-
-  // TODO: Replace with actual events data from API
-  // Events would come from the extrinsic data when properly fetched
   const events = extrinsic.events || []
+  const extrinsicIndex = getExtrinsicIndex(extrinsic)
+  const blockNumber = getBlockNumber(extrinsic)
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {onBack && (
             <button
               onClick={onBack}
-              className="text-avail-600 hover:text-avail-700 flex items-center space-x-2"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </button>
           )}
-          <h1 className="text-3xl font-bold">Extrinsic Details</h1>
+          <h1 className="text-2xl font-bold">Extrinsic Details</h1>
         </div>
-
-        {/* Status indicator */}
-        <div
-          className={`flex items-center space-x-2 px-4 py-2 rounded-full border ${getStatusColor(extrinsic.success)}`}
-        >
+        <div className="flex items-center space-x-2">
           {extrinsic.success ? (
-            <CheckCircle className="h-5 w-5" />
+            <div className="flex items-center space-x-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Success</span>
+            </div>
           ) : (
-            <XCircle className="h-5 w-5" />
+            <div className="flex items-center space-x-2 text-red-600">
+              <XCircle className="h-5 w-5" />
+              <span className="font-medium">Failed</span>
+            </div>
           )}
-          <span className="font-medium">
-            {extrinsic.success ? 'Success' : 'Failed'}
-          </span>
         </div>
       </div>
 
-      {/* Main Information Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Basic Information */}
-        <div className="bg-card p-6 rounded-lg border shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <Hash className="h-5 w-5 mr-2 text-avail-600" />
-            Transaction Information
-          </h2>
+      {/* Main Info Card */}
+      <div className="bg-card p-6 rounded-lg border shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column */}
           <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <span className="text-muted-foreground">Hash:</span>
-              <div className="flex items-center space-x-2">
-                <span className="font-mono text-sm break-all">
-                  {extrinsic.hash}
-                </span>
-                <button
-                  onClick={() => copyToClipboard(extrinsic.hash, 'hash')}
-                  className="p-1 hover:bg-muted rounded"
-                  title="Copy hash"
-                >
-                  <Copy className="h-3 w-3" />
-                </button>
-                {copied === 'hash' && (
-                  <span className="text-green-500 text-xs">Copied!</span>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Extrinsic Hash
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                <code className="text-sm bg-muted px-2 py-1 rounded font-mono">
+                  {extrinsic.hash || 'Hash not available'}
+                </code>
+                {extrinsic.hash && (
+                  <>
+                    <button
+                      onClick={() => copyToClipboard(extrinsic.hash!, 'hash')}
+                      className="p-1 hover:bg-muted rounded"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    {copied === 'hash' && (
+                      <span className="text-xs text-green-600">Copied!</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Block:</span>
-              <Link
-                href={`/blocks/${extrinsic.blockNumber}`}
-                className="text-avail-600 hover:text-avail-700 font-mono flex items-center space-x-1"
-              >
-                <span>#{extrinsic.blockNumber}</span>
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            </div>
-
-            {extrinsic.extrinsicIndex !== undefined && (
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Index:</span>
-                <span className="font-mono">{extrinsic.extrinsicIndex}</span>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Block Number
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                <Link
+                  href={`/blocks/${blockNumber}`}
+                  className="text-avail-600 hover:text-avail-700 font-medium flex items-center space-x-1"
+                >
+                  <span>#{blockNumber}</span>
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
               </div>
-            )}
-
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Module:</span>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
-              >
-                {extrinsic.module}
-              </span>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Call:</span>
-              <span className="font-medium">{extrinsic.call}</span>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Extrinsic Index
+              </label>
+              <div className="mt-1">
+                <span className="font-medium">#{extrinsicIndex}</span>
+              </div>
             </div>
 
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Timestamp:</span>
-              <div className="text-right">
-                <div className="font-semibold">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Module & Call
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                  {extrinsic.module || 'Unknown'}
+                </span>
+                <span className="font-medium">
+                  {extrinsic.call || 'Unknown'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Signer
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                {extrinsic.signer ? (
+                  <>
+                    <Link
+                      href={`/accounts/${extrinsic.signer}`}
+                      className="text-avail-600 hover:text-avail-700 font-mono text-sm flex items-center space-x-1"
+                    >
+                      <User className="h-3 w-3" />
+                      <span>
+                        {extrinsic.signer.slice(0, 8)}...
+                        {extrinsic.signer.slice(-8)}
+                      </span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <button
+                      onClick={() =>
+                        copyToClipboard(extrinsic.signer!, 'signer')
+                      }
+                      className="p-1 hover:bg-muted rounded"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    {copied === 'signer' && (
+                      <span className="text-xs text-green-600">Copied!</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">
+                    Signer not available
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Fee
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="font-mono">
+                  {formatFeeValue(extrinsic.fee)} AVAIL
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Tip
+              </label>
+              <div className="flex items-center space-x-2 mt-1">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="font-mono">
+                  {formatFeeValue(extrinsic.tip)} AVAIL
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Timestamp
+              </label>
+              <div className="mt-1">
+                <span className="text-sm">
                   {new Date(extrinsic.timestamp).toLocaleString()}
-                </div>
-                <div className="text-sm text-muted-foreground">
+                </span>
+                <div className="text-xs text-muted-foreground">
                   {formatTimeAgo(extrinsic.timestamp)}
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Account and Fee Information */}
-        <div className="bg-card p-6 rounded-lg border shadow-sm">
-          <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <User className="h-5 w-5 mr-2 text-avail-600" />
-            Account & Fee Details
-          </h2>
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <span className="text-muted-foreground">Signer:</span>
-              <div className="flex items-center space-x-2">
-                <Link
-                  href={`/accounts/${extrinsic.signer}`}
-                  className="font-mono text-sm text-avail-600 hover:text-avail-700 break-all"
-                >
-                  {extrinsic.signer}
-                </Link>
-                <button
-                  onClick={() => copyToClipboard(extrinsic.signer, 'signer')}
-                  className="p-1 hover:bg-muted rounded"
-                  title="Copy address"
-                >
-                  <Copy className="h-3 w-3" />
-                </button>
-                {copied === 'signer' && (
-                  <span className="text-green-500 text-xs">Copied!</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Transaction Fee:</span>
-              <div className="flex items-center space-x-1">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="font-mono">
-                  {formatFee(extrinsic.fee)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Status:</span>
-              <div
-                className={`flex items-center space-x-1 px-2 py-1 rounded-full border text-xs ${getStatusColor(extrinsic.success)}`}
-              >
-                {extrinsic.success ? (
-                  <CheckCircle className="h-3 w-3" />
-                ) : (
-                  <XCircle className="h-3 w-3" />
-                )}
-                <span>{extrinsic.success ? 'Success' : 'Failed'}</span>
-              </div>
-            </div>
-          </div>
+      {/* Signature Section */}
+      <div className="bg-card p-6 rounded-lg border shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <Hash className="h-5 w-5 mr-2 text-avail-600" />
+          Signature
+        </h2>
+        <div className="bg-muted/50 rounded p-4">
+          <code className="text-sm font-mono break-all">
+            {extrinsic.signature}
+          </code>
         </div>
       </div>
 
+      {/* Arguments Section */}
+      <div className="bg-card p-6 rounded-lg border shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Call Arguments</h2>
+        {extrinsic.args && Object.keys(extrinsic.args).length > 0 ? (
+          <div className="bg-muted/50 rounded p-4">
+            <pre className="text-sm font-mono whitespace-pre-wrap overflow-x-auto">
+              {JSON.stringify(extrinsic.args, null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="text-center py-4 text-muted-foreground">
+            No arguments available. Arguments require API integration to fetch
+            real data.
+          </div>
+        )}
+      </div>
+
       {/* Events Section */}
-      <div className="bg-card p-6 rounded-lg border shadow-sm mb-8">
+      <div className="bg-card p-6 rounded-lg border shadow-sm">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Activity className="h-5 w-5 mr-2 text-avail-600" />
           Events ({events.length})
         </h2>
+
         {events.length > 0 ? (
           <div className="space-y-3">
             {events.map((event, index) => (

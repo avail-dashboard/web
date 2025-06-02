@@ -95,7 +95,7 @@ export default function BlocksPage() {
         0
       ) / latestBlocks.length
     const averageSize =
-      latestBlocks.reduce((sum, block) => sum + block.size, 0) /
+      latestBlocks.reduce((sum, block) => sum + (block.size || 0), 0) /
       latestBlocks.length
 
     return { averageBlockTime, averageExtrinsics, averageSize }
@@ -168,9 +168,9 @@ export default function BlocksPage() {
       header: 'Author',
       cell: ({ row }) => (
         <span className="font-mono text-sm">
-          {row.original.author_id
+          {row.original.author_id && row.original.author_id.trim() !== ''
             ? `${row.original.author_id.slice(0, 8)}...${row.original.author_id.slice(-8)}`
-            : 'Unknown'}
+            : 'Not available'}
         </span>
       ),
     },
@@ -178,7 +178,9 @@ export default function BlocksPage() {
       accessorKey: 'size',
       header: 'Size',
       cell: ({ row }) => (
-        <span className="text-sm">{formatSize(row.original.size)}</span>
+        <span className="text-sm">
+          {row.original.size ? formatSize(row.original.size) : 'N/A'}
+        </span>
       ),
     },
     {
@@ -198,11 +200,17 @@ export default function BlocksPage() {
       accessorKey: 'hash',
       header: 'Hash',
       cell: ({ row }) => (
-        <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-          {row.original.hash && row.original.hash.trim()
-            ? `${row.original.hash.slice(0, 10)}...${row.original.hash.slice(-10)}`
-            : 'Hash not available'}
-        </code>
+        <div>
+          {row.original.hash ? (
+            <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
+              {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-8)}
+            </code>
+          ) : (
+            <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground">
+              Pending backend deployment
+            </code>
+          )}
+        </div>
       ),
     },
   ]

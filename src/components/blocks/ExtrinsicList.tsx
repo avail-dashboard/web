@@ -21,51 +21,74 @@ interface ExtrinsicListProps {
   showFilters?: boolean
 }
 
+// Helper function to get extrinsic index
+const getExtrinsicIndex = (extrinsic: Extrinsic): number => {
+  return extrinsic.extrinsic_index ?? extrinsic.extrinsicIndex ?? 0
+}
+
+// Helper function to get block number
+const getBlockNumber = (extrinsic: Extrinsic): number => {
+  // Extract from ID if available (format: "blockNumber-index")
+  if (extrinsic.id) {
+    const parts = extrinsic.id.split('-')
+    if (parts.length >= 2) {
+      return parseInt(parts[0], 10)
+    }
+  }
+  return extrinsic.blockNumber ?? 0
+}
+
+// Helper function to format fee/tip values
+const formatFeeValue = (value: number | string | undefined): string => {
+  if (value === undefined || value === null) return 'N/A'
+  if (typeof value === 'string') return value
+  return value.toString()
+}
+
 export function ExtrinsicList({
   extrinsics,
   showBlockNumber = true,
   compact = false,
-  showFilters = true,
+  showFilters = false,
 }: ExtrinsicListProps) {
-  const [filter, setFilter] = useState<'all' | 'success' | 'failed'>('all')
-  const [moduleFilter, setModuleFilter] = useState<string>('all')
-  const [copied, setCopied] = useState<string | null>(null)
+  const [filter, setFilter] = useState('')
+  const [moduleFilter, setModuleFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'success' | 'failed'
+  >('all')
 
-  // Get unique modules for filtering
-  const uniqueModules = Array.from(new Set(extrinsics.map(ext => ext.module)))
-
-  // Filter extrinsics
+  // Filter extrinsics based on current filters
   const filteredExtrinsics = extrinsics.filter(extrinsic => {
-    const statusMatch =
-      filter === 'all' ||
-      (filter === 'success' && extrinsic.success) ||
-      (filter === 'failed' && !extrinsic.success)
+    const matchesSearch =
+      !filter ||
+      (extrinsic.hash &&
+        extrinsic.hash.toLowerCase().includes(filter.toLowerCase())) ||
+      (extrinsic.signer &&
+        extrinsic.signer.toLowerCase().includes(filter.toLowerCase())) ||
+      (extrinsic.module &&
+        extrinsic.module.toLowerCase().includes(filter.toLowerCase())) ||
+      (extrinsic.call &&
+        extrinsic.call.toLowerCase().includes(filter.toLowerCase()))
 
-    const moduleMatch =
-      moduleFilter === 'all' || extrinsic.module === moduleFilter
+    const matchesModule =
+      !moduleFilter ||
+      (extrinsic.module &&
+        extrinsic.module.toLowerCase().includes(moduleFilter.toLowerCase()))
 
-    return statusMatch && moduleMatch
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'success' && extrinsic.success) ||
+      (statusFilter === 'failed' && !extrinsic.success)
+
+    return matchesSearch && matchesModule && matchesStatus
   })
 
-  const copyToClipboard = async (text: string, type: string) => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      setCopied(type)
-      setTimeout(() => setCopied(null), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const formatAddress = (address: string) => {
-    if (address.length <= 12) return address
-    return `${address.slice(0, 6)}...${address.slice(-6)}`
-  }
-
-  const getStatusColor = (success: boolean) => {
-    return success
-      ? 'text-green-600 bg-green-50 border-green-200'
-      : 'text-red-600 bg-red-50 border-red-200'
   }
 
   const getModuleColor = (module: string) => {
@@ -74,6 +97,7 @@ export function ExtrinsicList({
       balances: 'bg-green-100 text-green-800',
       staking: 'bg-purple-100 text-purple-800',
       utility: 'bg-orange-100 text-orange-800',
+      dataAvailability: 'bg-indigo-100 text-indigo-800',
       default: 'bg-gray-100 text-gray-800',
     }
     return colors[module as keyof typeof colors] || colors.default
@@ -91,161 +115,160 @@ export function ExtrinsicList({
     <div className="space-y-4">
       {/* Filters */}
       {showFilters && (
-        <div className="flex flex-wrap gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="flex flex-wrap gap-4 p-4 bg-muted/30 rounded-lg">
           <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filters:</span>
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-muted-foreground">Status:</label>
-            <select
+            <input
+              type="text"
+              placeholder="Search hash, signer, module..."
               value={filter}
-              onChange={e =>
-                setFilter(e.target.value as 'all' | 'success' | 'failed')
-              }
-              className="text-sm border rounded px-2 py-1 bg-background"
-            >
-              <option value="all">All</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-            </select>
+              onChange={e => setFilter(e.target.value)}
+              className="px-3 py-1 border rounded text-sm"
+            />
           </div>
-
-          {/* Module Filter */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-muted-foreground">Module:</label>
-            <select
-              value={moduleFilter}
-              onChange={e => setModuleFilter(e.target.value)}
-              className="text-sm border rounded px-2 py-1 bg-background"
-            >
-              <option value="all">All Modules</option>
-              {uniqueModules.map(module => (
-                <option key={module} value={module}>
-                  {module}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredExtrinsics.length} of {extrinsics.length}{' '}
-            extrinsics
-          </div>
+          <select
+            value={moduleFilter}
+            onChange={e => setModuleFilter(e.target.value)}
+            className="px-3 py-1 border rounded text-sm"
+          >
+            <option value="">All Modules</option>
+            <option value="system">System</option>
+            <option value="balances">Balances</option>
+            <option value="staking">Staking</option>
+            <option value="utility">Utility</option>
+            <option value="dataAvailability">Data Availability</option>
+          </select>
+          <select
+            value={statusFilter}
+            onChange={e =>
+              setStatusFilter(e.target.value as 'all' | 'success' | 'failed')
+            }
+            className="px-3 py-1 border rounded text-sm"
+          >
+            <option value="all">All Status</option>
+            <option value="success">Success</option>
+            <option value="failed">Failed</option>
+          </select>
         </div>
       )}
 
       {/* Extrinsics List */}
       <div className="space-y-2">
-        {filteredExtrinsics.map((extrinsic, index) => (
-          <div
-            key={`${extrinsic.hash}-${index}`}
-            className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
-              compact ? 'p-3' : 'p-4'
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              {/* Left side - Main info */}
-              <div className="flex-1 space-y-2">
-                {/* Hash and Status */}
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
-                    <Link
-                      href={`/extrinsics/${extrinsic.hash}`}
-                      className="font-mono text-sm text-avail-600 hover:text-avail-700"
-                    >
-                      {compact ? formatAddress(extrinsic.hash) : extrinsic.hash}
-                    </Link>
-                    <button
-                      onClick={() =>
-                        copyToClipboard(extrinsic.hash, `hash-${index}`)
-                      }
-                      className="p-1 hover:bg-muted rounded"
-                      title="Copy hash"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </button>
-                    {copied === `hash-${index}` && (
-                      <span className="text-green-500 text-xs">Copied!</span>
-                    )}
-                  </div>
+        {filteredExtrinsics.map((extrinsic, index) => {
+          const extrinsicIndex = getExtrinsicIndex(extrinsic)
+          const blockNumber = getBlockNumber(extrinsic)
 
-                  {/* Status indicator */}
-                  <div
-                    className={`flex items-center space-x-1 px-2 py-1 rounded-full border text-xs ${getStatusColor(extrinsic.success)}`}
-                  >
+          return (
+            <div
+              key={extrinsic.hash || index}
+              className={`border rounded-lg p-4 hover:bg-muted/30 transition-colors ${
+                compact ? 'p-3' : 'p-4'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  {/* Header Row */}
+                  <div className="flex items-center space-x-3 mb-2">
+                    {/* Status Icon */}
                     {extrinsic.success ? (
-                      <CheckCircle className="h-3 w-3" />
+                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
                     ) : (
-                      <XCircle className="h-3 w-3" />
+                      <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
                     )}
-                    <span>{extrinsic.success ? 'Success' : 'Failed'}</span>
-                  </div>
-                </div>
 
-                {/* Module and Call */}
-                <div className="flex items-center space-x-3">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(extrinsic.module)}`}
-                  >
-                    {extrinsic.module}
-                  </span>
-                  <span className="text-sm font-medium">
-                    {extrinsic.call}
-                  </span>
-                </div>
-
-                {/* Block and Signer info */}
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  {showBlockNumber && (
-                    <div className="flex items-center space-x-1">
-                      <span>Block:</span>
-                      <Link
-                        href={`/blocks/${extrinsic.blockNumber}`}
-                        className="text-avail-600 hover:text-avail-700 font-mono"
-                      >
-                        #{extrinsic.blockNumber}
-                      </Link>
-                    </div>
-                  )}
-
-                  <div className="flex items-center space-x-1">
-                    <User className="h-3 w-3" />
-                    <span>Signer:</span>
+                    {/* Hash */}
                     <Link
-                      href={`/accounts/${extrinsic.signer}`}
-                      className="text-avail-600 hover:text-avail-700 font-mono"
+                      href={`/extrinsics/${extrinsic.hash || 'unknown'}`}
+                      className="font-mono text-sm text-avail-600 hover:text-avail-700 truncate"
                     >
-                      {formatAddress(extrinsic.signer)}
+                      {extrinsic.hash || 'Hash not available'}
                     </Link>
+
+                    {/* Copy Button */}
+                    {extrinsic.hash && (
+                      <button
+                        onClick={() => copyToClipboard(extrinsic.hash!)}
+                        className="p-1 hover:bg-muted rounded flex-shrink-0"
+                        title="Copy hash"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Details Row */}
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    {/* Block Number */}
+                    {showBlockNumber && (
+                      <Link
+                        href={`/blocks/${blockNumber}`}
+                        className="flex items-center space-x-1 text-avail-600 hover:text-avail-700"
+                      >
+                        <Hash className="h-3 w-3" />
+                        <span>Block #{blockNumber}</span>
+                      </Link>
+                    )}
+
+                    {/* Index */}
+                    <span className="flex items-center space-x-1">
+                      <span>Index #{extrinsicIndex}</span>
+                    </span>
+
+                    {/* Module & Call */}
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getModuleColor(
+                          extrinsic.module || 'default'
+                        )}`}
+                      >
+                        {extrinsic.module || 'Unknown'}
+                      </span>
+                      <span className="font-medium">
+                        {extrinsic.call || 'Unknown'}
+                      </span>
+                    </div>
+
+                    {/* Signer */}
+                    {extrinsic.signer ? (
+                      <Link
+                        href={`/accounts/${extrinsic.signer}`}
+                        className="flex items-center space-x-1 text-avail-600 hover:text-avail-700"
+                      >
+                        <User className="h-3 w-3" />
+                        <span className="font-mono">
+                          {extrinsic.signer.slice(0, 6)}...
+                          {extrinsic.signer.slice(-6)}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span className="flex items-center space-x-1 text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>Signer not available</span>
+                      </span>
+                    )}
+
+                    {/* Fee */}
+                    <span className="flex items-center space-x-1">
+                      <span>Fee: {formatFeeValue(extrinsic.fee)} AVAIL</span>
+                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Right side - Timestamp */}
-              <div className="text-right text-sm text-muted-foreground">
-                <div className="flex items-center space-x-1">
+                {/* Timestamp */}
+                <div className="flex items-center space-x-1 text-xs text-muted-foreground flex-shrink-0 ml-4">
                   <Clock className="h-3 w-3" />
                   <span>{formatTimeAgo(extrinsic.timestamp)}</span>
                 </div>
-                {!compact && (
-                  <div className="text-xs mt-1">
-                    {new Date(extrinsic.timestamp).toLocaleString()}
-                  </div>
-                )}
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {/* No results message */}
-      {filteredExtrinsics.length === 0 && extrinsics.length > 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          No extrinsics match the current filters
+      {/* Results Summary */}
+      {showFilters && (
+        <div className="text-sm text-muted-foreground text-center">
+          Showing {filteredExtrinsics.length} of {extrinsics.length} extrinsics
         </div>
       )}
     </div>

@@ -74,20 +74,24 @@ api.interceptors.response.use(
   }
 )
 
-// Types for API responses based on the backend documentation
-export interface ApiResponse<T> {
+// ============================================================================
+// TYPE DEFINITIONS - Updated to match API Documentation exactly
+// ============================================================================
+
+// Common Response Format
+export interface APIResponse<T> {
   success: boolean
-  data: T
+  data?: T
+  error?: {
+    code: string
+    message: string
+  }
   meta?: {
     page?: number
     limit?: number
     total?: number
-    source: 'rpc' | 'database'
-    note?: string
-  }
-  error?: {
-    code: string
-    message: string
+    source?: string
+    [key: string]: unknown
   }
 }
 
@@ -101,11 +105,14 @@ export interface PaginatedResponse<T> {
   }
 }
 
-// Updated interfaces to match backend API documentation
+// ============================================================================
+// BLOCKS API TYPES
+// ============================================================================
+
 export interface Block {
   number: number
   hash?: string
-  parent_hash?: string
+  parent_hash: string
   timestamp: number
   extrinsics: number
   time: string
@@ -113,28 +120,52 @@ export interface Block {
   extrinsics_root: string
   author_id: string
   size: number
-  weight: number
+  weight: string
   spec: number
   finalized: boolean
   extrinsics_count?: number
 }
 
-export interface Extrinsic {
-  hash: string
-  blockNumber: number
-  extrinsicIndex: number
-  module: string
-  call: string
-  success: boolean
+export interface BlockDetails {
+  number: number
+  hash?: string
+  parent_hash: string
   timestamp: number
-  signer: string
-  fee: number
-  tip: number
-  signature: string
-  args: Record<string, unknown>
-  events: Event[]
-  isSigned: boolean
-  isUserTransaction: boolean
+  extrinsics_count: number
+  time: string
+  state_root: string
+  extrinsics_root: string
+  author_id: string
+  size: number
+  weight: string
+  spec: number
+  finalized: boolean
+  extrinsics: Extrinsic[]
+}
+
+// ============================================================================
+// EXTRINSICS API TYPES
+// ============================================================================
+
+export interface Extrinsic {
+  id?: string
+  hash?: string
+  extrinsic_index?: number
+  module?: string
+  call?: string
+  success?: boolean
+  timestamp: number
+  signer?: string
+  fee?: number | string
+  tip?: number | string
+  signature?: string
+  args?: Record<string, unknown>
+  events?: Event[]
+  // Legacy fields for backward compatibility
+  blockNumber?: number
+  extrinsicIndex?: number
+  isSigned?: boolean
+  isUserTransaction?: boolean
 }
 
 export interface Event {
@@ -149,6 +180,10 @@ export interface Event {
   topics: string[]
 }
 
+// ============================================================================
+// ACCOUNTS API TYPES
+// ============================================================================
+
 export interface Account {
   address: string
   balance: number
@@ -162,6 +197,10 @@ export interface Account {
   }
 }
 
+// ============================================================================
+// TRANSFERS API TYPES
+// ============================================================================
+
 export interface Transfer {
   id: string
   from: string
@@ -173,6 +212,10 @@ export interface Transfer {
   success: boolean
   fee: number
 }
+
+// ============================================================================
+// DATA SUBMISSIONS API TYPES
+// ============================================================================
 
 export interface DataSubmission {
   extrinsicId: string
@@ -186,6 +229,10 @@ export interface DataSubmission {
   success: boolean
 }
 
+// ============================================================================
+// VALIDATORS & STAKING API TYPES
+// ============================================================================
+
 export interface Validator {
   address: string
   active: boolean
@@ -198,6 +245,245 @@ export interface Validator {
     web?: string
   }
 }
+
+export interface ValidatorDetails extends Validator {
+  stash_address?: string
+  controller_address?: string
+  nominator_count?: number
+  nominator_list?: string[]
+  commission_rate?: number
+  session_keys?: string[]
+  bonded_amounts?: {
+    own: string
+    total: string
+  }
+  rewards_history?: RewardEntry[]
+  proposed_blocks?: number[]
+  slashing_events?: SlashingEvent[]
+}
+
+export interface RewardEntry {
+  era: number
+  amount: string
+  timestamp: number
+}
+
+export interface SlashingEvent {
+  era: number
+  amount: string
+  reason: string
+  timestamp: number
+}
+
+export interface StakingOverview {
+  total_staked: string
+  total_validators: number
+  active_validators: number
+  waiting_validators: number
+  min_stake_required: string
+  max_nominators_per_validator: number
+  current_era: number
+  session_length: number
+  era_length: number
+}
+
+// ============================================================================
+// ROLLUPS & APP SPACES API TYPES
+// ============================================================================
+
+export interface Rollup {
+  app_id: number
+  name: string
+  description: string
+  last_active: string
+  total_submissions: number
+  total_data_size: number
+  total_fees_paid: string
+  paid_per_mb: string
+  website?: string
+  logo_url?: string
+}
+
+export interface RollupDetails extends Rollup {
+  first_seen: string
+  statistics: {
+    submissions_24h: number
+    data_size_24h: number
+    fees_paid_24h: string
+    unique_submitters: number
+    average_submission_size: number
+  }
+  recent_submissions: DataSubmission[]
+}
+
+export interface RollupLeaderboard {
+  leaderboard: RollupLeaderboardEntry[]
+  total_rollups: number
+  metric: string
+}
+
+export interface RollupLeaderboardEntry {
+  rank: number
+  app_id: number
+  name: string
+  metric_value: number
+  percentage_of_total: number
+  change_24h: number
+}
+
+export interface RollupsListResponse {
+  rollups: Rollup[]
+  total_count: number
+  active_count: number
+  page: number
+  limit: number
+}
+
+// ============================================================================
+// ANALYTICS API TYPES
+// ============================================================================
+
+export interface NetworkAnalytics {
+  current_stats: {
+    block_height: string
+    total_extrinsics: number
+    total_data_size: number
+    total_fees: number
+    active_validators: number
+    total_staked: string
+    inflation_rate: number
+    network_utilization: number
+    average_block_time: number
+  }
+  historical_data: HistoricalDataPoint[]
+  gas_price_trend: GasPricePoint[]
+  rollup_distribution: RollupDistributionPoint[]
+  data_throughput: {
+    submissions_24h: number
+    data_size_24h: number
+    unique_apps_24h: number
+    average_submission_size: number
+  }
+}
+
+export interface HistoricalDataPoint {
+  timestamp: number
+  block_height: number
+  total_extrinsics: number
+  total_data_size: number
+  active_validators: number
+  network_utilization: number
+}
+
+export interface GasPricePoint {
+  timestamp: number
+  average_gas_price: string
+  median_gas_price: string
+  gas_used: number
+  gas_limit: number
+}
+
+export interface RollupDistributionPoint {
+  app_id: number
+  name: string
+  percentage: number
+  data_size: number
+}
+
+export interface GasAnalytics {
+  current_gas_price: string
+  average_gas_price_24h: string
+  gas_price_trend: GasPricePoint[]
+  gas_efficiency: {
+    average_gas_used: number
+    average_gas_limit: number
+    efficiency_ratio: number
+  }
+  cost_per_transaction: {
+    average_cost_24h: string
+    median_cost_24h: string
+    cost_trend: CostTrendPoint[]
+  }
+  cost_per_block: {
+    average_cost_24h: string
+    cost_trend: CostTrendPoint[]
+  }
+  fee_distribution: {
+    by_transaction_type: FeeDistributionPoint[]
+    by_complexity: FeeDistributionPoint[]
+  }
+}
+
+export interface CostTrendPoint {
+  timestamp: number
+  average_cost: string
+  median_cost: string
+  transaction_count: number
+}
+
+export interface FeeDistributionPoint {
+  category: string
+  percentage: number
+  total_fees: string
+  transaction_count: number
+}
+
+// ============================================================================
+// WEBSOCKET SUBSCRIPTION TYPES
+// ============================================================================
+
+export interface WebSocketSubscription {
+  type: 'subscribe' | 'unsubscribe'
+  channel: string
+  params?: Record<string, unknown>
+}
+
+export interface WebSocketMessage<T = unknown> {
+  type: string
+  channel: string
+  data: T
+  timestamp: number
+}
+
+export interface BlockUpdate {
+  block: Block
+  new_extrinsics: Extrinsic[]
+}
+
+export interface ValidatorUpdate {
+  validator: Validator
+  status_change?: 'active' | 'inactive' | 'slashed'
+  stake_change?: {
+    previous: string
+    current: string
+  }
+}
+
+export interface RollupUpdate {
+  app_id: number
+  new_submissions: DataSubmission[]
+  updated_stats: {
+    total_submissions: number
+    total_data_size: number
+    submissions_24h: number
+  }
+}
+
+// ============================================================================
+// SEARCH API TYPES
+// ============================================================================
+
+export interface SearchResult {
+  blocks: Block[]
+  extrinsics: Extrinsic[]
+  accounts: Account[]
+  validators: Validator[]
+  rollups?: Rollup[]
+}
+
+// ============================================================================
+// LEGACY TYPES FOR BACKWARD COMPATIBILITY
+// ============================================================================
 
 export interface ChainStats {
   finalizedBlocks: number
@@ -277,7 +563,9 @@ export interface DataThroughputData {
   averageSize: string
 }
 
-// API Functions
+// ============================================================================
+// API FUNCTIONS
+// ============================================================================
 
 // Blocks API
 export const blocksApi = {
@@ -552,10 +840,3 @@ export { availWS } from './websocket'
 
 // Legacy interfaces for backward compatibility
 export type ChainData = ChainStats
-
-export interface SearchResult {
-  blocks: Block[]
-  extrinsics: Extrinsic[]
-  accounts: Account[]
-  validators: Validator[]
-}
