@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+  throw new Error(
+    'NEXT_PUBLIC_API_BASE_URL environment variable is required but not set'
+  )
 }
 
 export async function GET() {
@@ -27,13 +29,16 @@ export async function GET() {
 
   try {
     // Check backend health
+    console.log('🔍 Checking backend health at:', `${API_BASE_URL}/health`)
     const backendResponse = await fetch(`${API_BASE_URL}/health`, {
       method: 'GET',
       signal: AbortSignal.timeout(3000),
     })
 
+    console.log('📡 Backend response status:', backendResponse.status)
     if (backendResponse.ok) {
       const backendHealth = await backendResponse.json()
+      console.log('✅ Backend is healthy')
       health.backend.status = 'healthy'
       health.backend.available = true
 
@@ -42,10 +47,12 @@ export async function GET() {
         health.services = { ...health.services, ...backendHealth.services }
       }
     } else {
+      console.log('❌ Backend returned error status:', backendResponse.status)
       health.backend.status = 'unhealthy'
       health.backend.error = `HTTP ${backendResponse.status}`
     }
   } catch (error) {
+    console.log('💥 Backend check failed with error:', error)
     health.backend.status = 'unreachable'
     health.backend.error =
       error instanceof Error ? error.message : 'Unknown error'

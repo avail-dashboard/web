@@ -706,7 +706,7 @@ export const searchApi = {
 
 // Health API
 export const healthApi = {
-  getHealth: () => api.get('/health').then(res => res.data),
+  getHealth: () => fetch('/api/health').then(res => res.json()),
 }
 
 // Export the main api instance for custom requests
@@ -716,7 +716,12 @@ export default api
 export const availAPI = {
   getChainData: async (): Promise<ChainStats> => {
     try {
-      return await chainApi.getChainStats()
+      const response = await fetch('/api/chain')
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch chain data')
+      }
+      return data
     } catch (error) {
       console.error('Failed to fetch chain data:', error)
       throw error
@@ -725,7 +730,12 @@ export const availAPI = {
 
   getLatestBlocks: async (count: number = 10): Promise<Block[]> => {
     try {
-      return await blocksApi.getLatestBlocks(count)
+      const response = await fetch(`/api/blocks?limit=${count}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch latest blocks')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch latest blocks:', error)
       throw error
@@ -734,7 +744,12 @@ export const availAPI = {
 
   getBlock: async (numberOrHash: string | number): Promise<Block> => {
     try {
-      return await blocksApi.getBlock(numberOrHash.toString())
+      const response = await fetch(`/api/blocks/${numberOrHash}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch block')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch block:', error)
       throw error
@@ -747,14 +762,17 @@ export const availAPI = {
     limit: number = 10
   ): Promise<Extrinsic[]> => {
     try {
-      const params: { block?: number; page?: number; limit?: number } = {
-        page,
-        limit,
+      const params = new URLSearchParams()
+      if (blockNumber) params.append('block', blockNumber.toString())
+      if (page) params.append('page', page.toString())
+      if (limit) params.append('limit', limit.toString())
+
+      const response = await fetch(`/api/extrinsics?${params}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch extrinsics')
       }
-      if (blockNumber) {
-        params.block = blockNumber
-      }
-      return await extrinsicsApi.getExtrinsics(params)
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch extrinsics:', error)
       throw error
@@ -763,7 +781,13 @@ export const availAPI = {
 
   getValidators: async (): Promise<Validator[]> => {
     try {
-      return await validatorsApi.getValidators({ page: 1, limit: 100 })
+      // Note: This endpoint might not exist yet, but keeping for consistency
+      const response = await fetch('/api/validators?page=1&limit=100')
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch validators')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch validators:', error)
       throw error
@@ -772,7 +796,12 @@ export const availAPI = {
 
   getAccount: async (address: string): Promise<Account> => {
     try {
-      return await accountsApi.getAccount(address)
+      const response = await fetch(`/api/accounts/${address}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch account')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch account:', error)
       throw error
@@ -781,7 +810,12 @@ export const availAPI = {
 
   search: async (query: string) => {
     try {
-      return await searchApi.search(query)
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to search')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to search:', error)
       throw error
@@ -790,7 +824,12 @@ export const availAPI = {
 
   getAnalytics: async () => {
     try {
-      return await analyticsApi.getNetworkAnalytics()
+      const response = await fetch('/api/analytics/network')
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch analytics')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
       throw error
@@ -804,12 +843,19 @@ export const availAPI = {
     submitter?: string
   ): Promise<DataSubmission[]> => {
     try {
-      return await dataSubmissionsApi.getDataSubmissions({
-        page,
-        limit,
-        appId,
-        submitter,
+      const params = new URLSearchParams({
+        page: (page - 1).toString(), // Convert to 0-based for Next.js API
+        limit: limit.toString(),
       })
+      if (appId) params.append('appId', appId.toString())
+      if (submitter) params.append('submitter', submitter)
+
+      const response = await fetch(`/api/data-submissions?${params}`)
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch data submissions')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch data submissions:', error)
       throw error
@@ -818,7 +864,12 @@ export const availAPI = {
 
   getDataSubmissionStats: async () => {
     try {
-      return await dataSubmissionsApi.getDataSubmissionStats()
+      const response = await fetch('/api/data-submissions/stats')
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch data submission stats')
+      }
+      return data.data || data
     } catch (error) {
       console.error('Failed to fetch data submission stats:', error)
       throw error
@@ -827,8 +878,8 @@ export const availAPI = {
 
   refreshBackendStatus: async (): Promise<boolean> => {
     try {
-      await healthApi.getHealth()
-      return true
+      const healthData = await healthApi.getHealth()
+      return healthData.backend?.available === true
     } catch {
       return false
     }

@@ -325,7 +325,7 @@ export function useAnalytics() {
 
 // Hook for backend connection status
 export function useBackendStatus() {
-  const [isConnected, setIsConnected] = useState(false)
+  const [isConnected, setIsConnected] = useState<boolean | null>(null) // Start with null to indicate "checking"
   const [lastChecked, setLastChecked] = useState<Date | null>(null)
 
   const checkStatus = useCallback(async () => {
@@ -349,7 +349,8 @@ export function useBackendStatus() {
   }, [checkStatus])
 
   return {
-    isConnected,
+    isConnected: isConnected ?? false, // Convert null to false for backward compatibility
+    isChecking: isConnected === null,
     lastChecked,
     checkStatus,
   }

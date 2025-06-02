@@ -116,6 +116,7 @@ const mockChainDataBase = {
 
 const mockBackendStatus = {
   isConnected: true,
+  isChecking: false,
   lastChecked: new Date(),
   checkStatus: jest.fn(),
 }

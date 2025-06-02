@@ -244,15 +244,21 @@ export function BackendStatus({
 
 // Quick status badge for headers/navigation
 export function StatusBadge({ className = '' }: { className?: string }) {
-  const { isConnected } = useBackendStatus()
+  const { isConnected, isChecking } = useBackendStatus()
 
   return (
     <div className={`flex items-center space-x-1 ${className}`}>
       <div
-        className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}
+        className={`w-2 h-2 rounded-full ${
+          isChecking
+            ? 'bg-blue-500 animate-pulse'
+            : isConnected
+              ? 'bg-green-500'
+              : 'bg-red-500'
+        }`}
       />
       <span className="text-xs text-gray-600">
-        {isConnected ? 'Online' : 'Offline'}
+        {isChecking ? 'Checking...' : isConnected ? 'Online' : 'Offline'}
       </span>
     </div>
   )
