@@ -114,21 +114,29 @@ export default function ExtrinsicsPage() {
     const successful = latestExtrinsics.filter(ext => ext.success).length
     const successRate = (successful / latestExtrinsics.length) * 100
 
-    const totalFees = latestExtrinsics.reduce(
-      (sum, ext) => sum + (typeof ext.fee === 'string' ? parseFloat(ext.fee) : ext.fee),
-      0
-    )
+    const totalFees = latestExtrinsics.reduce((sum, ext) => {
+      if (ext.fee !== undefined && ext.fee !== null) {
+        return (
+          sum + (typeof ext.fee === 'string' ? parseFloat(ext.fee) : ext.fee)
+        )
+      }
+      return sum
+    }, 0)
     const averageFee = totalFees / latestExtrinsics.length
 
     const methods = new Set(
-      latestExtrinsics.map(ext => `${ext.module}.${ext.call}`)
+      latestExtrinsics
+        .filter(ext => ext.module && ext.call)
+        .map(ext => `${ext.module}.${ext.call}`)
     )
     const uniqueMethods = methods.size
 
     const methodBreakdown = latestExtrinsics.reduce(
       (acc, ext) => {
         const key = ext.module
-        acc[key] = (acc[key] || 0) + 1
+        if (key) {
+          acc[key] = (acc[key] || 0) + 1
+        }
         return acc
       },
       {} as Record<string, number>
@@ -144,7 +152,7 @@ export default function ExtrinsicsPage() {
       header: 'Hash',
       cell: ({ row }) => (
         <Link
-          href={`/extrinsics/${row.original.hash}`}
+          href={`/extrinsics/${row.original.hash || ''}`}
           className="font-mono text-blue-600 hover:text-blue-800 hover:underline text-sm"
         >
           {row.original.hash
@@ -168,10 +176,10 @@ export default function ExtrinsicsPage() {
       ),
       cell: ({ row }) => (
         <Link
-          href={`/blocks/${row.original.blockNumber}`}
+          href={`/blocks/${row.original.blockNumber || 0}`}
           className="font-mono text-blue-600 hover:underline"
         >
-          #{row.original.blockNumber.toLocaleString()}
+          #{row.original.blockNumber?.toLocaleString() || 'N/A'}
         </Link>
       ),
     },
@@ -200,12 +208,14 @@ export default function ExtrinsicsPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Badge
-            className={`text-xs ${getMethodColor(row.original.module)}`}
+            className={`text-xs ${getMethodColor(row.original.module || '')}`}
             variant="secondary"
           >
-            {row.original.module}
+            {row.original.module || 'Unknown'}
           </Badge>
-          <span className="font-mono text-sm">{row.original.call}</span>
+          <span className="font-mono text-sm">
+            {row.original.call || 'Unknown'}
+          </span>
         </div>
       ),
     },
@@ -224,7 +234,7 @@ export default function ExtrinsicsPage() {
       ),
       cell: ({ row }) => (
         <Link
-          href={`/accounts/${row.original.signer}`}
+          href={`/accounts/${row.original.signer || ''}`}
           className="font-mono text-sm text-blue-600 hover:underline"
         >
           {row.original.signer
@@ -238,7 +248,10 @@ export default function ExtrinsicsPage() {
       header: 'Fee',
       cell: ({ row }) => (
         <span className="text-sm font-mono">
-          {formatFee(row.original.fee)} AVAIL
+          {row.original.fee !== undefined && row.original.fee !== null
+            ? formatFee(row.original.fee)
+            : '0'}{' '}
+          AVAIL
         </span>
       ),
     },
