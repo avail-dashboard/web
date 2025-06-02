@@ -3,7 +3,9 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios'
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 if (!API_BASE_URL) {
-  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+  throw new Error(
+    'NEXT_PUBLIC_API_BASE_URL environment variable is required but not set'
+  )
 }
 
 // Create axios instance with default config
@@ -35,11 +37,33 @@ api.interceptors.response.use(
       if (response.data.success === false) {
         throw new Error(response.data.error?.message || 'API request failed')
       }
+
+      // Debug logging for blocks data
+      if (response.config.url?.includes('/blocks') && response.data.data) {
+        console.log('Blocks API Response:', {
+          url: response.config.url,
+          dataLength: Array.isArray(response.data.data)
+            ? response.data.data.length
+            : 'not array',
+          firstBlock:
+            Array.isArray(response.data.data) && response.data.data.length > 0
+              ? {
+                  number: response.data.data[0].number,
+                  hash: response.data.data[0].hash,
+                  hashType: typeof response.data.data[0].hash,
+                  hashLength: response.data.data[0].hash?.length,
+                  parent_hash: response.data.data[0].parent_hash,
+                  parentHashType: typeof response.data.data[0].parent_hash,
+                }
+              : 'no blocks',
+        })
+      }
+
       // Return the data field for successful responses
       return {
         ...response,
         data: response.data.data,
-        meta: response.data.meta
+        meta: response.data.meta,
       }
     }
     return response
@@ -80,8 +104,8 @@ export interface PaginatedResponse<T> {
 // Updated interfaces to match backend API documentation
 export interface Block {
   number: number
-  hash: string
-  parent_hash: string
+  hash?: string
+  parent_hash?: string
   timestamp: number
   extrinsics: number
   time: string
@@ -257,10 +281,7 @@ export interface DataThroughputData {
 
 // Blocks API
 export const blocksApi = {
-  getBlocks: (params?: {
-    page?: number
-    limit?: number
-  }): Promise<Block[]> =>
+  getBlocks: (params?: { page?: number; limit?: number }): Promise<Block[]> =>
     api.get('/blocks', { params }).then(res => res.data || []),
 
   getBlock: (identifier: string): Promise<Block> =>
@@ -279,15 +300,15 @@ export const extrinsicsApi = {
     limit?: number
     block?: number
   }): Promise<Extrinsic[]> =>
-    api
-      .get('/extrinsics', { params })
-      .then(res => res.data || []),
+    api.get('/extrinsics', { params }).then(res => res.data || []),
 
   getExtrinsic: (hash: string): Promise<Extrinsic> =>
     api.get(`/extrinsics/${hash}`).then(res => res.data),
 
   getLatestExtrinsics: (limit = 10): Promise<Extrinsic[]> =>
-    api.get('/extrinsics', { params: { page: 1, limit } }).then(res => res.data || []),
+    api
+      .get('/extrinsics', { params: { page: 1, limit } })
+      .then(res => res.data || []),
 }
 
 // Accounts API
@@ -314,10 +335,7 @@ export const dataSubmissionsApi = {
 
 // Validators API
 export const validatorsApi = {
-  getValidators: (params?: {
-    page?: number
-    limit?: number
-  }) =>
+  getValidators: (params?: { page?: number; limit?: number }) =>
     api.get('/validators', { params }).then(res => res.data?.validators || []),
 
   getValidator: (address: string): Promise<Validator> =>
@@ -347,8 +365,10 @@ export const analyticsApi = {
   getRollupAnalytics: (params?: { period?: string }) =>
     api.get('/analytics/rollups', { params }).then(res => res.data),
 
-  getDataThroughputAnalytics: (params?: { period?: string; granularity?: string }) =>
-    api.get('/analytics/data-throughput', { params }).then(res => res.data),
+  getDataThroughputAnalytics: (params?: {
+    period?: string
+    granularity?: string
+  }) => api.get('/analytics/data-throughput', { params }).then(res => res.data),
 
   getValidatorAnalytics: () =>
     api.get('/analytics/validators').then(res => res.data),
@@ -366,17 +386,23 @@ export const rollupsApi = {
     status?: string
     sortBy?: string
     sortOrder?: string
-  }) =>
-    api.get('/rollups', { params }).then(res => res.data?.rollups || []),
+  }) => api.get('/rollups', { params }).then(res => res.data?.rollups || []),
 
   getRollup: (appId: number) =>
     api.get(`/rollups/${appId}`).then(res => res.data),
 
-  getRollupSubmissions: (appId: number, params?: { page?: number; limit?: number }) =>
-    api.get(`/rollups/${appId}/submissions`, { params }).then(res => res.data?.submissions || []),
+  getRollupSubmissions: (
+    appId: number,
+    params?: { page?: number; limit?: number }
+  ) =>
+    api
+      .get(`/rollups/${appId}/submissions`, { params })
+      .then(res => res.data?.submissions || []),
 
   getRollupBlobs: (appId: number, params?: { page?: number; limit?: number }) =>
-    api.get(`/rollups/${appId}/blobs`, { params }).then(res => res.data?.blobs || []),
+    api
+      .get(`/rollups/${appId}/blobs`, { params })
+      .then(res => res.data?.blobs || []),
 
   getRollupAnalytics: (appId: number, params?: { period?: string }) =>
     api.get(`/rollups/${appId}/analytics`, { params }).then(res => res.data),
@@ -385,13 +411,14 @@ export const rollupsApi = {
 // Search API
 export const searchApi = {
   search: (query: string) =>
-    api.get(`/search?q=${encodeURIComponent(query)}`).then(res => res.data || []),
+    api
+      .get(`/search?q=${encodeURIComponent(query)}`)
+      .then(res => res.data || []),
 }
 
 // Health API
 export const healthApi = {
-  getHealth: () =>
-    api.get('/health').then(res => res.data),
+  getHealth: () => api.get('/health').then(res => res.data),
 }
 
 // Export the main api instance for custom requests
@@ -432,7 +459,10 @@ export const availAPI = {
     limit: number = 10
   ): Promise<Extrinsic[]> => {
     try {
-      const params: { block?: number; page?: number; limit?: number } = { page, limit }
+      const params: { block?: number; page?: number; limit?: number } = {
+        page,
+        limit,
+      }
       if (blockNumber) {
         params.block = blockNumber
       }
@@ -490,7 +520,7 @@ export const availAPI = {
         page,
         limit,
         appId,
-        submitter
+        submitter,
       })
     } catch (error) {
       console.error('Failed to fetch data submissions:', error)

@@ -161,7 +161,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
                   {block.hash}
                 </span>
                 <button
-                  onClick={() => copyToClipboard(block.hash, 'hash')}
+                  onClick={() => copyToClipboard(block.hash || '', 'hash')}
                   className="p-1 hover:bg-muted rounded"
                   title="Copy hash"
                 >
