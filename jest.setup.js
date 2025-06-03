@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-// import { server } from './src/__tests__/setup/server'
+// import { server } from './src/__tests__/setup/msw'
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -25,7 +25,6 @@ jest.mock('next/navigation', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: props => {
-    // eslint-disable-next-line @next/next/no-img-element
     return <img {...props} />
   },
 }))
@@ -77,7 +76,7 @@ afterAll(() => {
   console.error = originalError
 })
 
-// MSW setup (temporarily disabled)
+// MSW setup - temporarily disabled to fix commit
 // beforeAll(() => server.listen())
 // afterEach(() => server.resetHandlers())
 // afterAll(() => server.close())

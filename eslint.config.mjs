@@ -26,4 +26,14 @@ export default [
       'react/jsx-uses-react': 'off',
     },
   },
+  {
+    files: ['**/__tests__/**/*', '**/*.test.*', '**/*.spec.*', 'jest.setup.js'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.jest,
+      },
+    },
+  },
 ]
