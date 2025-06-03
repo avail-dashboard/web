@@ -1,6 +1,47 @@
 {
   "extends": ["next/core-web-vitals"],
+  "env": {
+    "jest": true,
+    "node": true,
+    "browser": true,
+    "es6": true
+  },
+  "globals": {
+    "jest": "readonly",
+    "beforeAll": "readonly",
+    "afterAll": "readonly",
+    "beforeEach": "readonly",
+    "afterEach": "readonly",
+    "describe": "readonly",
+    "it": "readonly",
+    "test": "readonly",
+    "expect": "readonly"
+  },
   "rules": {
     "@next/next/no-html-link-for-pages": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/__tests__/**/*",
+        "**/*.test.*",
+        "**/*.spec.*",
+        "jest.setup.js"
+      ],
+      "env": {
+        "jest": true
+      },
+      "globals": {
+        "jest": "readonly",
+        "beforeAll": "readonly",
+        "afterAll": "readonly",
+        "beforeEach": "readonly",
+        "afterEach": "readonly",
+        "describe": "readonly",
+        "it": "readonly",
+        "test": "readonly",
+        "expect": "readonly"
+      }
+    }
+  ]
 }
