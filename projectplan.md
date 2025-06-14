@@ -1,96 +1,74 @@
-# System Improvement Plan
+# Project Plan: Add Dedicated Sections to Avail DA Explorer Scope
 
 ## Overview
-Based on the architecture analysis, here are potential improvements focusing on simplicity and minimal code impact.
+Adding dedicated sections for Blocks, Extrinsics, Rollups, Accounts, and Validators to enhance the scope document with detailed specifications for each core entity.
 
-## Proposed Changes
+## Completed Todo Items
+- [x] Add detailed Blocks section with UI specifications and features
+- [x] Add detailed Extrinsics section with list and detail views  
+- [x] Add detailed Rollups section with analytics and tracking
+- [x] Add detailed Accounts section with profile and history features
+- [x] Add detailed Validators section with staking and validation info
+- [x] Review and ensure consistency across all sections
 
-### 1. Performance Optimizations
-- [x] **Optimize API request batching** - ✅ COMPLETED: Added request deduplication layer to availAPI with smart caching (10s-5min TTL based on data type)
-- [ ] **Improve loading states** - Add skeleton loaders for better perceived performance
-- [ ] **Optimize bundle size** - Remove unused dependencies and implement tree shaking improvements
+## Plan Details
 
-### 2. Code Quality & Maintainability
-- [x] **Simplify complex components** - ✅ COMPLETED: Refactored ExtrinsicsPage (437→146 lines) into focused components
-- [x] **Remove unused code** - ✅ COMPLETED: Removed 6 unused files and cleaned up imports, ~500+ lines removed
-- [ ] **Standardize error handling** - Create consistent error handling patterns across components
+### 1. Blocks Section
+- List view with sorting and filtering
+- Detailed block view with comprehensive data
+- Block analytics and statistics
+- Navigation features
 
-### 3. User Experience Enhancements
-- [ ] **Improve mobile responsiveness** - Fix layout issues on smaller screens
-- [ ] **Enhanced search functionality** - Add search suggestions and better error messages
-- [ ] **Better accessibility** - Add proper ARIA labels and keyboard navigation
+### 2. Extrinsics Section  
+- Comprehensive list view with filters
+- Detailed extrinsic view with full transaction data
+- Search and navigation capabilities
+- Status tracking and result display
 
-### 4. Developer Experience
-- [ ] **Improve dev tooling** - Add better debugging tools and development helpers
-- [ ] **Enhance documentation** - Update inline code comments and README sections
-- [ ] **Optimize hot reload** - Reduce development server restart frequency
+### 3. Rollups Section
+- Rollup overview and leaderboard
+- Individual rollup detailed pages
+- Analytics dashboard with charts
+- Blob tracking and management
 
-### 5. Technical Debt
-- [ ] **Update outdated dependencies** - Safely upgrade packages with known vulnerabilities
-- [ ] **Simplify configuration** - Consolidate environment variables and config files
-- [ ] **Improve type safety** - Add missing TypeScript types and reduce `any` usage
+### 4. Accounts Section
+- Account profile pages
+- Balance and role information
+- Transaction history and activity
+- Staking and nomination details
 
-## Priority Order
-1. **High**: Performance optimizations (loading states, API batching)
-2. **Medium**: Code quality improvements (unused code cleanup)
-3. **Low**: Developer experience enhancements
+### 5. Validators Section
+- Validator list with status indicators
+- Detailed validator profiles
+- Staking metrics and performance
+- Era and epoch tracking
 
-## Success Metrics
-- Improved page load times
-- Reduced bundle size
-- Better mobile experience
-- Cleaner codebase with less complexity
+Each section will include UI/UX specifications, data requirements, and integration points with existing features.
 
-## Notes
-- All changes will be minimal and focused
-- Each task targets specific files/components
-- No major architectural changes
-- Maintain existing functionality
+## Review Section
 
-## Implementation Progress
+### Implementation Summary
 
-### ✅ Completed: API Request Batching (High Priority)
-**What was done:**
-- Added `RequestDeduplicator` class with smart caching to `src/lib/api.ts`
-- Enhanced all `availAPI` methods with request deduplication
-- Standardized polling intervals: 15s for blocks, 60s for chain data
-- Added cache management methods: `clearCache()` and `getCacheStats()`
+All dedicated sections have been successfully added to the scope document with comprehensive specifications:
 
-**Files modified:**
-- `src/lib/api.ts` - Added deduplication layer
-- `src/lib/hooks/useAvailAPI.ts` - Standardized polling intervals
+**1. Blocks Section** - Complete block explorer with list/detail views, filtering, search, navigation, and export capabilities
 
-**Performance gains:**
-- Prevents duplicate API calls for same data within TTL window
-- Reduces network requests by ~40-60% in typical usage
-- Smart caching with data-specific TTLs (10s default, 30s chain, 60s blocks, 5min validators)
+**2. Extrinsics Section** - Full transaction tracking with advanced filtering, parameter decoding, event tracking, and data submission details
 
-### ✅ Completed: Code Quality & Maintainability (Medium Priority)
-**What was done:**
-- **Component Simplification**: Refactored ExtrinsicsPage from 437 lines to 146 lines
-- **Created reusable components**: 
-  - `ExtrinsicsStatsCards` - Stats display component
-  - `ExtrinsicsFilters` - Filter controls component  
-  - `extrinsicTableColumns` - Table column definitions
-  - `extrinsicFormatters` - Utility functions
-- **Removed unused code**: 6 unused component files, 3+ unused React imports
-- **Cleaner architecture**: Separated concerns, improved maintainability
+**3. Rollups Section** - Comprehensive rollup analytics with leaderboard, individual rollup pages, blob management, and market analysis
 
-**Files created:**
-- `src/lib/utils/extrinsicFormatters.ts` - Utility functions
-- `src/components/extrinsics/ExtrinsicsStatsCards.tsx` - Stats component
-- `src/components/extrinsics/ExtrinsicsFilters.tsx` - Filters component
-- `src/components/extrinsics/extrinsicTableColumns.tsx` - Table columns
+**4. Accounts Section** - Detailed account profiling with balance tracking, activity history, staking information, and analytics dashboard
 
-**Files removed:**
-- 6 completely unused components (~500+ lines of dead code)
+**5. Validators Section** - Complete validator ecosystem with performance metrics, nomination pools, staking tools, and network analytics
 
-**Code quality gains:**
-- Better separation of concerns
-- Reusable components
-- Cleaner, more maintainable code
-- Reduced complexity and cognitive load
+### Consistency Review
 
-**Next steps:**
-- Convert components using direct API calls to unified hooks
-- Implement skeleton loaders for better loading states
+All sections follow consistent design patterns:
+- **List Views**: Tables with filtering, search, sorting, pagination
+- **Detail Views**: Header sections, information panels, tabbed content  
+- **Analytics**: Charts, visualizations, performance metrics
+- **Export Options**: CSV/JSON capabilities throughout
+- **Navigation**: Cross-linking between related entities
+- **Search**: Consistent search functionality across all sections
+
+The scope document now provides a complete blueprint for building a comprehensive Avail DA Explorer with dedicated sections for all core blockchain entities. Each section includes detailed UI/UX specifications, data requirements, and integration points that will enable developers to build a fully-featured explorer application.

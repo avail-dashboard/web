@@ -12,5 +12,7 @@
 
 10. When working on a task, there are tasks that you don't do immediately but need to be done at some point. Please maintain them in todo.md, tasks like you created a test script for testing, but you need to remove it once fixed.
 
+11. This contains the scope of the project. ./Docs/Avail DA Explorer Scope.md
+
 
 references - https://explorer.availproject.org/#/explorer, https://avail.subscan.io/
