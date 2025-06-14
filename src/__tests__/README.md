@@ -131,7 +131,7 @@ npm run test:ci
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 
 # WebSocket URL for testing
-NEXT_PUBLIC_WEBSOCKET_URL=http://localhost:3001
+NEXT_PUBLIC_WS_URL=http://localhost:3001
 
 # Playwright test URL
 PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000

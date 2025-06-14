@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client'
 
 // Mock WebSocket server URL
 const WEBSOCKET_URL =
-  process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3001'
+  process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001'
 
 describe('WebSocket Real-time Updates', () => {
   let socket: Socket

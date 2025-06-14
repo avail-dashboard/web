@@ -246,15 +246,11 @@ export class AvailWebSocket {
   }
 }
 
-// Validate required environment variables
-const wsUrl = process.env.NEXT_PUBLIC_WS_URL
-if (!wsUrl) {
-  throw new Error('NEXT_PUBLIC_WS_URL environment variable is required but not set')
-}
+import { WS_URL } from './env'
 
-// Create and export WebSocket instance
+// Create and export WebSocket instance - No fallbacks, env validation ensures WS_URL exists
 const wsConfig: WebSocketConfig = {
-  url: wsUrl,
+  url: WS_URL,
   autoConnect: false, // We'll connect manually
   reconnection: true,
   reconnectionAttempts: 5,

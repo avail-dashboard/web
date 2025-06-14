@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 
-const BACKEND_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3001/api'
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+if (!BACKEND_API_URL) {
+  throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
+}
 
 export async function GET(
   request: Request,
