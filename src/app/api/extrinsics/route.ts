@@ -7,15 +7,23 @@ if (!API_BASE_URL) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  // Remove pagination parameters - get all extrinsics
+  const page = searchParams.get('page') || '1'
+  const limit = searchParams.get('limit') || '10'
+  const sortBy = searchParams.get('sort_by') || 'id'
+  const sortOrder = searchParams.get('sort_order') || 'desc'
   const block = searchParams.get('block')
   const signer = searchParams.get('signer')
   const method = searchParams.get('method')
   const success = searchParams.get('success')
 
   try {
-    // Fetch from backend API without pagination
-    const params = new URLSearchParams()
+    // Fetch from backend API with pagination and sorting
+    const params = new URLSearchParams({
+      page,
+      limit,
+      sort_by: sortBy,
+      sort_order: sortOrder
+    })
     if (block) {
       params.append('block', block)
     }
@@ -42,7 +50,7 @@ export async function GET(request: Request) {
 
     if (backendResponse.ok) {
       const data = await backendResponse.json()
-      console.log('✅ Backend extrinsics data received (all results)')
+      console.log('✅ Backend extrinsics data received')
       return NextResponse.json(data)
     }
 

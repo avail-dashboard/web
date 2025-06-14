@@ -19,7 +19,7 @@ export default function ExtrinsicsPage() {
   // State for filters
   const [blockFilter, setBlockFilter] = React.useState<string>(blockParam || '')
   const [signerFilter, setSignerFilter] = React.useState<string>('')
-  const [methodFilter, setMethodFilter] = React.useState<string>('')
+  const [methodFilter, setMethodFilter] = React.useState<string>('all')
   const [successFilter, setSuccessFilter] = React.useState<string>('all')
 
   // Fetch extrinsics data
@@ -59,7 +59,7 @@ export default function ExtrinsicsPage() {
       )
     }
 
-    if (methodFilter) {
+    if (methodFilter && methodFilter !== 'all') {
       filtered = filtered.filter(ext =>
         ext.module?.toLowerCase().includes(methodFilter.toLowerCase()) ||
         ext.call?.toLowerCase().includes(methodFilter.toLowerCase())
@@ -79,7 +79,7 @@ export default function ExtrinsicsPage() {
   const handleClearFilters = () => {
     setBlockFilter('')
     setSignerFilter('')
-    setMethodFilter('')
+    setMethodFilter('all')
     setSuccessFilter('all')
   }
 

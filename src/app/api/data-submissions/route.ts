@@ -5,17 +5,21 @@ const BACKEND_API_URL =
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const page = searchParams.get('page') || '0'
+  const page = searchParams.get('page') || '1'
   const limit = searchParams.get('limit') || '10'
+  const sortBy = searchParams.get('sort_by') || 'block_number'
+  const sortOrder = searchParams.get('sort_order') || 'desc'
   const appId = searchParams.get('appId')
   const submitter = searchParams.get('submitter')
 
   try {
-    // Convert 0-based pagination to 1-based for backend
-    const backendPage = (parseInt(page) + 1).toString()
-
-    // Fetch from backend API
-    const params = new URLSearchParams({ page: backendPage, limit })
+    // Use 1-based pagination as per Postman collection
+    const params = new URLSearchParams({ 
+      page, 
+      limit,
+      sort_by: sortBy,
+      sort_order: sortOrder
+    })
     if (appId) params.append('appId', appId)
     if (submitter) params.append('submitter', submitter)
 
@@ -50,10 +54,10 @@ export async function GET(request: Request) {
           error: `Backend server error: ${backendResponse.status} ${backendResponse.statusText}`,
           data: [],
           meta: {
+            source: 'error',
             page: parseInt(page),
             limit: parseInt(limit),
             total: 0,
-            source: 'error',
           },
         },
         { status: 503 }

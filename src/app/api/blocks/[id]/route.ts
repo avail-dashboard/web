@@ -29,21 +29,9 @@ export async function GET(
       const data = await backendResponse.json()
 
       if (data.success && data.data) {
-        const rawBlock = data.data
-
-        // Transform snake_case to camelCase
-        const block = {
-          number: rawBlock.number,
-          hash: rawBlock.hash,
-          time: rawBlock.timestamp || rawBlock.time,
-          extrinsics: rawBlock.extrinsics_count || rawBlock.extrinsics,
-          parentHash: rawBlock.parent_hash || rawBlock.parentHash,
-          stateRoot: rawBlock.state_root || rawBlock.stateRoot,
-        }
-
         return NextResponse.json({
           success: true,
-          data: block,
+          data: data.data,
           timestamp: new Date().toISOString(),
         })
       }

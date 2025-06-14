@@ -5,29 +5,20 @@ if (!API_BASE_URL) {
   throw new Error('NEXT_PUBLIC_API_BASE_URL environment variable is required but not set')
 }
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const page = searchParams.get('page') || '1'
-  const limit = searchParams.get('limit') || '10'
-  const sortBy = searchParams.get('sort_by') || 'number'
-  const sortOrder = searchParams.get('sort_order') || 'desc'
+export async function GET(
+  request: Request,
+  { params }: { params: { blockNumber: string } }
+) {
+  const blockNumber = params.blockNumber
 
   try {
-    // Fetch from backend API with proper parameters
-    const params = new URLSearchParams({
-      page,
-      limit,
-      sort_by: sortBy,
-      sort_order: sortOrder
-    })
     const backendResponse = await fetch(
-      `${API_BASE_URL}/blocks?${params}`,
+      `${API_BASE_URL}/extrinsics/block/${blockNumber}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Increased timeout since we're not using fallback
         signal: AbortSignal.timeout(10000),
       }
     )
@@ -37,12 +28,10 @@ export async function GET(request: Request) {
       return NextResponse.json(data)
     }
 
-    // If backend fails, return error instead of fallback
     throw new Error(`Backend API error: ${backendResponse.status}`)
   } catch (error) {
-    console.error('Blocks API error:', error)
+    console.error('Extrinsics by block API error:', error)
 
-    // Determine error type for better error messages
     if (error instanceof Error) {
       if (error.name === 'TimeoutError') {
         return NextResponse.json(
@@ -67,9 +56,9 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch blocks',
+        error: 'Failed to fetch block extrinsics',
       },
       { status: 500 }
     )
   }
-}
+} 

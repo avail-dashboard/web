@@ -8,10 +8,11 @@ if (!API_BASE_URL) {
 }
 
 export async function GET() {
+  const timestamp = new Date().toISOString()
   const health = {
     frontend: {
       status: 'healthy',
-      timestamp: new Date().toISOString(),
+      timestamp,
       version: '1.0.0',
     },
     backend: {
@@ -21,9 +22,9 @@ export async function GET() {
       error: null as string | null,
     },
     services: {
-      websocket: false,
-      caching: false,
-      database: false,
+      websocket: { enabled: false },
+      caching: { connected: false, ping: null, note: 'Not connected' },
+      database: { connected: false, note: 'Not connected' },
     },
   }
 
@@ -43,8 +44,8 @@ export async function GET() {
       health.backend.available = true
 
       // Extract service status if available
-      if (backendHealth.services) {
-        health.services = { ...health.services, ...backendHealth.services }
+      if (backendHealth.data && backendHealth.data.services) {
+        health.services = { ...health.services, ...backendHealth.data.services }
       }
     } else {
       console.log('❌ Backend returned error status:', backendResponse.status)
@@ -63,9 +64,16 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      ...health,
+      success: true,
+      data: {
+        status: overallStatus,
+        timestamp,
+        uptime: process.uptime(),
+        version: '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        services: health.services,
+      },
+      timestamp,
     },
     {
       status: overallStatus === 'healthy' ? 200 : 503,

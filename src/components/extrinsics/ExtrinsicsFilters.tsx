@@ -41,7 +41,7 @@ export function ExtrinsicsFilters({
   setSuccessFilter,
   onClearFilters,
 }: ExtrinsicsFiltersProps) {
-  const hasActiveFilters = blockFilter || signerFilter || methodFilter || successFilter !== 'all'
+  const hasActiveFilters = blockFilter || signerFilter || (methodFilter && methodFilter !== 'all') || successFilter !== 'all'
 
   return (
     <Card>
@@ -82,7 +82,7 @@ export function ExtrinsicsFilters({
                 <SelectValue placeholder="All methods" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All methods</SelectItem>
+                <SelectItem value="all">All methods</SelectItem>
                 <SelectItem value="balances">Balances</SelectItem>
                 <SelectItem value="timestamp">Timestamp</SelectItem>
                 <SelectItem value="system">System</SelectItem>
