@@ -181,7 +181,7 @@ export function useBlocks(
     onNewBlock?: (block: Block) => void
   }
 ) {
-  const { refetchInterval = 15000, onNewBlock } = options || {} // Increased from 6s to 15s
+  const { refetchInterval = 15000, onNewBlock } = options || {} // Standardized to 15s
 
   // Memoize the API call function
   const apiCall = useCallback(() => availAPI.getLatestBlocks(count), [count])
@@ -215,7 +215,7 @@ export function useChainData(options?: { refetchInterval?: number }): {
   error: Error | null
   refetch: () => Promise<void>
 } {
-  const { refetchInterval = 60000 } = options || {} // Increased from 30s to 60s
+  const { refetchInterval = 60000 } = options || {} // Standardized to 60s
 
   // Memoize the API call function
   const apiCall = useCallback(() => availAPI.getChainData(), [])

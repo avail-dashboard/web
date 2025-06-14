@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { useBlocks, useChainData } from '@/lib/hooks/useAvailAPI'
 import { TokenDistributionChart } from '@/components/charts/TokenDistributionChart'
 import { BlocksChart } from '@/components/charts/BlocksChart'

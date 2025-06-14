@@ -712,48 +712,154 @@ export const healthApi = {
 // Export the main api instance for custom requests
 export default api
 
+// Request deduplication and caching layer
+interface CacheEntry<T> {
+  data: T
+  timestamp: number
+  promise?: Promise<T>
+}
+
+class RequestDeduplicator {
+  private cache = new Map<string, CacheEntry<any>>()
+  private pendingRequests = new Map<string, Promise<any>>()
+  
+  // Default cache TTL: 10 seconds for most requests
+  private defaultTTL = 10 * 1000 
+  
+  // Custom TTLs for different types of data
+  private customTTLs = {
+    'chain-data': 30 * 1000, // 30s for chain stats
+    'blocks-latest': 10 * 1000, // 10s for latest blocks
+    'block-detail': 60 * 1000, // 60s for individual blocks
+    'validators': 5 * 60 * 1000, // 5min for validators
+  }
+  
+  private getCacheKey(endpoint: string, params?: Record<string, any>): string {
+    const paramStr = params ? JSON.stringify(params) : ''
+    return `${endpoint}:${paramStr}`
+  }
+  
+  private getTTL(cacheType: string): number {
+    return this.customTTLs[cacheType as keyof typeof this.customTTLs] || this.defaultTTL
+  }
+  
+  private isStale(entry: CacheEntry<any>, ttl: number): boolean {
+    return Date.now() - entry.timestamp > ttl
+  }
+  
+  async deduplicate<T>(
+    cacheKey: string,
+    cacheType: string,
+    requestFn: () => Promise<T>
+  ): Promise<T> {
+    const ttl = this.getTTL(cacheType)
+    const existing = this.cache.get(cacheKey)
+    
+    // Return cached data if not stale
+    if (existing && !this.isStale(existing, ttl)) {
+      return existing.data
+    }
+    
+    // Return pending request if already in flight
+    if (this.pendingRequests.has(cacheKey)) {
+      return this.pendingRequests.get(cacheKey)
+    }
+    
+    // Make new request
+    const promise = requestFn()
+    this.pendingRequests.set(cacheKey, promise)
+    
+    try {
+      const data = await promise
+      
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      })
+      
+      return data
+    } catch (error) {
+      // Don't cache errors, but remove from pending
+      this.pendingRequests.delete(cacheKey)
+      throw error
+    } finally {
+      // Always remove from pending requests
+      this.pendingRequests.delete(cacheKey)
+    }
+  }
+  
+  // Method to clear cache (useful for manual refresh)
+  clearCache(pattern?: string) {
+    if (pattern) {
+      for (const key of this.cache.keys()) {
+        if (key.includes(pattern)) {
+          this.cache.delete(key)
+        }
+      }
+    } else {
+      this.cache.clear()
+    }
+  }
+  
+  // Method to get cache stats (for debugging)
+  getCacheStats() {
+    return {
+      cacheSize: this.cache.size,
+      pendingRequests: this.pendingRequests.size,
+      cacheKeys: Array.from(this.cache.keys()),
+    }
+  }
+}
+
+// Create a singleton deduplicator instance
+const requestDeduplicator = new RequestDeduplicator()
+
 // Export the unified API interface that hooks expect
 export const availAPI = {
   getChainData: async (): Promise<ChainStats> => {
-    try {
-      const response = await fetch('/api/chain')
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch chain data')
+    return requestDeduplicator.deduplicate(
+      'chain-data',
+      'chain-data',
+      async () => {
+        const response = await fetch('/api/chain')
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch chain data')
+        }
+        return data
       }
-      return data
-    } catch (error) {
-      console.error('Failed to fetch chain data:', error)
-      throw error
-    }
+    )
   },
 
   getLatestBlocks: async (count: number = 10): Promise<Block[]> => {
-    try {
-      const response = await fetch(`/api/blocks?limit=${count}`)
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch latest blocks')
+    return requestDeduplicator.deduplicate(
+      `blocks-latest:${count}`,
+      'blocks-latest',
+      async () => {
+        const response = await fetch(`/api/blocks?limit=${count}`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch latest blocks')
+        }
+        return data.data || data
       }
-      return data.data || data
-    } catch (error) {
-      console.error('Failed to fetch latest blocks:', error)
-      throw error
-    }
+    )
   },
 
   getBlock: async (numberOrHash: string | number): Promise<Block> => {
-    try {
-      const response = await fetch(`/api/blocks/${numberOrHash}`)
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch block')
+    return requestDeduplicator.deduplicate(
+      `block:${numberOrHash}`,
+      'block-detail',
+      async () => {
+        const response = await fetch(`/api/blocks/${numberOrHash}`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch block')
+        }
+        return data.data || data
       }
-      return data.data || data
-    } catch (error) {
-      console.error('Failed to fetch block:', error)
-      throw error
-    }
+    )
   },
 
   getExtrinsics: async (
@@ -761,37 +867,39 @@ export const availAPI = {
     page: number = 1,
     limit: number = 10
   ): Promise<Extrinsic[]> => {
-    try {
-      const params = new URLSearchParams()
-      if (blockNumber) params.append('block', blockNumber.toString())
-      if (page) params.append('page', page.toString())
-      if (limit) params.append('limit', limit.toString())
+    const cacheKey = `extrinsics:${JSON.stringify({ blockNumber, page, limit })}`
+    return requestDeduplicator.deduplicate(
+      cacheKey,
+      'default',
+      async () => {
+        const params = new URLSearchParams()
+        if (blockNumber) params.append('block', blockNumber.toString())
+        if (page) params.append('page', page.toString())
+        if (limit) params.append('limit', limit.toString())
 
-      const response = await fetch(`/api/extrinsics?${params}`)
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch extrinsics')
+        const response = await fetch(`/api/extrinsics?${params}`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch extrinsics')
+        }
+        return data.data || data
       }
-      return data.data || data
-    } catch (error) {
-      console.error('Failed to fetch extrinsics:', error)
-      throw error
-    }
+    )
   },
 
   getValidators: async (): Promise<Validator[]> => {
-    try {
-      // Note: This endpoint might not exist yet, but keeping for consistency
-      const response = await fetch('/api/validators?page=1&limit=100')
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch validators')
+    return requestDeduplicator.deduplicate(
+      'validators',
+      'validators',
+      async () => {
+        const response = await fetch('/api/validators?page=1&limit=100')
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch validators')
+        }
+        return data.data || data
       }
-      return data.data || data
-    } catch (error) {
-      console.error('Failed to fetch validators:', error)
-      throw error
-    }
+    )
   },
 
   getAccount: async (address: string): Promise<Account> => {
@@ -809,17 +917,18 @@ export const availAPI = {
   },
 
   search: async (query: string) => {
-    try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to search')
+    return requestDeduplicator.deduplicate(
+      `search:${query}`,
+      'default',
+      async () => {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to search')
+        }
+        return data.data || data
       }
-      return data.data || data
-    } catch (error) {
-      console.error('Failed to search:', error)
-      throw error
-    }
+    )
   },
 
   getAnalytics: async () => {
@@ -883,6 +992,15 @@ export const availAPI = {
     } catch {
       return false
     }
+  },
+
+  // Cache management methods
+  clearCache: (pattern?: string) => {
+    requestDeduplicator.clearCache(pattern)
+  },
+
+  getCacheStats: () => {
+    return requestDeduplicator.getCacheStats()
   },
 }
 
