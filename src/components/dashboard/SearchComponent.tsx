@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react'
 import { Search, Loader2 } from 'lucide-react'
-import { availAPI } from '@/lib/api'
+import { searchApi } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 
 interface SearchResult {
-  type: 'block' | 'transaction' | 'account'
+  type: 'block' | 'extrinsic' | 'rollup' | 'data_submission'
   id: string
   data: Record<string, unknown>
 }
@@ -24,7 +24,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
 
   const detectSearchType = (
     input: string
-  ): 'block' | 'transaction' | 'account' | 'unknown' => {
+  ): 'block' | 'extrinsic' | 'rollup' | 'data_submission' | 'unknown' => {
     const trimmed = input.trim()
 
     // Block number (numeric)
@@ -32,17 +32,18 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
       return 'block'
     }
 
-    // Transaction hash or block hash (0x followed by hex)
+    // Hash (0x followed by 64 hex characters) - could be block, extrinsic, or data submission
     if (/^0x[a-fA-F0-9]{64}$/.test(trimmed)) {
-      return 'transaction'
+      return 'extrinsic' // Let API determine the actual type
     }
 
-    // Account address (starts with 5 and is 48 characters)
-    if (/^5[a-zA-Z0-9]{47}$/.test(trimmed)) {
-      return 'account'
+    // Account address (47+ characters, Substrate format)
+    if (trimmed.length >= 47 && /^[a-zA-Z0-9]+$/.test(trimmed)) {
+      return 'extrinsic' // Search for extrinsics by signer
     }
 
-    return 'unknown'
+    // Text search - likely rollup name
+    return 'rollup'
   }
 
   const performSearch = async (searchQuery: string) => {
@@ -55,24 +56,58 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
     try {
       const searchType = detectSearchType(searchQuery)
 
-      if (searchType === 'unknown') {
-        setError(
-          'Invalid search format. Please enter a valid block number, transaction hash, or account address.'
-        )
-        return
-      }
+      // Use the search API instead of direct navigation
+      try {
+        const searchResults = await searchApi.search(searchQuery)
+        console.log('Frontend received search results:', searchResults)
+        
+        if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
+          setError('No results found for your search query.')
+          return
+        }
 
-      // Navigate directly to the appropriate page based on search type
-      switch (searchType) {
-        case 'block':
-          router.push(`/blocks/${searchQuery.trim()}`)
-          break
-        case 'transaction':
-          router.push(`/extrinsics/${searchQuery.trim()}`)
-          break
-        case 'account':
-          router.push(`/accounts/${searchQuery.trim()}`)
-          break
+        // If single result, navigate directly
+        if (searchResults.results.length === 1) {
+          const result = searchResults.results[0]
+          switch (result.type) {
+            case 'block':
+              router.push(`/blocks/${result.id}`)
+              break
+            case 'extrinsic':
+              router.push(`/extrinsics/${result.data.hash || result.id}`)
+              break
+            case 'rollup':
+              router.push(`/rollups/${result.id}`)
+              break
+            case 'data_submission':
+              router.push(`/data-submissions/${result.id}`)
+              break
+          }
+        } else {
+          // Multiple results - set them for display
+          setResults(searchResults.results.map(r => ({
+            type: r.type,
+            id: r.id,
+            data: r.data
+          })))
+        }
+      } catch (apiError) {
+        console.error('Search API error:', apiError)
+        // Fallback to direct navigation based on detected type
+        switch (searchType) {
+          case 'block':
+            router.push(`/blocks/${searchQuery.trim()}`)
+            break
+          case 'extrinsic':
+            router.push(`/extrinsics/${searchQuery.trim()}`)
+            break
+          case 'rollup':
+            setError('Rollup search requires API connection.')
+            return
+          case 'data_submission':
+            router.push(`/data-submissions/${searchQuery.trim()}`)
+            break
+        }
       }
 
       // Clear the search input
@@ -101,7 +136,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search blocks, transactions, or accounts..."
+            placeholder="Search blocks, extrinsics, rollups, or data submissions..."
             className="w-full pl-10 pr-12 py-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-avail-500 focus:border-transparent"
           />
           <button

@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Search, Loader2, Hash, User, Blocks, Shield } from "lucide-react"
+import { Search, Loader2, Hash, User, Blocks, Shield, Database, Package } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import Fuse from "fuse.js"
 
 import { cn } from "@/lib/utils"
-import { searchApi, Block, Extrinsic, Account, Validator } from "@/lib/api"
+import { searchApi, SearchResult, SearchData } from "@/lib/api"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,9 +19,8 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 
-interface SearchResult {
-  type: 'block' | 'extrinsic' | 'account' | 'validator'
-  data: Block | Extrinsic | Account | Validator
+// Use SearchResult from API but extend with score for fuzzy search
+interface ExtendedSearchResult extends SearchResult {
   score?: number
 }
 
@@ -33,7 +32,7 @@ interface GlobalSearchProps {
 
 export function GlobalSearch({ 
   className, 
-  placeholder = "Search blocks, extrinsics, accounts...",
+  placeholder = "Search blocks, extrinsics, rollups, data submissions...",
   showShortcut = true 
 }: GlobalSearchProps) {
   const [open, setOpen] = React.useState(false)
@@ -59,39 +58,33 @@ export function GlobalSearch({
     staleTime: 30000,
   })
 
-  // Flatten and score results
+  // Process and score results
   const allResults = React.useMemo(() => {
-    if (!searchResults) return []
+    if (!searchResults?.results) return []
 
-    const results: SearchResult[] = [
-      ...searchResults.blocks.map((block: Block) => ({ type: 'block' as const, data: block })),
-      ...searchResults.extrinsics.map((extrinsic: Extrinsic) => ({ type: 'extrinsic' as const, data: extrinsic })),
-      ...searchResults.accounts.map((account: Account) => ({ type: 'account' as const, data: account })),
-      ...searchResults.validators.map((validator: Validator) => ({ type: 'validator' as const, data: validator })),
-    ]
+    const results: ExtendedSearchResult[] = searchResults.results
 
-    // Use Fuse.js for better fuzzy search scoring
+    // Use Fuse.js for better fuzzy search scoring if needed
     const fuse = new Fuse(results, {
       keys: [
+        { name: 'context', weight: 1.0 },
+        { name: 'id', weight: 0.9 },
         { name: 'data.hash', weight: 1.0 },
         { name: 'data.number', weight: 0.9 },
-        { name: 'data.address', weight: 1.0 },
-        { name: 'data.identity.display', weight: 0.8 },
-        { name: 'data.method', weight: 0.7 },
-        { name: 'data.section', weight: 0.6 },
+        { name: 'data.name', weight: 0.8 },
+        { name: 'data.module', weight: 0.7 },
+        { name: 'data.call', weight: 0.6 },
       ],
       threshold: 0.4,
       includeScore: true,
     })
 
-    if (debouncedQuery.length > 2) {
-      return fuse.search(debouncedQuery).map(result => ({
-        ...result.item,
-        score: result.score,
-      }))
+    // For exact API matches, don't re-score since API already did the matching
+    if (results.length > 0) {
+      return results.slice(0, 10)
     }
 
-    return results.slice(0, 10)
+    return []
   }, [searchResults, debouncedQuery])
 
   // Keyboard navigation
@@ -140,29 +133,25 @@ export function GlobalSearch({
     setSelectedIndex(0)
   }, [allResults])
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = (result: ExtendedSearchResult) => {
     setOpen(false)
     setQuery("")
     
     switch (result.type) {
       case 'block': {
-        const block = result.data as Block
-        router.push(`/blocks/${block.number}`)
+        router.push(`/blocks/${result.id}`)
         break
       }
       case 'extrinsic': {
-        const extrinsic = result.data as Extrinsic
-        router.push(`/extrinsics/${extrinsic.hash}`)
+        router.push(`/extrinsics/${result.data.hash || result.id}`)
         break
       }
-      case 'account': {
-        const account = result.data as Account
-        router.push(`/accounts/${account.address}`)
+      case 'rollup': {
+        router.push(`/rollups/${result.id}`)
         break
       }
-      case 'validator': {
-        const validator = result.data as Validator
-        router.push(`/validators/${validator.address}`)
+      case 'data_submission': {
+        router.push(`/data-submissions/${result.id}`)
         break
       }
     }
@@ -174,58 +163,52 @@ export function GlobalSearch({
         return <Blocks className="h-4 w-4" />
       case 'extrinsic':
         return <Hash className="h-4 w-4" />
-      case 'account':
-        return <User className="h-4 w-4" />
-      case 'validator':
-        return <Shield className="h-4 w-4" />
+      case 'rollup':
+        return <Package className="h-4 w-4" />
+      case 'data_submission':
+        return <Database className="h-4 w-4" />
       default:
         return <Search className="h-4 w-4" />
     }
   }
 
-  const getResultTitle = (result: SearchResult) => {
+  const getResultTitle = (result: ExtendedSearchResult) => {
     switch (result.type) {
       case 'block': {
-        const block = result.data as Block
-        return `Block #${block.number}`
+        return `Block #${result.data.number || result.id}`
       }
       case 'extrinsic': {
-        const extrinsic = result.data as Extrinsic
-        return `${extrinsic.module}.${extrinsic.call}`
+        return result.data.module && result.data.call 
+          ? `${result.data.module}.${result.data.call}`
+          : `Extrinsic ${result.id}`
       }
-      case 'account': {
-        const account = result.data as Account
-        return `${account.address.slice(0, 8)}...${account.address.slice(-8)}`
+      case 'rollup': {
+        return result.data.name || `Rollup ${result.id}`
       }
-      case 'validator': {
-        const validator = result.data as Validator
-        return validator.identity?.display || `${validator.address.slice(0, 8)}...${validator.address.slice(-8)}`
+      case 'data_submission': {
+        return `Data Submission #${result.id}`
       }
       default:
-        return 'Unknown'
+        return result.context || 'Unknown'
     }
   }
 
-  const getResultSubtitle = (result: SearchResult) => {
+  const getResultSubtitle = (result: ExtendedSearchResult) => {
     switch (result.type) {
       case 'block': {
-        const block = result.data as Block
-        return `${block.extrinsicsCount || 0} extrinsics • Finalized`
+        return `${result.data.extrinsicsCount || 0} extrinsics • ${result.data.finalized ? 'Finalized' : 'Pending'}`
       }
       case 'extrinsic': {
-        const extrinsic = result.data as Extrinsic
-        return `Block #${extrinsic.blockNumber} • ${extrinsic.success ? 'Success' : 'Failed'}`
+        return `Block #${result.data.blockNumber || result.data.block_number} • ${result.data.success ? 'Success' : 'Failed'}`
       }
-      case 'account': {
-        const account = result.data as Account
-        return `Balance: ${account.balance} • Nonce: ${account.nonce}`
+      case 'rollup': {
+        return result.data.description || `App ID: ${result.data.appId || result.data.app_id}`
       }
-      case 'validator': {
-        const validator = result.data as Validator
-        return `${validator.active ? 'Active' : 'Inactive'} • ${validator.commission} commission`
+      case 'data_submission': {
+        return `Size: ${result.data.dataSize || result.data.data_size} bytes • App ID: ${result.data.appId || result.data.app_id}`
       }
       default:
-        return ''
+        return result.context || ''
     }
   }
 

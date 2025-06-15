@@ -487,12 +487,31 @@ export interface RollupUpdate {
 // SEARCH API TYPES
 // ============================================================================
 
+export interface SearchResponse {
+  success: boolean
+  data: {
+    query: string
+    total_results: number
+    results: SearchResult[]
+  }
+  meta: {
+    source: string
+    total: number
+  }
+  timestamp: string
+}
+
 export interface SearchResult {
-  blocks: Block[]
-  extrinsics: Extrinsic[]
-  accounts: Account[]
-  validators: Validator[]
-  rollups?: Rollup[]
+  type: 'block' | 'extrinsic' | 'rollup' | 'data_submission'
+  id: string
+  data: any // Entity-specific data structure
+  context: string
+}
+
+export interface SearchData {
+  query: string
+  total_results: number
+  results: SearchResult[]
 }
 
 // ============================================================================
@@ -712,10 +731,26 @@ export const rollupsApi = {
 
 // Search API
 export const searchApi = {
-  search: (query: string) =>
+  search: (query: string): Promise<SearchData> =>
     api
-      .get(`/search?q=${encodeURIComponent(query)}`)
-      .then(res => res.data || []),
+      .get(`/search?query=${encodeURIComponent(query)}`)
+      .then(res => {
+        console.log('Raw API response:', res.data)
+        // Handle different response formats
+        if (res.data?.data) {
+          // New format: { success: true, data: { query, total_results, results } }
+          return res.data.data
+        } else if (Array.isArray(res.data)) {
+          // Old format: just an array
+          return { query, total_results: res.data.length, results: res.data }
+        } else if (res.data?.results) {
+          // Alternative format: { results: [...] }
+          return { query, total_results: res.data.results.length, results: res.data.results }
+        } else {
+          // Empty or unknown format
+          return { query, total_results: 0, results: [] }
+        }
+      }),
 }
 
 // Health API
