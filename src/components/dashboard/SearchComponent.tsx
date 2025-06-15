@@ -118,15 +118,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
         </div>
       </form>
 
-      {/* Search Tips */}
-      <div className="mt-2 text-xs text-muted-foreground">
-        <span>Examples: </span>
-        <span className="text-avail-600">Block #1000000</span>
-        <span> • </span>
-        <span className="text-avail-600">0x1234...abcd (Transaction hash)</span>
-        <span> • </span>
-        <span className="text-avail-600">5ABC...XYZ (Account address)</span>
-      </div>
+
 
       {/* Error Display */}
       {error && (

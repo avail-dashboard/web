@@ -63,8 +63,7 @@ export default function Dashboard() {
     <div className="container mx-auto px-4 py-8">
       {/* Search Section */}
       <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Search</h2>
-        <div className="bg-card p-6 rounded-lg border shadow-sm">
+        <div>
           <SearchComponent />
         </div>
       </section>
@@ -299,7 +298,7 @@ export default function Dashboard() {
                   blocks={latestBlocks.map(block => ({
                     number: block.number,
                     time: new Date(block.timestamp).getTime(),
-                    extrinsics: block.extrinsics_count || block.extrinsics,
+                    extrinsics: block.extrinsicsCount || block.extrinsics || 0,
                   }))}
                 />
               ) : (
@@ -353,7 +352,7 @@ export default function Dashboard() {
                             {formatTimeAgo(new Date(block.timestamp).getTime())}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {block.extrinsics_count || block.extrinsics}{' '}
+                            {block.extrinsicsCount || block.extrinsics || 0}{' '}
                             extrinsics
                           </div>
                         </div>
