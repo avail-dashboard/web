@@ -11,6 +11,7 @@ import { DataTable } from '@/components/ui/data-table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { CopyableValue } from '@/components/ui/copyable-value'
+import { formatTimeAgo } from '@/lib/utils'
 import {
   Card,
   CardContent,
@@ -25,18 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-// Format timestamp to relative time
-const formatTimeAgo = (timestamp: number | string) => {
-  const now = new Date()
-  const time = new Date(timestamp)
-  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
-
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  return `${Math.floor(diffInSeconds / 86400)}d ago`
-}
 
 // Format block size
 const formatSize = (bytes: number) => {

@@ -18,7 +18,8 @@ describe('Utils', () => {
     })
 
     it('should handle conditional classes', () => {
-      expect(cn('class1', false && 'class2', 'class3')).toBe('class1 class3')
+      const condition = false
+      expect(cn('class1', condition && 'class2', 'class3')).toBe('class1 class3')
     })
 
     it('should merge tailwind classes correctly', () => {
@@ -130,6 +131,25 @@ describe('Utils', () => {
     it('should handle string timestamps', () => {
       const timestamp = (now - 30 * 1000).toString()
       expect(formatTimeAgo(timestamp)).toBe('30s ago')
+    })
+
+    it('should handle ISO string timestamps', () => {
+      const isoString = new Date(now - 5 * 60 * 1000).toISOString()
+      expect(formatTimeAgo(isoString)).toBe('5m ago')
+    })
+
+    it('should handle invalid timestamps', () => {
+      expect(formatTimeAgo('invalid-date')).toBe('Invalid date')
+      expect(formatTimeAgo(NaN)).toBe('Invalid date')
+    })
+
+    it('should handle future timestamps', () => {
+      const futureTimestamp = now + 60 * 1000
+      expect(formatTimeAgo(futureTimestamp)).toBe('just now')
+    })
+
+    it('should handle zero seconds correctly', () => {
+      expect(formatTimeAgo(now)).toBe('0s ago')
     })
   })
 

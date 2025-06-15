@@ -1,16 +1,8 @@
 // Utility functions for formatting extrinsic data
+import { formatTimeAgo } from '@/lib/utils'
 
-// Format timestamp to relative time
-export const formatTimeAgo = (timestamp: string | number) => {
-  const now = new Date()
-  const time = new Date(timestamp)
-  const diffInSeconds = Math.floor((now.getTime() - time.getTime()) / 1000)
-
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
-  return `${Math.floor(diffInSeconds / 86400)}d ago`
-}
+// Export the centralized formatTimeAgo function
+export { formatTimeAgo }
 
 // Format fee amount
 export const formatFee = (fee: string | number) => {
@@ -33,7 +25,12 @@ export const getMethodColor = (module: string) => {
 }
 
 // Calculate extrinsic stats
-export const calculateExtrinsicStats = (extrinsics: any[]) => {
+export const calculateExtrinsicStats = (extrinsics: Array<{
+  success?: boolean
+  fee?: string | number
+  module?: string
+  call?: string
+}>) => {
   if (!extrinsics || extrinsics.length === 0) {
     return {
       successRate: 0,

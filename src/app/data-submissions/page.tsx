@@ -332,7 +332,7 @@ export default function DataSubmissionsPage() {
                         </span>
                         <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(new Date(submission.timestamp).getTime())}</span>
+                          <span>{formatTimeAgo(submission.timestamp)}</span>
                         </div>
                       </div>
                     </div>

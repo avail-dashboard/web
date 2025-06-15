@@ -55,12 +55,31 @@ export function formatAddress(address: string, chars: number = 6): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`
 }
 
-// Format time ago
+// Format time ago - handles both ISO strings and millisecond timestamps
 export function formatTimeAgo(timestamp: number | string): string {
   const now = Date.now()
-  const time = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp
-  const diff = now - time
+  let time: number
 
+  if (typeof timestamp === 'string') {
+    // First try to parse as a number (for numeric strings like "1234567890")
+    const numericTimestamp = parseInt(timestamp, 10)
+    if (!isNaN(numericTimestamp) && numericTimestamp.toString() === timestamp) {
+      time = numericTimestamp
+    } else {
+      // Handle ISO string timestamps (e.g., "2024-01-20T10:25:30.000Z")
+      time = new Date(timestamp).getTime()
+    }
+  } else {
+    // Handle numeric timestamps (milliseconds)
+    time = timestamp
+  }
+
+  // Validate the timestamp
+  if (isNaN(time)) {
+    return 'Invalid date'
+  }
+
+  const diff = now - time
   const seconds = Math.floor(diff / 1000)
   const minutes = Math.floor(seconds / 60)
   const hours = Math.floor(minutes / 60)
@@ -69,7 +88,10 @@ export function formatTimeAgo(timestamp: number | string): string {
   if (days > 0) return `${days}d ago`
   if (hours > 0) return `${hours}h ago`
   if (minutes > 0) return `${minutes}m ago`
-  return `${seconds}s ago`
+  if (seconds >= 0) return `${seconds}s ago`
+  
+  // Handle future timestamps
+  return 'just now'
 }
 
 // Format percentage

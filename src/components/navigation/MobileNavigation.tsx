@@ -25,20 +25,11 @@ const colorMap = {
   red: 'text-red-600 hover:text-red-700 bg-red-50 border-red-200',
 }
 
-interface MobileNavigationProps {
-  isHomepage?: boolean
-}
-
-export function MobileNavigation({ isHomepage = false }: MobileNavigationProps) {
+export function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { navigationItems } = useNavigation()
-
-  // Don't show mobile navigation on homepage
-  if (isHomepage) {
-    return null
-  }
 
   // Determine active section from pathname
   const currentSection = navigationItems.find(item => {

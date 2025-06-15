@@ -4,13 +4,8 @@ import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useNavigation } from '@/contexts/NavigationContext'
-import { Home, Blocks, Activity, User, Database, Layers, Shield } from 'lucide-react'
+import { Home, Blocks, Activity, User, Layers, Shield } from 'lucide-react'
 import Link from 'next/link'
-
-interface AnimatedNavigationProps {
-  isHomepage?: boolean
-  showSearch?: boolean
-}
 
 const iconMap = {
   home: Home,
@@ -31,14 +26,9 @@ const colorMap = {
   red: 'text-red-600 hover:text-red-700',
 }
 
-export function AnimatedNavigation({ isHomepage = false, showSearch = false }: AnimatedNavigationProps) {
+export function AnimatedNavigation() {
   const pathname = usePathname()
-  const { navigationItems, isAnimating, activeSection } = useNavigation()
-
-  // Don't show navigation on homepage
-  if (isHomepage) {
-    return null
-  }
+  const { navigationItems } = useNavigation()
 
   // Determine active section from pathname
   const currentSection = navigationItems.find(item => {
@@ -96,14 +86,9 @@ export function AnimatedNavigation({ isHomepage = false, showSearch = false }: A
   )
 }
 
-export function AnimatedSearchBar({ isHomepage = false }: { isHomepage?: boolean }) {
-  const { isAnimating } = useNavigation()
+export function AnimatedSearchBar() {
   const [query, setQuery] = React.useState('')
   const router = useRouter()
-
-  if (isHomepage) {
-    return null
-  }
 
   const detectSearchType = (
     input: string

@@ -3,7 +3,7 @@
 import React, { useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { StatusBadge } from '@/components/BackendStatus'
 import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
@@ -13,10 +13,7 @@ import { MobileNavigation } from '@/components/navigation/MobileNavigation'
 
 export const Header = React.memo(function Header() {
   const router = useRouter()
-  const pathname = usePathname()
   const { isConnected, isChecking } = useBackendStatus()
-  
-  const isHomepage = pathname === '/'
 
   const {
     data: chainData,
@@ -75,24 +72,20 @@ export const Header = React.memo(function Header() {
           {/* Backend Status */}
           <StatusBadge />
           
-          {/* Navigation - only show on non-homepage */}
-          {!isHomepage && (
-            <div className="hidden lg:block">
-              <AnimatedNavigation />
-            </div>
-          )}
+          {/* Navigation - now show on all pages including homepage */}
+          <div className="hidden lg:block">
+            <AnimatedNavigation />
+          </div>
         </div>
 
-        {/* Center section for search on non-homepage */}
-        {!isHomepage && (
-          <div className="flex-1 max-w-md mx-4">
-            <AnimatedSearchBar />
-          </div>
-        )}
+        {/* Center section for search - show on all pages */}
+        <div className="flex-1 max-w-md mx-4">
+          <AnimatedSearchBar />
+        </div>
 
         <div className="flex items-center space-x-4">
-          {/* Mobile Navigation - only show on dedicated pages */}
-          <MobileNavigation isHomepage={isHomepage} />
+          {/* Mobile Navigation - show on all pages */}
+          <MobileNavigation />
           
           {/* Show consistent status message */}
           {isChecking ? (

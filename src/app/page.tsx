@@ -6,6 +6,7 @@ import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { TransfersTable } from '@/components/transfers/TransfersTable'
 import { AnimatedNavigationCard } from '@/components/navigation/AnimatedNavigationCard'
+import { formatTimeAgo } from '@/lib/utils'
 import Link from 'next/link'
 import { Blocks, Activity, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -31,15 +32,6 @@ export default function Dashboard() {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M'
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K'
     return num.toLocaleString()
-  }
-
-  const formatTimeAgo = (timestamp: number): string => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000)
-    if (seconds < 60) return `${seconds}s ago`
-    const minutes = Math.floor(seconds / 60)
-    if (minutes < 60) return `${minutes}m ago`
-    const hours = Math.floor(minutes / 60)
-    return `${hours}h ago`
   }
 
   const isLoading = chainLoading || blocksLoading
@@ -305,7 +297,7 @@ export default function Dashboard() {
                         </div>
                         <div className="text-right text-sm">
                           <div>
-                            {formatTimeAgo(new Date(block.timestamp).getTime())}
+                            {formatTimeAgo(block.timestamp)}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {block.extrinsicsCount || block.extrinsics || 0}{' '}

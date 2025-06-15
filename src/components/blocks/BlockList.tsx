@@ -214,7 +214,7 @@ export function BlockList({
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   <span>
-                    {formatTimeAgo(new Date(block.timestamp).getTime())}
+                    {formatTimeAgo(block.timestamp)}
                   </span>
                 </div>
 
