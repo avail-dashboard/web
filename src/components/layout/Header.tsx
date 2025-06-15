@@ -9,6 +9,7 @@ import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { useChainData, useBackendStatus } from '@/lib/hooks/useAvailAPI'
 import { AnimatedNavigation, AnimatedSearchBar } from '@/components/navigation/AnimatedNavigation'
+import { MobileNavigation } from '@/components/navigation/MobileNavigation'
 
 export const Header = React.memo(function Header() {
   const router = useRouter()
@@ -90,6 +91,9 @@ export const Header = React.memo(function Header() {
         )}
 
         <div className="flex items-center space-x-4">
+          {/* Mobile Navigation - only show on dedicated pages */}
+          <MobileNavigation isHomepage={isHomepage} />
+          
           {/* Show consistent status message */}
           {isChecking ? (
             <div className="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded">
