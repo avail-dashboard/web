@@ -17,5 +17,9 @@ export default function BlockPage({ params }: BlockPageProps) {
     router.push(`/blocks/${blockNumber}`)
   }
 
-  return <BlockDetails blockNumber={blockId} onNavigate={handleNavigate} />
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <BlockDetails blockNumber={blockId} onNavigate={handleNavigate} />
+    </div>
+  )
 }

@@ -88,52 +88,55 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
   const currentBlockNumber = Number(blockNumber)
 
   return (
-    <div className="space-y-6">
-      {/* Header with Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold">Block #{block.number}</h1>
-          <div className="flex items-center space-x-2">
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                block.finalized
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}
-            >
-              {block.finalized ? 'Finalized' : 'Pending'}
-            </span>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-3xl font-bold tracking-tight">Block #{block.number}</h1>
+            <div className="flex items-center space-x-2">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  block.finalized
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}
+              >
+                {block.finalized ? 'Finalized' : 'Pending'}
+              </span>
+            </div>
           </div>
+
+          {/* Navigation Controls */}
+          {onNavigate && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => onNavigate(currentBlockNumber - 1)}
+                disabled={currentBlockNumber <= 1}
+                className="flex items-center space-x-1 px-3 py-2 border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span>Previous</span>
+              </button>
+              <button
+                onClick={() => onNavigate(currentBlockNumber + 1)}
+                className="flex items-center space-x-1 px-3 py-2 border rounded-lg hover:bg-muted"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
+      </section>
 
-        {/* Navigation Controls */}
-        {onNavigate && (
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onNavigate(currentBlockNumber - 1)}
-              disabled={currentBlockNumber <= 1}
-              className="flex items-center space-x-1 px-3 py-2 border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span>Previous</span>
-            </button>
-            <button
-              onClick={() => onNavigate(currentBlockNumber + 1)}
-              className="flex items-center space-x-1 px-3 py-2 border rounded-lg hover:bg-muted"
-            >
-              <span>Next</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Block Information */}
-      <div className="bg-card p-6 rounded-lg border shadow-sm">
+      {/* Block Information Section */}
+      <section>
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Hash className="h-5 w-5 mr-2 text-avail-600" />
           Block Information
         </h2>
+        <div className="bg-card p-6 rounded-lg border shadow-sm">
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Left Column */}
@@ -335,14 +338,16 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* Extrinsics Section */}
-      <div className="bg-card p-6 rounded-lg border shadow-sm">
+      <section>
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Users className="h-5 w-5 mr-2 text-avail-600" />
           Extrinsics ({block.extrinsicsCount || 0})
         </h2>
+        <div className="bg-card p-6 rounded-lg border shadow-sm">
         {extrinsicsLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="loading-dots">
@@ -366,7 +371,8 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
             No extrinsics found in this block
           </div>
         )}
-      </div>
+        </div>
+      </section>
     </div>
   )
 }

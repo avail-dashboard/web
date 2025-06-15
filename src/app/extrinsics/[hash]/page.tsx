@@ -31,17 +31,19 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="loading-dots">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="loading-dots">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <p className="mt-4 text-muted-foreground">
+              Loading extrinsic details...
+            </p>
           </div>
-          <p className="mt-4 text-muted-foreground">
-            Loading extrinsic details...
-          </p>
         </div>
       </div>
     )
@@ -49,21 +51,27 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
 
   if (error || !extrinsic) {
     return (
-      <div className="text-center py-12">
-        <div className="text-red-500 text-6xl mb-4">⚠️</div>
-        <h3 className="text-xl font-semibold mb-2">Extrinsic Not Found</h3>
-        <p className="text-muted-foreground mb-4">
-          The extrinsic with hash {extrinsicHash} could not be found.
-        </p>
-        <button
-          onClick={handleBack}
-          className="bg-avail-600 text-white px-4 py-2 rounded hover:bg-avail-700"
-        >
-          Go Back
-        </button>
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="text-center py-12">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-semibold mb-2">Extrinsic Not Found</h3>
+          <p className="text-muted-foreground mb-4">
+            The extrinsic with hash {extrinsicHash} could not be found.
+          </p>
+          <button
+            onClick={handleBack}
+            className="bg-avail-600 text-white px-4 py-2 rounded hover:bg-avail-700"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     )
   }
 
-  return <ExtrinsicDetails extrinsic={extrinsic} onBack={handleBack} />
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <ExtrinsicDetails extrinsic={extrinsic} onBack={handleBack} />
+    </div>
+  )
 }
