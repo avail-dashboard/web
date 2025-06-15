@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { Extrinsic } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { CopyableValue } from '@/components/ui/copyable-value'
 import { formatTimeAgo, formatFee, getMethodColor } from '@/lib/utils/extrinsicFormatters'
 
 export const extrinsicTableColumns: ColumnDef<Extrinsic>[] = [
@@ -20,11 +21,15 @@ export const extrinsicTableColumns: ColumnDef<Extrinsic>[] = [
     cell: ({ row }) => (
       <Link
         href={`/extrinsics/${row.original.hash || ''}`}
-        className="font-mono text-blue-600 hover:text-blue-800 hover:underline text-sm"
+        className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
       >
-        {row.original.hash
-          ? `${row.original.hash.slice(0, 10)}...${row.original.hash.slice(-10)}`
-          : 'Hash not available'}
+        <CopyableValue
+          value={row.original.hash || 'Hash not available'}
+          truncate={true}
+          truncateStart={10}
+          truncateEnd={10}
+          valueClassName="text-blue-600 hover:text-blue-800"
+        />
       </Link>
     ),
   },
@@ -44,9 +49,14 @@ export const extrinsicTableColumns: ColumnDef<Extrinsic>[] = [
     cell: ({ row }) => (
       <Link
         href={`/blocks/${row.original.blockNumber || 0}`}
-        className="font-mono text-blue-600 hover:underline"
+        className="text-blue-600 hover:underline"
       >
-        #{row.original.blockNumber?.toLocaleString() || 'N/A'}
+        <CopyableValue
+          value={row.original.blockNumber?.toString() || 'N/A'}
+          displayValue={`#${row.original.blockNumber?.toLocaleString() || 'N/A'}`}
+          monospace={true}
+          valueClassName="text-blue-600"
+        />
       </Link>
     ),
   },
@@ -102,11 +112,15 @@ export const extrinsicTableColumns: ColumnDef<Extrinsic>[] = [
     cell: ({ row }) => (
       <Link
         href={`/accounts/${row.original.signer || ''}`}
-        className="font-mono text-sm text-blue-600 hover:underline"
+        className="text-sm text-blue-600 hover:underline"
       >
-        {row.original.signer
-          ? `${row.original.signer.slice(0, 8)}...${row.original.signer.slice(-8)}`
-          : 'Signer not available'}
+        <CopyableValue
+          value={row.original.signer || 'Signer not available'}
+          truncate={true}
+          truncateStart={8}
+          truncateEnd={8}
+          valueClassName="text-blue-600"
+        />
       </Link>
     ),
   },

@@ -4,8 +4,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useNavigation } from '@/contexts/NavigationContext'
-import { Home, Blocks, Activity, User, Database, Layers, Shield, Menu, X } from 'lucide-react'
-import Link from 'next/link'
+import { Home, Blocks, Activity, User, Layers, Shield, Menu, X } from 'lucide-react'
 
 const iconMap = {
   home: Home,
@@ -77,7 +76,7 @@ export function MobileNavigation({ isHomepage = false }: MobileNavigationProps) 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/20 z-40 lg:hidden"
               onClick={() => setIsOpen(false)}
             />
 
@@ -87,12 +86,15 @@ export function MobileNavigation({ isHomepage = false }: MobileNavigationProps) 
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-80 bg-background border-l shadow-xl z-50 lg:hidden"
+              className="fixed top-0 right-0 h-full w-80 bg-white border-l border-gray-200 shadow-2xl z-50 lg:hidden"
+              style={{ 
+                backgroundColor: 'white',
+                background: 'white'
+              }}
             >
-              <div className="flex flex-col h-full">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-lg font-semibold">Navigation</h2>
+              <div className="flex flex-col h-full bg-white">
+                {/* Header with close button only */}
+                <div className="flex items-center justify-end p-4 bg-white">
                   <button
                     onClick={() => setIsOpen(false)}
                     className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
@@ -103,8 +105,8 @@ export function MobileNavigation({ isHomepage = false }: MobileNavigationProps) 
                 </div>
 
                 {/* Navigation Items */}
-                <div className="flex-1 p-4 space-y-2">
-                  {navigationItems.map(item => {
+                <div className="flex-1 px-4 pb-4 space-y-2 bg-white">
+                  {navigationItems.filter(item => item.id !== 'home').map(item => {
                     const IconComponent = iconMap[item.id as keyof typeof iconMap]
                     const isActive = currentSection === item.id
                     const colorClass = colorMap[item.color as keyof typeof colorMap] || colorMap.avail
@@ -131,13 +133,6 @@ export function MobileNavigation({ isHomepage = false }: MobileNavigationProps) 
                       </motion.button>
                     )
                   })}
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 border-t bg-muted/30">
-                  <p className="text-xs text-muted-foreground text-center">
-                    Avail Explorer
-                  </p>
                 </div>
               </div>
             </motion.div>

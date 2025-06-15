@@ -6,12 +6,12 @@ import Link from 'next/link'
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  Copy,
   ExternalLink,
   Coins,
   RefreshCw,
 } from 'lucide-react'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
+import { CopyableValue } from '@/components/ui/copyable-value'
 
 interface Transfer {
   hash: string
@@ -38,7 +38,6 @@ export function TransfersTable({
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState<string | null>(null)
 
   const fetchTransfers = useCallback(async () => {
     try {
@@ -62,15 +61,7 @@ export function TransfersTable({
     fetchTransfers()
   }, [fetchTransfers])
 
-  const copyToClipboard = async (text: string, type: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(type)
-      setTimeout(() => setCopied(null), 2000)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
+
 
   const formatAddress = (address: string) => {
     if (address.length <= 12) return address
@@ -150,22 +141,14 @@ export function TransfersTable({
                       )}
                       <Link
                         href={`/extrinsics/${transfer.hash}`}
-                        className="font-mono text-sm text-avail-600 hover:text-avail-700"
+                        className="text-sm text-avail-600 hover:text-avail-700"
                       >
-                        {compact ? formatAddress(transfer.hash) : transfer.hash}
+                        <CopyableValue
+                          value={transfer.hash}
+                          displayValue={compact ? formatAddress(transfer.hash) : transfer.hash}
+                          valueClassName="text-avail-600"
+                        />
                       </Link>
-                      <button
-                        onClick={() =>
-                          copyToClipboard(transfer.hash, `hash-${index}`)
-                        }
-                        className="p-1 hover:bg-muted rounded"
-                        title="Copy hash"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </button>
-                      {copied === `hash-${index}` && (
-                        <span className="text-green-500 text-xs">Copied!</span>
-                      )}
                     </div>
 
                     {/* Status badge */}
@@ -186,9 +169,13 @@ export function TransfersTable({
                       <span className="text-muted-foreground">From:</span>
                       <Link
                         href={`/accounts/${transfer.from}`}
-                        className="font-mono text-avail-600 hover:text-avail-700"
+                        className="text-avail-600 hover:text-avail-700"
                       >
-                        {formatAddress(transfer.from)}
+                        <CopyableValue
+                          value={transfer.from}
+                          displayValue={formatAddress(transfer.from)}
+                          valueClassName="text-avail-600"
+                        />
                       </Link>
                     </div>
                     <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
@@ -196,9 +183,13 @@ export function TransfersTable({
                       <span className="text-muted-foreground">To:</span>
                       <Link
                         href={`/accounts/${transfer.to}`}
-                        className="font-mono text-avail-600 hover:text-avail-700"
+                        className="text-avail-600 hover:text-avail-700"
                       >
-                        {formatAddress(transfer.to)}
+                        <CopyableValue
+                          value={transfer.to}
+                          displayValue={formatAddress(transfer.to)}
+                          valueClassName="text-avail-600"
+                        />
                       </Link>
                     </div>
                   </div>
@@ -209,9 +200,12 @@ export function TransfersTable({
                       href={`/blocks/${transfer.blockNumber}`}
                       className="hover:text-avail-600 flex items-center space-x-1"
                     >
-                      <span>
-                        Block #{transfer.blockNumber.toLocaleString()}
-                      </span>
+                      <CopyableValue
+                        value={transfer.blockNumber.toString()}
+                        displayValue={`Block #${transfer.blockNumber.toLocaleString()}`}
+                        monospace={true}
+                        valueClassName="hover:text-avail-600"
+                      />
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <span>{formatTimeAgo(transfer.timestamp)}</span>

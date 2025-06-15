@@ -1,0 +1,1 @@
+when facing playwright issues, kill playwright and start fresh.

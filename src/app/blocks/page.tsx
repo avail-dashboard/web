@@ -10,6 +10,7 @@ import { blocksApi, Block } from '@/lib/api'
 import { DataTable } from '@/components/ui/data-table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { CopyableValue } from '@/components/ui/copyable-value'
 import {
   Card,
   CardContent,
@@ -119,9 +120,14 @@ export default function BlocksPage() {
       cell: ({ row }) => (
         <Link
           href={`/blocks/${row.original.number}`}
-          className="font-mono text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
         >
-          #{row.original.number.toLocaleString()}
+          <CopyableValue
+            value={row.original.number.toString()}
+            displayValue={`#${row.original.number.toLocaleString()}`}
+            monospace={true}
+            valueClassName="text-blue-600"
+          />
         </Link>
       ),
     },
@@ -167,11 +173,13 @@ export default function BlocksPage() {
       accessorKey: 'validator',
       header: 'Author',
       cell: ({ row }) => (
-        <span className="font-mono text-sm">
-          {row.original.validator && row.original.validator.trim() !== ''
-            ? `${row.original.validator.slice(0, 8)}...${row.original.validator.slice(-8)}`
-            : 'Not available'}
-        </span>
+        <CopyableValue
+          value={row.original.validator || 'Not available'}
+          truncate={true}
+          truncateStart={8}
+          truncateEnd={8}
+          className="text-sm"
+        />
       ),
     },
     {
@@ -200,17 +208,14 @@ export default function BlocksPage() {
       accessorKey: 'hash',
       header: 'Hash',
       cell: ({ row }) => (
-        <div>
-          {row.original.hash ? (
-            <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-              {row.original.hash.slice(0, 10)}...{row.original.hash.slice(-8)}
-            </code>
-          ) : (
-            <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground">
-              Pending backend deployment
-            </code>
-          )}
-        </div>
+        <CopyableValue
+          value={row.original.hash || 'Pending backend deployment'}
+          truncate={true}
+          truncateStart={10}
+          truncateEnd={8}
+          className="text-xs bg-muted px-2 py-1 rounded"
+          valueClassName={row.original.hash ? '' : 'text-muted-foreground'}
+        />
       ),
     },
   ]

@@ -210,7 +210,7 @@ export function GlobalSearch({
     switch (result.type) {
       case 'block': {
         const block = result.data as Block
-        return `${block.extrinsics_count || block.extrinsics || 0} extrinsics • Finalized`
+        return `${block.extrinsicsCount || 0} extrinsics • Finalized`
       }
       case 'extrinsic': {
         const extrinsic = result.data as Extrinsic

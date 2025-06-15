@@ -23,7 +23,7 @@ interface ExtrinsicListProps {
 
 // Helper function to get extrinsic index
 const getExtrinsicIndex = (extrinsic: Extrinsic): number => {
-  return extrinsic.extrinsic_index ?? extrinsic.extrinsicIndex ?? 0
+  return extrinsic.extrinsicIndex ?? 0
 }
 
 // Helper function to get block number

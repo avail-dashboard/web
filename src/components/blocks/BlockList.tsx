@@ -194,8 +194,8 @@ export function BlockList({
                   <div className="flex items-center space-x-2">
                     <Activity className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm">
-                      {block.extrinsics_count} extrinsic
-                      {block.extrinsics_count !== 1 ? 's' : ''}
+                      {block.extrinsicsCount} extrinsic
+                      {block.extrinsicsCount !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export function BlockList({
             </div>
 
             {/* Additional info for non-compact view */}
-            {!compact && block.parent_hash && (
+            {!compact && block.parentHash && (
               <div className="mt-4 pt-4 border-t">
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground font-mono">
                   <span>Parent:</span>
@@ -235,8 +235,8 @@ export function BlockList({
                     href={`/blocks/${block.number - 1}`}
                     className="text-avail-600 hover:underline"
                   >
-                    {block.parent_hash && block.parent_hash.trim()
-                      ? `${block.parent_hash.slice(0, 10)}...${block.parent_hash.slice(-8)}`
+                    {block.parentHash && block.parentHash.trim()
+                      ? `${block.parentHash.slice(0, 10)}...${block.parentHash.slice(-8)}`
                       : 'Hash not available'}
                   </Link>
                 </div>

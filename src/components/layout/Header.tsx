@@ -52,7 +52,7 @@ export const Header = React.memo(function Header() {
   }, [chainLoading])
 
   return (
-    <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-50">
+    <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50">
       <div className="container flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex flex-col items-center">

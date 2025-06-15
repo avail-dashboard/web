@@ -16,6 +16,7 @@ import {
   Layers,
 } from 'lucide-react'
 import Link from 'next/link'
+import { CopyableValue } from '@/components/ui/copyable-value'
 
 // Helper function to format data size
 const formatDataSize = (bytes: number): string => {
@@ -350,12 +351,15 @@ export default function DataSubmissionsPage() {
                         </span>
                         <Link
                           href={`/accounts/${submission.submitter}`}
-                          className="font-mono text-avail-600 hover:text-avail-700 flex items-center space-x-1"
+                          className="text-avail-600 hover:text-avail-700 flex items-center space-x-1"
                         >
-                          <span>
-                            {submission.submitter.slice(0, 8)}...
-                            {submission.submitter.slice(-8)}
-                          </span>
+                          <CopyableValue
+                            value={submission.submitter}
+                            truncate={true}
+                            truncateStart={8}
+                            truncateEnd={8}
+                            valueClassName="text-avail-600"
+                          />
                           <ExternalLink className="h-3 w-3" />
                         </Link>
                       </div>
@@ -377,10 +381,15 @@ export default function DataSubmissionsPage() {
                         <span className="text-muted-foreground">Block:</span>
                         <Link
                           href={`/blocks/${submission.blockNumber}`}
-                          className="font-mono text-avail-600 hover:text-avail-700 flex items-center space-x-1"
+                          className="text-avail-600 hover:text-avail-700 flex items-center space-x-1"
                         >
                           <Hash className="h-3 w-3" />
-                          <span>#{submission.blockNumber}</span>
+                          <CopyableValue
+                            value={submission.blockNumber.toString()}
+                            displayValue={`#${submission.blockNumber}`}
+                            monospace={true}
+                            valueClassName="text-avail-600"
+                          />
                           <ExternalLink className="h-3 w-3" />
                         </Link>
                       </div>
@@ -389,9 +398,13 @@ export default function DataSubmissionsPage() {
                         <span className="text-muted-foreground">
                           Data Hash:
                         </span>
-                        <code className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                          {submission.dataHash}
-                        </code>
+                        <CopyableValue
+                          value={submission.dataHash}
+                          truncate={true}
+                          truncateStart={10}
+                          truncateEnd={10}
+                          className="text-xs bg-muted px-2 py-1 rounded"
+                        />
                       </div>
                     </div>
                   </div>
