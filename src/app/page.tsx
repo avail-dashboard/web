@@ -5,8 +5,9 @@ import { TokenDistributionChart } from '@/components/charts/TokenDistributionCha
 import { BlocksChart } from '@/components/charts/BlocksChart'
 import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { TransfersTable } from '@/components/transfers/TransfersTable'
+import { AnimatedNavigationCard } from '@/components/navigation/AnimatedNavigationCard'
 import Link from 'next/link'
-import { Blocks, Activity, User, Search, ArrowRight } from 'lucide-react'
+import { Blocks, Activity, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function Dashboard() {
@@ -73,93 +74,60 @@ export default function Dashboard() {
         <h2 className="text-xl font-semibold mb-4">Explore the Network</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Blocks Explorer */}
-          <Link href="/blocks" className="group">
-            <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-avail-600/50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-avail-100 rounded-lg group-hover:bg-avail-200 transition-colors">
-                    <Blocks className="h-6 w-6 text-avail-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Blocks</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Explore blockchain blocks
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-avail-600 transition-colors" />
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Latest Block:</span>
-                  <span className="font-mono">
-                    {latestBlocks && latestBlocks.length > 0
-                      ? `#${formatNumber(latestBlocks[0].number)}`
-                      : chainData
-                        ? `#${formatNumber(chainData.finalizedBlocks)}`
-                        : 'Loading...'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Block Time:</span>
-                  <span>~12 seconds</span>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <AnimatedNavigationCard
+            id="blocks"
+            title="Blocks"
+            description="Explore blockchain blocks"
+            icon={<Blocks className="h-6 w-6 text-avail-600" />}
+            href="/blocks"
+            colorClass="avail"
+            stats={[
+              {
+                label: "Latest Block",
+                value: latestBlocks && latestBlocks.length > 0
+                  ? `#${formatNumber(latestBlocks[0].number)}`
+                  : chainData
+                    ? `#${formatNumber(chainData.finalizedBlocks)}`
+                    : 'Loading...'
+              },
+              {
+                label: "Block Time",
+                value: "~12 seconds"
+              }
+            ]}
+          />
 
           {/* Extrinsics Explorer */}
-          <Link href="/extrinsics" className="group">
-            <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-avail-600/50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                    <Activity className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Transactions</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Browse all extrinsics
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Total Extrinsics:
-                  </span>
-                  <span className="font-mono">
-                    {chainData
-                      ? formatNumber(chainData.signedExtrinsics)
-                      : 'Loading...'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Success Rate:</span>
-                  <span className="text-green-600">~98.5%</span>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <AnimatedNavigationCard
+            id="extrinsics"
+            title="Transactions"
+            description="Browse all extrinsics"
+            icon={<Activity className="h-6 w-6 text-blue-600" />}
+            href="/extrinsics"
+            colorClass="blue"
+            stats={[
+              {
+                label: "Total Extrinsics",
+                value: chainData
+                  ? formatNumber(chainData.signedExtrinsics)
+                  : 'Loading...'
+              },
+              {
+                label: "Success Rate",
+                value: "~98.5%"
+              }
+            ]}
+          />
 
           {/* Account Search */}
-          <div className="bg-card p-6 rounded-lg border shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <User className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Accounts</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Search account details
-                  </p>
-                </div>
-              </div>
-              <Search className="h-5 w-5 text-muted-foreground" />
-            </div>
+          <AnimatedNavigationCard
+            id="accounts"
+            title="Accounts"
+            description="Search account details"
+            icon={<User className="h-6 w-6 text-green-600" />}
+            href="/accounts"
+            colorClass="green"
+          >
             <div className="space-y-3">
               <input
                 type="text"
@@ -179,39 +147,27 @@ export default function Dashboard() {
                 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
               </div>
             </div>
-          </div>
+          </AnimatedNavigationCard>
 
           {/* Data Submissions Explorer */}
-          <Link href="/data-submissions" className="group">
-            <div className="bg-card p-6 rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 group-hover:border-purple-600/50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                    <Activity className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Data Submissions</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Browse data availability submissions
-                    </p>
-                  </div>
-                </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-purple-600 transition-colors" />
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Data Submissions:
-                  </span>
-                  <span className="font-mono">Loading...</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Unique Apps:</span>
-                  <span>Loading...</span>
-                </div>
-              </div>
-            </div>
-          </Link>
+          <AnimatedNavigationCard
+            id="data-submissions"
+            title="Data Submissions"
+            description="Browse data availability submissions"
+            icon={<Activity className="h-6 w-6 text-purple-600" />}
+            href="/data-submissions"
+            colorClass="purple"
+            stats={[
+              {
+                label: "Data Submissions",
+                value: "Loading..."
+              },
+              {
+                label: "Unique Apps",
+                value: "Loading..."
+              }
+            ]}
+          />
         </div>
       </section>
 

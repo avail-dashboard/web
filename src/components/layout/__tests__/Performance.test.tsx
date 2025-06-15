@@ -164,7 +164,8 @@ describe('Layout Performance Tests', () => {
       expect(headerRenderCount).toBe(initialRenderCount + 3)
 
       // Verify Header still works correctly
-      expect(screen.getByText('Avail Explorer')).toBeInTheDocument()
+      expect(screen.getByAltText('Avail')).toBeInTheDocument()
+      expect(screen.getByText('Explorer')).toBeInTheDocument()
       expect(screen.getByText('AVAIL $0.12345678')).toBeInTheDocument()
     })
 
@@ -309,7 +310,8 @@ describe('Layout Performance Tests', () => {
       expect(renderCount).toBe(initialRenderCount + 100)
 
       // Component should still work correctly
-      expect(screen.getByText('Avail Explorer')).toBeInTheDocument()
+      expect(screen.getByAltText('Avail')).toBeInTheDocument()
+      expect(screen.getByText('Explorer')).toBeInTheDocument()
     })
 
     it('should maintain performance with complex layout structure', () => {
@@ -363,7 +365,8 @@ describe('Layout Performance Tests', () => {
       expect(footerRenderCount).toBe(initialFooterRenders + 10)
 
       // Verify both components still work
-      expect(screen.getByText('Avail Explorer')).toBeInTheDocument()
+      expect(screen.getByAltText('Avail')).toBeInTheDocument()
+      expect(screen.getByText('Explorer')).toBeInTheDocument()
       expect(
         screen.getByText('© 2024 Avail Project. All rights reserved.')
       ).toBeInTheDocument()
@@ -439,7 +442,8 @@ describe('Layout Performance Tests', () => {
       const { unmount } = render(<div>{components}</div>)
 
       // Verify they all render correctly
-      expect(screen.getAllByText('Avail Explorer')).toHaveLength(10)
+      expect(screen.getAllByAltText('Avail')).toHaveLength(10)
+      expect(screen.getAllByText('Explorer')).toHaveLength(10)
       expect(
         screen.getAllByText('© 2024 Avail Project. All rights reserved.')
       ).toHaveLength(10)

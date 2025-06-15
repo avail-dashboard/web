@@ -2,15 +2,20 @@
 
 import React, { useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { useRouter, usePathname } from 'next/navigation'
 import { StatusBadge } from '@/components/BackendStatus'
 import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { useChainData, useBackendStatus } from '@/lib/hooks/useAvailAPI'
+import { AnimatedNavigation, AnimatedSearchBar } from '@/components/navigation/AnimatedNavigation'
 
 export const Header = React.memo(function Header() {
   const router = useRouter()
+  const pathname = usePathname()
   const { isConnected, isChecking } = useBackendStatus()
+  
+  const isHomepage = pathname === '/'
 
   const {
     data: chainData,
@@ -47,12 +52,20 @@ export const Header = React.memo(function Header() {
 
   return (
     <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-50">
-      <div className="container flex h-16 items-center justify-between px-4">
+      <div className="container flex h-16 items-center justify-between px-4 max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-avail-600 hover:text-avail-700 transition-colors">
-              Avail Explorer
-            </h1>
+          <Link href="/" className="flex flex-col items-center">
+            <Image
+              src="/avail-logo.png"
+              alt="Avail"
+              width={120}
+              height={40}
+              className="h-8 w-auto hover:opacity-80 transition-opacity"
+              priority
+            />
+            <span className="text-xs font-medium text-muted-foreground mt-1">
+              Explorer
+            </span>
           </Link>
           <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
             <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -60,7 +73,21 @@ export const Header = React.memo(function Header() {
           </div>
           {/* Backend Status */}
           <StatusBadge />
+          
+          {/* Navigation - only show on non-homepage */}
+          {!isHomepage && (
+            <div className="hidden lg:block">
+              <AnimatedNavigation />
+            </div>
+          )}
         </div>
+
+        {/* Center section for search on non-homepage */}
+        {!isHomepage && (
+          <div className="flex-1 max-w-md mx-4">
+            <AnimatedSearchBar />
+          </div>
+        )}
 
         <div className="flex items-center space-x-4">
           {/* Show consistent status message */}

@@ -128,7 +128,8 @@ describe('Header Component', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('Avail Explorer')).toBeInTheDocument()
+    expect(screen.getByAltText('Avail')).toBeInTheDocument()
+    expect(screen.getByText('Explorer')).toBeInTheDocument()
     expect(screen.getByText('Mainnet')).toBeInTheDocument()
     expect(screen.getByTestId('status-badge')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /refresh/i })).toBeInTheDocument()
@@ -308,7 +309,7 @@ describe('Header Component', () => {
 
     render(<Header />)
 
-    const logoLink = screen.getByRole('link', { name: /avail explorer/i })
+    const logoLink = screen.getByRole('link', { name: /avail/i })
     expect(logoLink).toHaveAttribute('href', '/')
   })
 

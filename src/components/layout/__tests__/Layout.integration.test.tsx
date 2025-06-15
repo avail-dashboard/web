@@ -117,7 +117,8 @@ describe('Layout Integration Tests', () => {
     )
 
     // Header elements
-    expect(screen.getByText('Avail Explorer')).toBeInTheDocument()
+    expect(screen.getByAltText('Avail')).toBeInTheDocument()
+    expect(screen.getByText('Explorer')).toBeInTheDocument()
     expect(screen.getByText('Mainnet')).toBeInTheDocument()
     expect(screen.getByTestId('status-badge')).toBeInTheDocument()
 
@@ -177,7 +178,7 @@ describe('Layout Integration Tests', () => {
     )
 
     // Check that both header logo and footer links point to correct routes
-    const headerLogo = screen.getByRole('link', { name: /avail explorer/i })
+    const headerLogo = screen.getByRole('link', { name: /avail/i })
     expect(headerLogo).toHaveAttribute('href', '/')
 
     const footerBlocksLink = screen.getByRole('link', { name: 'Blocks' })

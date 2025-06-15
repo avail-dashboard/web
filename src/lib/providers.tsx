@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NavigationProvider } from '@/contexts/NavigationContext'
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,7 +23,9 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <NavigationProvider>
+        {children}
+      </NavigationProvider>
     </QueryClientProvider>
   )
 } 
