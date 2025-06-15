@@ -29,10 +29,13 @@ const getExtrinsicIndex = (extrinsic: Extrinsic): number => {
 // Helper function to get block number
 const getBlockNumber = (extrinsic: Extrinsic): number => {
   // Extract from ID if available (format: "blockNumber-index")
-  if (extrinsic.id) {
+  if (extrinsic.id && typeof extrinsic.id === 'string') {
     const parts = extrinsic.id.split('-')
     if (parts.length >= 2) {
-      return parseInt(parts[0], 10)
+      const blockNum = parseInt(parts[0], 10)
+      if (!isNaN(blockNum)) {
+        return blockNum
+      }
     }
   }
   return extrinsic.blockNumber ?? 0

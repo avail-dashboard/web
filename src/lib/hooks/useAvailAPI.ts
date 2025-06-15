@@ -245,7 +245,15 @@ export function useBlock(numberOrHash: string | number | null) {
 export function useExtrinsics(blockNumber?: number) {
   // Memoize the API call function
   const apiCall = useCallback(
-    () => availAPI.getExtrinsics(blockNumber, 0, 0), // Pass 0 for page and limit since we get all results
+    () => {
+      if (blockNumber) {
+        // Use the specific block extrinsics endpoint for better performance
+        return availAPI.getBlockExtrinsics(blockNumber)
+      } else {
+        // Use the general extrinsics endpoint for listing all extrinsics
+        return availAPI.getExtrinsics(undefined, 1, 20)
+      }
+    },
     [blockNumber]
   )
 

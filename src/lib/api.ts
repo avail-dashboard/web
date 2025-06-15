@@ -47,8 +47,10 @@ api.interceptors.response.use(
                   hash: response.data.data[0].hash,
                   hashType: typeof response.data.data[0].hash,
                   hashLength: response.data.data[0].hash?.length,
-                  parent_hash: response.data.data[0].parent_hash,
-                  parentHashType: typeof response.data.data[0].parent_hash,
+                  parentHash: response.data.data[0].parentHash,
+                  parentHashType: typeof response.data.data[0].parentHash,
+                  validator: response.data.data[0].validator,
+                  extrinsicsCount: response.data.data[0].extrinsicsCount,
                 }
               : 'no blocks',
         })
@@ -107,35 +109,38 @@ export interface PaginatedResponse<T> {
 export interface Block {
   number: number
   hash?: string
-  parent_hash: string
-  timestamp: number
-  extrinsics: number
-  time: string
-  state_root: string
-  extrinsics_root: string
-  author_id: string
-  size: number
-  weight: string
-  spec: number
-  finalized: boolean
-  extrinsics_count?: number
+  parentHash: string
+  stateRoot: string
+  timestamp: string
+  extrinsicsCount: number
+  createdAt?: string
+  extrinsics?: number
+  time?: string
+  extrinsics_root?: string
+  validator?: string
+  size?: number
+  weight?: string
+  spec?: number
+  finalized?: boolean
+  eventsCount?: number
 }
 
 export interface BlockDetails {
   number: number
   hash?: string
-  parent_hash: string
+  parentHash: string
   timestamp: number
-  extrinsics_count: number
+  extrinsicsCount: number
   time: string
   state_root: string
   extrinsics_root: string
-  author_id: string
+  validator: string
   size: number
   weight: string
   spec: number
   finalized: boolean
   extrinsics: Extrinsic[]
+  eventsCount?: number
 }
 
 // ============================================================================
@@ -145,20 +150,23 @@ export interface BlockDetails {
 export interface Extrinsic {
   id?: string
   hash?: string
-  extrinsic_index?: number
-  module?: string
+  blockNumber?: number
+  extrinsicIndex?: number
+  extrinsicHash?: string
+  method?: string
+  section?: string
   call?: string
+  module?: string
+  signer?: string
+  nonce?: number
+  signature?: string
+  tip?: number | string
   success?: boolean
   timestamp: number
-  signer?: string
   fee?: number | string
-  tip?: number | string
-  signature?: string
   args?: Record<string, unknown>
   events?: Event[]
   // Legacy fields for backward compatibility
-  blockNumber?: number
-  extrinsicIndex?: number
   isSigned?: boolean
   isUserTransaction?: boolean
 }
@@ -213,15 +221,26 @@ export interface Transfer {
 // ============================================================================
 
 export interface DataSubmission {
-  extrinsicId: string
   blockNumber: number
   extrinsicIndex: number
+  extrinsicHash: string
   appId: number
-  size: number
-  dataHash: string
   submitter: string
-  timestamp: number
+  dataSize: number
+  dataHash: string
+  kateCommitment?: string
+  timestamp: string
   success: boolean
+}
+
+export interface DataSubmissionStats {
+  totalSubmissions: number
+  totalDataSize: number
+  uniqueApps: number
+  uniqueSubmitters: number
+  averageSize: number
+  submissionsToday: number
+  dataSizeToday: number
 }
 
 // ============================================================================
@@ -612,7 +631,7 @@ export const dataSubmissionsApi = {
   }): Promise<DataSubmission[]> =>
     api.get('/data-submissions', { params }).then(res => res.data || []),
 
-  getDataSubmissionStats: () =>
+  getDataSubmissionStats: (): Promise<DataSubmissionStats> =>
     api.get('/data-submissions/stats').then(res => res.data),
 }
 
@@ -787,7 +806,8 @@ class RequestDeduplicator {
   // Method to clear cache (useful for manual refresh)
   clearCache(pattern?: string) {
     if (pattern) {
-      for (const key of this.cache.keys()) {
+      const keys = Array.from(this.cache.keys())
+      for (const key of keys) {
         if (key.includes(pattern)) {
           this.cache.delete(key)
         }
@@ -882,6 +902,22 @@ export const availAPI = {
     )
   },
 
+  getBlockExtrinsics: async (blockNumber: number): Promise<Extrinsic[]> => {
+    const cacheKey = `block-extrinsics:${blockNumber}`
+    return requestDeduplicator.deduplicate(
+      cacheKey,
+      'block-detail',
+      async () => {
+        const response = await fetch(`/api/extrinsics/block/${blockNumber}`)
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch block extrinsics')
+        }
+        return data.data || []
+      }
+    )
+  },
+
   getValidators: async (): Promise<Validator[]> => {
     return requestDeduplicator.deduplicate(
       'validators',
@@ -945,7 +981,7 @@ export const availAPI = {
     limit: number = 20,
     appId?: number,
     submitter?: string
-  ): Promise<DataSubmission[]> => {
+  ): Promise<{dataSubmissions: DataSubmission[], totalCount: number}> => {
     try {
       const params = new URLSearchParams({
         page: (page - 1).toString(), // Convert to 0-based for Next.js API
@@ -959,21 +995,36 @@ export const availAPI = {
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch data submissions')
       }
-      return data.data || data
+      // Transform backend response to match frontend expectations
+      // Backend returns: { data: [...], pagination: { totalCount: ... } }
+      // Frontend expects: { dataSubmissions: [...], totalCount: ... }
+      return {
+        dataSubmissions: data.data || [],
+        totalCount: data.pagination?.totalCount || data.meta?.total || 0
+      }
     } catch (error) {
       console.error('Failed to fetch data submissions:', error)
       throw error
     }
   },
 
-  getDataSubmissionStats: async () => {
+  getDataSubmissionStats: async (): Promise<DataSubmissionStats> => {
     try {
       const response = await fetch('/api/data-submissions/stats')
       const data = await response.json()
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch data submission stats')
       }
-      return data.data || data
+      // Extract from nested API response structure
+      return data.data || {
+        totalSubmissions: 0,
+        totalDataSize: 0,
+        uniqueApps: 0,
+        uniqueSubmitters: 0,
+        averageSize: 0,
+        submissionsToday: 0,
+        dataSizeToday: 0
+      }
     } catch (error) {
       console.error('Failed to fetch data submission stats:', error)
       throw error

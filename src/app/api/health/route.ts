@@ -73,6 +73,7 @@ export async function GET() {
         environment: process.env.NODE_ENV!,
         services: health.services,
       },
+      backend: health.backend, // Include backend status for frontend status checks
       timestamp,
     },
     {

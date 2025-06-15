@@ -45,15 +45,12 @@ export function TransfersTable({
       setLoading(true)
       setError(null)
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Simulate API delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500))
 
-      // TODO: Replace with actual API call
-      // For now, return empty array to satisfy the component structure
+      // For now, return empty array since transfer API is not available
+      // This prevents the error state and shows a nice empty state instead
       setTransfers([])
-
-      // Show a message that API integration is needed
-      setError('Transfer data requires API integration to fetch real data.')
     } catch {
       setError('Failed to load transfer data')
     } finally {
@@ -108,7 +105,6 @@ export function TransfersTable({
       <ErrorDisplay
         error={new Error(error)}
         onRetry={fetchTransfers}
-        className="my-8"
       />
     )
   }
@@ -240,9 +236,9 @@ export function TransfersTable({
       ) : (
         <div className="text-center py-8">
           <div className="text-muted-foreground text-4xl mb-4">💸</div>
-          <h3 className="text-lg font-semibold mb-2">No Transfers Found</h3>
+          <h3 className="text-lg font-semibold mb-2">Transfers Coming Soon</h3>
           <p className="text-muted-foreground">
-            No recent transfer transactions available.
+            Transfer tracking is not yet available. This feature will be added when transfer API endpoints are implemented.
           </p>
         </div>
       )}

@@ -30,18 +30,12 @@ const formatFeeValue = (value: number | string | undefined): string => {
 
 // Helper function to get extrinsic index
 const getExtrinsicIndex = (extrinsic: Extrinsic): number => {
-  return extrinsic.extrinsic_index ?? extrinsic.extrinsicIndex ?? 0
+  return extrinsic.extrinsicIndex ?? 0
 }
 
 // Helper function to get block number
 const getBlockNumber = (extrinsic: Extrinsic): number => {
-  // Extract from ID if available (format: "blockNumber-index")
-  if (extrinsic.id) {
-    const parts = extrinsic.id.split('-')
-    if (parts.length >= 2) {
-      return parseInt(parts[0], 10)
-    }
-  }
+  // Use blockNumber directly from backend (camelCase)
   return extrinsic.blockNumber ?? 0
 }
 

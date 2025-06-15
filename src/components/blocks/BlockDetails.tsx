@@ -177,13 +177,13 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
               </label>
               <div className="flex items-center space-x-2 mt-1">
                 <code className="text-sm bg-muted px-2 py-1 rounded font-mono break-all">
-                  {block.parent_hash || 'Parent hash not available'}
+                  {block.parentHash || 'Parent hash not available'}
                 </code>
-                {block.parent_hash && (
+                {block.parentHash && (
                   <>
                     <button
                       onClick={() =>
-                        copyToClipboard(block.parent_hash!, 'parent')
+                        copyToClipboard(block.parentHash!, 'parent')
                       }
                       className="p-1 hover:bg-muted rounded"
                     >
@@ -203,13 +203,13 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
               </label>
               <div className="flex items-center space-x-2 mt-1">
                 <code className="text-sm bg-muted px-2 py-1 rounded font-mono break-all">
-                  {block.state_root || 'State root not available'}
+                  {block.stateRoot || 'State root not available'}
                 </code>
-                {block.state_root && (
+                {block.stateRoot && (
                   <>
                     <button
                       onClick={() =>
-                        copyToClipboard(block.state_root!, 'state')
+                        copyToClipboard(block.stateRoot!, 'state')
                       }
                       className="p-1 hover:bg-muted rounded"
                     >
@@ -257,20 +257,20 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
                 Block Author
               </label>
               <div className="flex items-center space-x-2 mt-1">
-                {block.author_id && block.author_id.trim() !== '' ? (
+                {block.validator && block.validator.trim() !== '' ? (
                   <>
                     <Link
-                      href={`/accounts/${block.author_id}`}
+                      href={`/accounts/${block.validator}`}
                       className="text-avail-600 hover:text-avail-700 font-mono text-sm flex items-center space-x-1"
                     >
                       <span>
-                        {block.author_id.slice(0, 8)}...
-                        {block.author_id.slice(-8)}
+                        {block.validator.slice(0, 8)}...
+                        {block.validator.slice(-8)}
                       </span>
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <button
-                      onClick={() => copyToClipboard(block.author_id, 'author')}
+                      onClick={() => copyToClipboard(block.validator!, 'author')}
                       className="p-1 hover:bg-muted rounded"
                     >
                       <Copy className="h-4 w-4" />
@@ -341,7 +341,7 @@ export function BlockDetails({ blockNumber, onNavigate }: BlockDetailsProps) {
       <div className="bg-card p-6 rounded-lg border shadow-sm">
         <h2 className="text-xl font-semibold mb-4 flex items-center">
           <Users className="h-5 w-5 mr-2 text-avail-600" />
-          Extrinsics ({block.extrinsics_count || block.extrinsics || 0})
+          Extrinsics ({block.extrinsicsCount || 0})
         </h2>
         {extrinsicsLoading ? (
           <div className="flex items-center justify-center py-8">

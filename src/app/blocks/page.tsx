@@ -91,7 +91,7 @@ export default function BlocksPage() {
 
     const averageExtrinsics =
       latestBlocks.reduce(
-        (sum, block) => sum + (block.extrinsics_count || block.extrinsics),
+        (sum, block) => sum + (block.extrinsicsCount ?? 0),
         0
       ) / latestBlocks.length
     const averageSize =
@@ -150,9 +150,9 @@ export default function BlocksPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <span className="font-medium">
-            {row.original.extrinsics_count || row.original.extrinsics}
+            {row.original.extrinsicsCount}
           </span>
-          {(row.original.extrinsics_count || row.original.extrinsics) > 0 && (
+          {row.original.extrinsicsCount > 0 && (
             <Link
               href={`/extrinsics?block=${row.original.number}`}
               className="text-xs text-blue-600 hover:underline"
@@ -164,12 +164,12 @@ export default function BlocksPage() {
       ),
     },
     {
-      accessorKey: 'author_id',
+      accessorKey: 'validator',
       header: 'Author',
       cell: ({ row }) => (
         <span className="font-mono text-sm">
-          {row.original.author_id && row.original.author_id.trim() !== ''
-            ? `${row.original.author_id.slice(0, 8)}...${row.original.author_id.slice(-8)}`
+          {row.original.validator && row.original.validator.trim() !== ''
+            ? `${row.original.validator.slice(0, 8)}...${row.original.validator.slice(-8)}`
             : 'Not available'}
         </span>
       ),

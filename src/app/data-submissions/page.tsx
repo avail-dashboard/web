@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { DataSubmission, dataSubmissionsApi } from '@/lib/api'
+import { DataSubmission, availAPI } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
 import {
   Search,
@@ -26,12 +26,7 @@ const formatDataSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// Helper function to get extrinsic hash from extrinsicId
-const getExtrinsicHash = (extrinsicId: string): string => {
-  // If extrinsicId is in format "blockNumber-index", we need to construct or get the actual hash
-  // For now, return the extrinsicId as is, but in a real implementation this would need to be resolved
-  return extrinsicId
-}
+
 
 export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
@@ -79,15 +74,16 @@ export default function DataSubmissionsPage() {
         params.submitter = submitterFilter
       }
 
-      const data = await dataSubmissionsApi.getDataSubmissions(params)
+      const response = await availAPI.getDataSubmissions(params.page, params.limit, params.appId, params.submitter)
+      const dataSubmissions = response.dataSubmissions || []
 
       if (reset || pageNum === 1) {
-        setSubmissions(data)
+        setSubmissions(dataSubmissions)
       } else {
-        setSubmissions(prev => [...prev, ...data])
+        setSubmissions(prev => [...prev, ...dataSubmissions])
       }
 
-      setHasMore(data.length === limit)
+      setHasMore(dataSubmissions.length === limit)
       setPage(pageNum)
     } catch (err) {
       console.error('Failed to fetch data submissions:', err)
@@ -102,7 +98,7 @@ export default function DataSubmissionsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const statsData = await dataSubmissionsApi.getDataSubmissionStats()
+      const statsData = await availAPI.getDataSubmissionStats()
       setStats(statsData)
     } catch (err) {
       console.error('Failed to fetch stats:', err)
@@ -111,17 +107,34 @@ export default function DataSubmissionsPage() {
 
   // Initial load
   useEffect(() => {
-    fetchSubmissions(1, true)
-    fetchStats()
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          fetchSubmissions(1, true),
+          fetchStats()
+        ])
+      } catch (err) {
+        console.error('Failed to load initial data:', err)
+        setError('Failed to load data. Please try again later.')
+        setLoading(false)
+      }
+    }
+    loadData()
   }, [appIdFilter, submitterFilter])
 
+  // Helper function to get extrinsic ID from submission
+  const getExtrinsicId = (submission: DataSubmission): string => {
+    return `${submission.blockNumber}-${submission.extrinsicIndex}`
+  }
+
   // Search functionality
-  const filteredSubmissions = submissions.filter(submission => {
+  const filteredSubmissions = (submissions || []).filter(submission => {
+    const extrinsicId = getExtrinsicId(submission)
     const matchesSearch =
       !searchTerm ||
       submission.dataHash.toLowerCase().includes(searchTerm.toLowerCase()) ||
       submission.submitter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.extrinsicId.toLowerCase().includes(searchTerm.toLowerCase())
+      extrinsicId.toLowerCase().includes(searchTerm.toLowerCase())
 
     return matchesSearch
   })
@@ -176,7 +189,7 @@ export default function DataSubmissionsPage() {
                 Total Submissions
               </p>
               <p className="text-2xl font-bold">
-                {stats.totalSubmissions.toLocaleString()}
+                {(stats.totalSubmissions || 0).toLocaleString()}
               </p>
             </div>
             <Database className="h-8 w-8 text-avail-600" />
@@ -190,7 +203,7 @@ export default function DataSubmissionsPage() {
                 Total Data Size
               </p>
               <p className="text-2xl font-bold">
-                {formatDataSize(stats.totalDataSize)}
+                {formatDataSize(stats.totalDataSize || 0)}
               </p>
             </div>
             <Layers className="h-8 w-8 text-avail-600" />
@@ -203,7 +216,7 @@ export default function DataSubmissionsPage() {
               <p className="text-sm font-medium text-muted-foreground">
                 Unique Apps
               </p>
-              <p className="text-2xl font-bold">{stats.uniqueApps}</p>
+              <p className="text-2xl font-bold">{stats.uniqueApps || 0}</p>
             </div>
             <Activity className="h-8 w-8 text-avail-600" />
           </div>
@@ -216,7 +229,7 @@ export default function DataSubmissionsPage() {
                 Average Size
               </p>
               <p className="text-2xl font-bold">
-                {formatDataSize(stats.averageSize)}
+                {formatDataSize(stats.averageSize || 0)}
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-avail-600" />
@@ -318,7 +331,7 @@ export default function DataSubmissionsPage() {
                         </span>
                         <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(submission.timestamp)}</span>
+                          <span>{formatTimeAgo(new Date(submission.timestamp).getTime())}</span>
                         </div>
                       </div>
                     </div>
@@ -327,7 +340,7 @@ export default function DataSubmissionsPage() {
                       <div className="flex items-center space-x-4">
                         <span className="text-muted-foreground">Size:</span>
                         <span className="font-mono">
-                          {formatDataSize(submission.size)}
+                          {formatDataSize(submission.dataSize)}
                         </span>
                       </div>
 
@@ -347,20 +360,18 @@ export default function DataSubmissionsPage() {
                         </Link>
                       </div>
 
-                      {submission.extrinsicId && (
-                        <div className="flex items-center space-x-4">
-                          <span className="text-muted-foreground">
-                            Extrinsic:
-                          </span>
-                          <Link
-                            href={`/extrinsics/${getExtrinsicHash(submission.extrinsicId)}`}
-                            className="font-mono text-avail-600 hover:text-avail-700 flex items-center space-x-1"
-                          >
-                            <span>{submission.extrinsicId}</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                        </div>
-                      )}
+                      <div className="flex items-center space-x-4">
+                        <span className="text-muted-foreground">
+                          Extrinsic:
+                        </span>
+                        <Link
+                          href={`/extrinsics/${submission.extrinsicHash}`}
+                          className="font-mono text-avail-600 hover:text-avail-700 flex items-center space-x-1"
+                        >
+                          <span>{getExtrinsicId(submission)}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      </div>
 
                       <div className="flex items-center space-x-4">
                         <span className="text-muted-foreground">Block:</span>

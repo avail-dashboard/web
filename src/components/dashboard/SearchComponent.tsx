@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import { Search, Loader2 } from 'lucide-react'
+import { availAPI } from '@/lib/api'
+import { useRouter } from 'next/navigation'
 
 interface SearchResult {
   type: 'block' | 'transaction' | 'account'
@@ -18,6 +20,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const detectSearchType = (
     input: string
@@ -59,12 +62,22 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
         return
       }
 
-      // TODO: Replace with actual API call
-      // For now, show a message that API integration is needed
-      setError(
-        'Search functionality requires backend API integration. Please implement the search endpoint.'
-      )
+      // Navigate directly to the appropriate page based on search type
+      switch (searchType) {
+        case 'block':
+          router.push(`/blocks/${searchQuery.trim()}`)
+          break
+        case 'transaction':
+          router.push(`/extrinsics/${searchQuery.trim()}`)
+          break
+        case 'account':
+          router.push(`/accounts/${searchQuery.trim()}`)
+          break
+      }
 
+      // Clear the search input
+      setQuery('')
+      
       onSearch?.(searchQuery, [])
     } catch (err) {
       console.error('Search error:', err)

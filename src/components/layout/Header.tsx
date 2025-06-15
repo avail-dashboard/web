@@ -63,18 +63,16 @@ export const Header = React.memo(function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {/* Only show offline message after checking, not during initial check */}
-          {!isChecking && !isConnected && (
-            <div className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
-              Backend offline - using fallback
-            </div>
-          )}
-          {/* Show checking status during initial load */}
-          {isChecking && (
+          {/* Show consistent status message */}
+          {isChecking ? (
             <div className="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded">
               Checking backend status...
             </div>
-          )}
+          ) : !isConnected ? (
+            <div className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
+              Backend offline - using fallback
+            </div>
+          ) : null}
           {chainError && (
             <ErrorDisplay
               error={chainError}
