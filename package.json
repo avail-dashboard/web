@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e .env.local next dev",
-    "build": "dotenv -e .env.local next build",
-    "start": "dotenv -e .env.local next start",
+    "build": "dotenv -e .env.production next build",
+    "start": "dotenv -e .env.production next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",

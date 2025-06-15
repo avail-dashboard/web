@@ -8,6 +8,9 @@ import { Footer } from '@/components/layout/Footer'
 export const metadata: Metadata = {
   title: 'Avail Explorer',
   description: 'Blockchain explorer for Avail network',
+  icons: {
+    icon: '/avail-logo.png',
+  },
 }
 
 export default function RootLayout({
