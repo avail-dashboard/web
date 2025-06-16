@@ -753,10 +753,6 @@ export const searchApi = {
       }),
 }
 
-// Health API
-export const healthApi = {
-  getHealth: () => fetch('/api/health').then(res => res.json()),
-}
 
 // Export the main api instance for custom requests
 export default api
@@ -1066,14 +1062,6 @@ export const availAPI = {
     }
   },
 
-  refreshBackendStatus: async (): Promise<boolean> => {
-    try {
-      const healthData = await healthApi.getHealth()
-      return healthData.backend?.available === true
-    } catch {
-      return false
-    }
-  },
 
   // Cache management methods
   clearCache: (pattern?: string) => {

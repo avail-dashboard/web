@@ -4,16 +4,14 @@ import React, { useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { StatusBadge } from '@/components/BackendStatus'
 import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
-import { useChainData, useBackendStatus } from '@/lib/hooks/useAvailAPI'
+import { useChainData } from '@/lib/hooks/useAvailAPI'
 import { AnimatedNavigation, AnimatedSearchBar } from '@/components/navigation/AnimatedNavigation'
 import { MobileNavigation } from '@/components/navigation/MobileNavigation'
 
 export const Header = React.memo(function Header() {
   const router = useRouter()
-  const { isConnected, isChecking } = useBackendStatus()
 
   const {
     data: chainData,
@@ -69,8 +67,6 @@ export const Header = React.memo(function Header() {
             <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
             <span>Mainnet</span>
           </div>
-          {/* Backend Status */}
-          <StatusBadge />
           
           {/* Navigation - now show on all pages including homepage */}
           <div className="hidden lg:block">
@@ -87,16 +83,6 @@ export const Header = React.memo(function Header() {
           {/* Mobile Navigation - show on all pages */}
           <MobileNavigation />
           
-          {/* Show consistent status message */}
-          {isChecking ? (
-            <div className="text-xs text-blue-500 bg-blue-50 px-2 py-1 rounded">
-              Checking backend status...
-            </div>
-          ) : !isConnected ? (
-            <div className="text-xs text-orange-500 bg-orange-50 px-2 py-1 rounded">
-              Backend offline - using fallback
-            </div>
-          ) : null}
           {chainError && (
             <ErrorDisplay
               error={chainError}

@@ -331,38 +331,6 @@ export function useAnalytics() {
   )
 }
 
-// Hook for backend connection status
-export function useBackendStatus() {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null) // Start with null to indicate "checking"
-  const [lastChecked, setLastChecked] = useState<Date | null>(null)
-
-  const checkStatus = useCallback(async () => {
-    try {
-      const status = await availAPI.refreshBackendStatus()
-      setIsConnected(status)
-      setLastChecked(new Date())
-    } catch {
-      setIsConnected(false)
-      setLastChecked(new Date())
-    }
-  }, [])
-
-  useEffect(() => {
-    // Check status on mount
-    checkStatus()
-
-    // Check status every 60 seconds
-    const interval = setInterval(checkStatus, 60000)
-    return () => clearInterval(interval)
-  }, [checkStatus])
-
-  return {
-    isConnected: isConnected ?? false, // Convert null to false for backward compatibility
-    isChecking: isConnected === null,
-    lastChecked,
-    checkStatus,
-  }
-}
 
 // Hook for real-time WebSocket updates
 export function useWebSocket(options?: { autoConnect?: boolean }) {
