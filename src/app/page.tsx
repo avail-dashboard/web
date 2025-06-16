@@ -134,7 +134,7 @@ export default function Dashboard() {
                   }
                 }}
               />
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground break-all">
                 Press Enter to search or try:
                 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
               </div>

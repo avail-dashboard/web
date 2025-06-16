@@ -66,8 +66,8 @@ export const Header = React.memo(function Header() {
               </span>
             </Link>
             
-            <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
-              <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+            <div className="hidden md:flex items-center space-x-2 bg-muted/30 border border-border/40 rounded-md px-2.5 py-1 text-xs text-muted-foreground">
+              <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
             </div>
             
