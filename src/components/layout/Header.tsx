@@ -50,8 +50,8 @@ export const Header = React.memo(function Header() {
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50">
       <div className="app-container">
         <div className="flex h-16 items-center justify-between">
-          {/* Left section - Logo and Navigation */}
-          <div className="flex items-center space-x-6">
+          {/* Left section - Logo, Search, and Navigation */}
+          <div className="flex items-center space-x-6 flex-1">
             <Link href="/" className="flex flex-col items-center flex-shrink-0">
               <Image
                 src="/avail-logo.png"
@@ -71,15 +71,15 @@ export const Header = React.memo(function Header() {
               <span>Mainnet</span>
             </div>
             
+            {/* Search bar - positioned before navigation */}
+            <div className="max-w-md">
+              <AnimatedSearchBar />
+            </div>
+            
             {/* Navigation - now show on all pages including homepage */}
             <div className="hidden lg:block">
               <AnimatedNavigation />
             </div>
-          </div>
-
-          {/* Center section for search - show on all pages */}
-          <div className="flex-1 max-w-md mx-6">
-            <AnimatedSearchBar />
           </div>
 
           {/* Right section - Controls and Info */}
