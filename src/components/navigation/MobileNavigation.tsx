@@ -96,8 +96,23 @@ export function MobileNavigation() {
                     const IconComponent = iconMap[item.id as keyof typeof iconMap]
                     const isActive = currentSection === item.id
                     const colorClass = colorMap[item.color as keyof typeof colorMap] || colorMap.avail
+                    const isDisabled = item.disabled
 
-                    return (
+                    return isDisabled ? (
+                      <motion.div
+                        key={item.id}
+                        className={`
+                          w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left
+                          transition-all duration-200 border cursor-not-allowed opacity-50
+                          text-muted-foreground border-transparent
+                        `}
+                      >
+                        {IconComponent && (
+                          <IconComponent className="h-5 w-5 flex-shrink-0" />
+                        )}
+                        <span className="font-medium">{item.label}</span>
+                      </motion.div>
+                    ) : (
                       <motion.button
                         key={item.id}
                         onClick={() => handleItemClick(item.href)}

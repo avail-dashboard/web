@@ -8,6 +8,7 @@ export interface NavigationItem {
   href: string
   icon: React.ReactNode
   color: string
+  disabled?: boolean
 }
 
 interface NavigationContextType {
@@ -48,7 +49,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       label: 'Accounts',
       href: '/accounts',
       icon: null, // Will use User icon
-      color: 'green'
+      color: 'green',
+      disabled: true
     },
     {
       id: 'data-submissions',
@@ -62,14 +64,16 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       label: 'Rollups',
       href: '/rollups',
       icon: null, // Will add later
-      color: 'orange'
+      color: 'orange',
+      disabled: true
     },
     {
       id: 'validators',
       label: 'Validators',
       href: '/validators',
       icon: null, // Will add later
-      color: 'red'
+      color: 'red',
+      disabled: true
     }
   ]
 

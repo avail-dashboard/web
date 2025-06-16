@@ -49,6 +49,7 @@ export function AnimatedNavigation() {
           const IconComponent = iconMap[item.id as keyof typeof iconMap]
           const isActive = currentSection === item.id
           const colorClass = colorMap[item.color as keyof typeof colorMap] || colorMap.avail
+          const isDisabled = item.disabled
 
           return (
             <motion.div
@@ -61,22 +62,37 @@ export function AnimatedNavigation() {
                 delay: navigationItems.indexOf(item) * 0.05
               }}
             >
-              <Link
-                href={item.href}
-                className={`
-                  flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
-                  transition-all duration-200
-                  ${isActive 
-                    ? `bg-${item.color}-50 ${colorClass} border border-${item.color}-200` 
-                    : `text-muted-foreground hover:text-foreground hover:bg-muted/50`
-                  }
-                `}
-              >
-                {IconComponent && (
-                  <IconComponent className="h-4 w-4" />
-                )}
-                <span className="hidden xl:inline">{item.label}</span>
-              </Link>
+              {isDisabled ? (
+                <div
+                  className={`
+                    flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
+                    transition-all duration-200 cursor-not-allowed opacity-50
+                    text-muted-foreground
+                  `}
+                >
+                  {IconComponent && (
+                    <IconComponent className="h-4 w-4" />
+                  )}
+                  <span className="hidden xl:inline">{item.label}</span>
+                </div>
+              ) : (
+                <Link
+                  href={item.href}
+                  className={`
+                    flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
+                    transition-all duration-200
+                    ${isActive 
+                      ? `bg-${item.color}-50 ${colorClass} border border-${item.color}-200` 
+                      : `text-muted-foreground hover:text-foreground hover:bg-muted/50`
+                    }
+                  `}
+                >
+                  {IconComponent && (
+                    <IconComponent className="h-4 w-4" />
+                  )}
+                  <span className="hidden xl:inline">{item.label}</span>
+                </Link>
+              )}
             </motion.div>
           )
         })}
