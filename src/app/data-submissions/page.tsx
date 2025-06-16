@@ -155,7 +155,7 @@ export default function DataSubmissionsPage() {
 
   if (loading && submissions.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="app-container py-8">
         <div className="flex items-center justify-center py-12">
           <div className="loading-dots">
             <div></div>
@@ -172,7 +172,7 @@ export default function DataSubmissionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="app-container py-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Data Submissions</h1>

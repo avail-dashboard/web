@@ -76,15 +76,11 @@ export function MobileNavigation() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-80 bg-white border-l border-gray-200 shadow-2xl z-50 lg:hidden"
-              style={{ 
-                backgroundColor: 'white',
-                background: 'white'
-              }}
+              className="fixed top-0 right-0 h-full w-80 max-w-[90vw] bg-background border-l border-border shadow-2xl z-50 lg:hidden"
             >
-              <div className="flex flex-col h-full bg-white">
+              <div className="flex flex-col h-full bg-background">
                 {/* Header with close button only */}
-                <div className="flex items-center justify-end p-4 bg-white">
+                <div className="flex items-center justify-end p-4 border-b border-border">
                   <button
                     onClick={() => setIsOpen(false)}
                     className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
@@ -95,7 +91,7 @@ export function MobileNavigation() {
                 </div>
 
                 {/* Navigation Items */}
-                <div className="flex-1 px-4 pb-4 space-y-2 bg-white">
+                <div className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
                   {navigationItems.filter(item => item.id !== 'home').map(item => {
                     const IconComponent = iconMap[item.id as keyof typeof iconMap]
                     const isActive = currentSection === item.id

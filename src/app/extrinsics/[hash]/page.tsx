@@ -31,7 +31,7 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="app-container py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="loading-dots">
@@ -51,7 +51,7 @@ export default function ExtrinsicPage({ params }: ExtrinsicPageProps) {
 
   if (error || !extrinsic) {
     return (
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="app-container py-6">
         <div className="text-center py-12">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h3 className="text-xl font-semibold mb-2">Extrinsic Not Found</h3>

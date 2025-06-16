@@ -43,7 +43,7 @@ export function AnimatedNavigation() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="flex items-center space-x-1 md:space-x-2"
+        className="flex items-center space-x-1"
       >
         {navigationItems.map(item => {
           const IconComponent = iconMap[item.id as keyof typeof iconMap]
@@ -64,7 +64,7 @@ export function AnimatedNavigation() {
               <Link
                 href={item.href}
                 className={`
-                  flex items-center space-x-1 md:space-x-2 px-2 md:px-3 py-2 rounded-lg text-sm font-medium
+                  flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
                   transition-all duration-200
                   ${isActive 
                     ? `bg-${item.color}-50 ${colorClass} border border-${item.color}-200` 
@@ -75,7 +75,7 @@ export function AnimatedNavigation() {
                 {IconComponent && (
                   <IconComponent className="h-4 w-4" />
                 )}
-                <span className="hidden md:inline">{item.label}</span>
+                <span className="hidden xl:inline">{item.label}</span>
               </Link>
             </motion.div>
           )
@@ -144,15 +144,15 @@ export function AnimatedSearchBar() {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex-1 max-w-md"
+      className="w-full"
     >
       <form onSubmit={handleSubmit} className="relative">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search blocks, transactions, or accounts..."
-          className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-avail-500 focus:border-transparent text-sm"
+          placeholder="Search blocks, transactions, accounts..."
+          className="w-full pl-10 pr-4 py-2 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-avail-500 focus:border-transparent text-sm transition-all duration-200 hover:border-avail-300"
         />
         <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
           <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
