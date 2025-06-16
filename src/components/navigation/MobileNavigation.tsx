@@ -4,10 +4,9 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { useNavigation } from '@/contexts/NavigationContext'
-import { Home, Blocks, Activity, User, Layers, Shield, Menu, X } from 'lucide-react'
+import { Blocks, Activity, User, Layers, Shield, Menu, X } from 'lucide-react'
 
 const iconMap = {
-  home: Home,
   blocks: Blocks,
   extrinsics: Activity,
   accounts: User,

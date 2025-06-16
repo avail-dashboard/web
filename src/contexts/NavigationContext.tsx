@@ -30,13 +30,6 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   // Define the navigation items that match the homepage cards
   const navigationItems: NavigationItem[] = [
     {
-      id: 'home',
-      label: 'Home',
-      href: '/',
-      icon: null, // Will be added later
-      color: 'avail'
-    },
-    {
       id: 'blocks',
       label: 'Blocks',
       href: '/blocks',
