@@ -14,9 +14,11 @@ import {
   TrendingUp,
   FileText,
   Layers,
+  BarChart3,
 } from 'lucide-react'
 import Link from 'next/link'
 import { CopyableValue } from '@/components/ui/copyable-value'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 // Helper function to format data size
 const formatDataSize = (bytes: number): string => {
@@ -27,7 +29,185 @@ const formatDataSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
+// Color palette for App IDs - Professional theme with good contrast and accessibility
+const APP_ID_COLORS = [
+  '#3B82F6', // Blue 500
+  '#10B981', // Emerald 500  
+  '#F59E0B', // Amber 500
+  '#EF4444', // Red 500
+  '#8B5CF6', // Violet 500
+  '#06B6D4', // Cyan 500
+  '#F97316', // Orange 500
+  '#84CC16', // Lime 500
+  '#EC4899', // Pink 500
+  '#6366F1', // Indigo 500
+  '#14B8A6', // Teal 500
+  '#F59E0B', // Yellow 500
+  '#8B5A2B', // Brown 600
+  '#6B7280', // Gray 500
+  '#7C3AED', // Purple 600
+  '#059669', // Emerald 600
+  '#DC2626', // Red 600
+  '#2563EB', // Blue 600
+  '#DB2777', // Pink 600
+  '#16A34A'  // Green 600
+]
 
+// Get consistent color for App ID
+const getAppIdColor = (appId: number): string => {
+  return APP_ID_COLORS[appId % APP_ID_COLORS.length]
+}
+
+// Generate nice, round tick values for Y-axis based on data size
+const generateNiceDataSizeTicks = (maxValue: number): number[] => {
+  if (maxValue === 0) return [0]
+  
+  // Define nice round values in bytes
+  const niceValues = [
+    // Bytes
+    100, 250, 500, 1000,
+    // KB
+    2 * 1024, 5 * 1024, 10 * 1024, 25 * 1024, 50 * 1024, 100 * 1024, 250 * 1024, 500 * 1024,
+    // MB  
+    1024 * 1024, 2 * 1024 * 1024, 5 * 1024 * 1024, 10 * 1024 * 1024, 
+    25 * 1024 * 1024, 50 * 1024 * 1024, 100 * 1024 * 1024, 250 * 1024 * 1024, 500 * 1024 * 1024,
+    // GB
+    1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024, 5 * 1024 * 1024 * 1024, 10 * 1024 * 1024 * 1024
+  ]
+  
+  // Find appropriate tick interval
+  const targetTicks = 5 // Aim for about 5 ticks
+  const roughInterval = maxValue / targetTicks
+  
+  // Find the smallest nice value that's >= roughInterval
+  const interval = niceValues.find(val => val >= roughInterval) || maxValue / targetTicks
+  
+  // Generate ticks
+  const ticks: number[] = [0]
+  let tick = interval
+  while (tick <= maxValue * 1.1) { // Go slightly beyond max for better visualization
+    ticks.push(tick)
+    tick += interval
+  }
+  
+  return ticks
+}
+
+// Type for chart data point
+interface ChartDataPoint {
+  blockNumber: number
+  [key: string]: number // Dynamic keys for app_${appId}
+}
+
+// Process submissions data for chart visualization
+const processSubmissionsForChart = (submissions: DataSubmission[]): { chartData: ChartDataPoint[], appIds: number[] } => {
+  if (!submissions || submissions.length === 0) return { chartData: [], appIds: [] }
+
+  // Group submissions by block number and App ID, summing dataSize
+  const groupedData: { [blockNumber: number]: { [appId: number]: number } } = {}
+  const appIds = new Set<number>()
+
+  submissions.forEach(submission => {
+    const blockNumber = submission.blockNumber
+    
+    if (!groupedData[blockNumber]) {
+      groupedData[blockNumber] = {}
+    }
+    
+    if (!groupedData[blockNumber][submission.appId]) {
+      groupedData[blockNumber][submission.appId] = 0
+    }
+    
+    // Sum dataSize instead of counting submissions
+    groupedData[blockNumber][submission.appId] += submission.dataSize
+    appIds.add(submission.appId)
+  })
+
+  // Get the range of block numbers
+  const blockNumbers = Object.keys(groupedData).map(Number).sort((a, b) => a - b)
+  if (blockNumbers.length === 0) return { chartData: [], appIds: [] }
+
+  // Determine the range of blocks to show
+  // If we have data from many blocks, show the range from first to last of the latest 50 blocks with data
+  // If we have data from fewer blocks, show a wider range to include gaps
+  const maxBlock = Math.max(...blockNumbers)
+  const minBlock = blockNumbers.length >= 50 ? 
+    blockNumbers[blockNumbers.length - 50] : // Last 50 blocks with data
+    Math.max(maxBlock - 100, Math.min(...blockNumbers)) // Show up to 100 block range or from first block
+
+  // Create continuous range of block numbers from min to max
+  const chartData: ChartDataPoint[] = []
+  for (let blockNumber = minBlock; blockNumber <= maxBlock; blockNumber++) {
+    const dataPoint: ChartDataPoint = {
+      blockNumber
+    }
+    
+    // Add total data size for each App ID (or 0 if no data for this block)
+    const sortedAppIds = Array.from(appIds).sort((a, b) => a - b)
+    sortedAppIds.forEach(appId => {
+      dataPoint[`app_${appId}`] = groupedData[blockNumber]?.[appId] || 0
+    })
+    
+    chartData.push(dataPoint)
+  }
+
+  return { chartData, appIds: Array.from(appIds).sort((a, b) => a - b) }
+}
+
+// Types for custom tooltip
+interface TooltipPayload {
+  value: number
+  dataKey: string
+  color: string
+  payload: ChartDataPoint
+}
+
+interface CustomTooltipProps {
+  active?: boolean
+  payload?: TooltipPayload[]
+  label?: string | number
+}
+
+// Custom tooltip component that only shows contributing App IDs
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    // Filter out entries with zero values
+    const contributingApps = payload.filter((entry: TooltipPayload) => entry.value > 0)
+    
+    if (contributingApps.length === 0) {
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-medium">{`Block: ${label}`}</p>
+          <p className="text-sm text-muted-foreground">No data submissions</p>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <p className="font-medium mb-2">{`Block: ${label}`}</p>
+        {contributingApps.map((entry: TooltipPayload, index: number) => (
+          <div key={index} className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-sm" 
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-sm">
+                App ID {entry.dataKey.replace('app_', '')}
+              </span>
+            </div>
+            <span className="text-sm font-medium">
+              {formatDataSize(entry.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+  
+  return null
+}
 
 export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
@@ -38,6 +218,8 @@ export default function DataSubmissionsPage() {
   const [submitterFilter, setSubmitterFilter] = useState('')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([])
+  const [chartAppIds, setChartAppIds] = useState<number[]>([])
 
   // Stats state
   const [stats, setStats] = useState({
@@ -47,7 +229,7 @@ export default function DataSubmissionsPage() {
     averageSize: 0,
   })
 
-  const limit = 20
+  const limit = 100
 
   // Fetch data submissions
   const fetchSubmissions = async (
@@ -80,8 +262,19 @@ export default function DataSubmissionsPage() {
 
       if (reset || pageNum === 1) {
         setSubmissions(dataSubmissions)
+        // Process chart data only for first page/reset
+        const { chartData: processedChartData, appIds } = processSubmissionsForChart(dataSubmissions)
+        setChartData(processedChartData)
+        setChartAppIds(appIds)
       } else {
-        setSubmissions(prev => [...prev, ...dataSubmissions])
+        setSubmissions(prev => {
+          const newSubmissions = [...prev, ...dataSubmissions]
+          // Update chart data with all submissions for better visualization
+          const { chartData: processedChartData, appIds } = processSubmissionsForChart(newSubmissions)
+          setChartData(processedChartData)
+          setChartAppIds(appIds)
+          return newSubmissions
+        })
       }
 
       setHasMore(dataSubmissions.length === limit)
@@ -236,6 +429,76 @@ export default function DataSubmissionsPage() {
             <TrendingUp className="h-8 w-8 text-avail-600" />
           </div>
         </div>
+      </div>
+
+      {/* Chart Section */}
+      <div className="bg-card p-6 rounded-lg border shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-avail-100 rounded-lg">
+              <BarChart3 className="h-5 w-5 text-avail-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Data Size by Block & App ID</h2>
+              <p className="text-sm text-muted-foreground">
+                Total data size per block, grouped by App ID (shows gaps for blocks without submissions)
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {chartData.length > 0 ? (
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="blockNumber" 
+                  fontSize={12}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  fontSize={12}
+                  tickFormatter={(value) => formatDataSize(value)}
+                  ticks={(() => {
+                    // Calculate max value from chart data
+                    const maxValue = Math.max(
+                      ...chartData.map(dataPoint => 
+                        chartAppIds.reduce((sum, appId) => 
+                          sum + (dataPoint[`app_${appId}`] || 0), 0
+                        )
+                      )
+                    )
+                    return generateNiceDataSizeTicks(maxValue)
+                  })()}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  formatter={(value) => `App ID ${value.replace('app_', '')}`}
+                />
+                {chartAppIds.map((appId) => (
+                  <Bar
+                    key={appId}
+                    dataKey={`app_${appId}`}
+                    stackId="submissions"
+                    fill={getAppIdColor(appId)}
+                    name={`app_${appId}`}
+                  />
+                ))}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="h-64 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>No data available for chart visualization</p>
+              <p className="text-xs">Load more submissions to see chart data</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
