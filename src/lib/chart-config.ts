@@ -12,9 +12,8 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
-import zoomPlugin from 'chartjs-plugin-zoom'
 
-// Register all Chart.js components used across the app in one place
+// Register core Chart.js components (safe for SSR)
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -25,9 +24,23 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler,
-  zoomPlugin
+  Filler
 )
+
+// Client-side zoom plugin registration
+export const registerZoomPlugin = async () => {
+  if (typeof window !== 'undefined') {
+    try {
+      const { default: zoomPlugin } = await import('chartjs-plugin-zoom')
+      ChartJS.register(zoomPlugin)
+      return true
+    } catch (error) {
+      console.warn('Failed to load zoom plugin:', error)
+      return false
+    }
+  }
+  return false
+}
 
 // Common chart options for consistency
 export const createBaseChartOptions = (type: 'bar' | 'line' | 'doughnut') => ({
@@ -61,48 +74,57 @@ export const createBaseChartOptions = (type: 'bar' | 'line' | 'doughnut') => ({
   },
 })
 
-// Enhanced chart options with zoom/pan functionality
-export const createZoomableChartOptions = (type: 'bar' | 'line' | 'doughnut') => ({
-  ...createBaseChartOptions(type),
-  plugins: {
-    ...createBaseChartOptions(type).plugins,
-    zoom: {
-      zoom: {
-        wheel: {
-          enabled: true,
-          speed: 0.1,
-        },
-        pinch: {
-          enabled: true
-        },
-        mode: type === 'line' ? 'xy' as const : 'x' as const,
-        drag: {
-          enabled: true,
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderColor: 'rgba(59, 130, 246, 0.3)',
-          borderWidth: 1,
-        }
-      },
-      pan: {
-        enabled: true,
-        mode: type === 'line' ? 'xy' as const : 'x' as const,
-        threshold: 10,
-      },
-      limits: {
-        x: {min: 'original' as const, max: 'original' as const},
-        y: {min: 'original' as const, max: 'original' as const}
-      }
-    }
-  },
-  interaction: {
-    intersect: false,
-    mode: 'index' as const,
+// Enhanced chart options with zoom/pan functionality (client-side only)
+export const createZoomableChartOptions = (type: 'bar' | 'line' | 'doughnut') => {
+  const baseOptions = createBaseChartOptions(type)
+  
+  // Only add zoom config on client side
+  if (typeof window === 'undefined') {
+    return baseOptions
   }
-})
+
+  return {
+    ...baseOptions,
+    plugins: {
+      ...baseOptions.plugins,
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: true,
+            speed: 0.1,
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: type === 'line' ? 'xy' as const : 'x' as const,
+          drag: {
+            enabled: true,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderColor: 'rgba(59, 130, 246, 0.3)',
+            borderWidth: 1,
+          }
+        },
+        pan: {
+          enabled: true,
+          mode: type === 'line' ? 'xy' as const : 'x' as const,
+          threshold: 10,
+        },
+        limits: {
+          x: {min: 'original' as const, max: 'original' as const},
+          y: {min: 'original' as const, max: 'original' as const}
+        }
+      }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index' as const,
+    }
+  }
+}
 
 // Reset zoom function for components
 export const resetZoom = (chartRef: React.RefObject<any>) => {
-  if (chartRef.current) {
+  if (chartRef.current && typeof chartRef.current.resetZoom === 'function') {
     chartRef.current.resetZoom()
   }
 }

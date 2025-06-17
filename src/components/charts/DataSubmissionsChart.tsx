@@ -1,10 +1,10 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { TooltipItem } from 'chart.js'
 import { formatTimeAgo } from '@/lib/utils'
-import { createZoomableChartOptions, getAppIdColor, resetZoom } from '@/lib/chart-config'
+import { createZoomableChartOptions, getAppIdColor, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 // Helper function to format data size
@@ -66,6 +66,12 @@ interface DataSubmissionsChartProps {
 
 export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChartProps) {
   const chartRef = useRef<any>(null)
+  const [zoomEnabled, setZoomEnabled] = useState(false)
+
+  // Register zoom plugin on client side
+  useEffect(() => {
+    registerZoomPlugin().then(setZoomEnabled)
+  }, [])
   if (!chartData.length || !appIds.length) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground">
@@ -189,36 +195,38 @@ export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChart
 
   return (
     <div className="space-y-3">
-      {/* Zoom Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-muted-foreground">Chart Controls:</span>
-          <button
-            onClick={() => chartRef.current?.zoom(1.1)}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-            title="Zoom In"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => chartRef.current?.zoom(0.9)}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-            title="Zoom Out"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => resetZoom(chartRef)}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-            title="Reset Zoom"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </button>
+      {/* Zoom Controls - Only show when zoom is enabled */}
+      {zoomEnabled && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm text-muted-foreground">Chart Controls:</span>
+            <button
+              onClick={() => chartRef.current?.zoom(1.1)}
+              className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => chartRef.current?.zoom(0.9)}
+              className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => resetZoom(chartRef)}
+              className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+              title="Reset Zoom"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            💡 Mouse wheel to zoom • Drag to pan • Drag select to zoom area
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          💡 Mouse wheel to zoom • Drag to pan • Drag select to zoom area
-        </div>
-      </div>
+      )}
       
       {/* Chart */}
       <div className="h-64 w-full">

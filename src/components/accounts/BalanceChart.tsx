@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { TrendingUp, TrendingDown, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { Line } from 'react-chartjs-2'
 import { TooltipItem } from 'chart.js'
-import { createZoomableChartOptions, CHART_COLORS, resetZoom } from '@/lib/chart-config'
+import { createZoomableChartOptions, CHART_COLORS, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
 
 interface BalanceChartProps {
   address: string
@@ -20,6 +20,12 @@ export function BalanceChart({ address }: BalanceChartProps) {
   const chartRef = useRef<any>(null)
   const [balanceData, setBalanceData] = useState<BalanceDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [zoomEnabled, setZoomEnabled] = useState(false)
+
+  // Register zoom plugin
+  useEffect(() => {
+    registerZoomPlugin().then(setZoomEnabled)
+  }, [])
 
   useEffect(() => {
     // TODO: Replace with actual API call to fetch balance history
@@ -210,36 +216,38 @@ export function BalanceChart({ address }: BalanceChartProps) {
 
       {/* Chart */}
       <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-        {/* Zoom Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">Chart Controls:</span>
-            <button
-              onClick={() => chartRef.current?.zoom(1.1)}
-              className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
-              title="Zoom In"
-            >
-              <ZoomIn className="h-3 w-3" />
-            </button>
-            <button
-              onClick={() => chartRef.current?.zoom(0.9)}
-              className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
-              title="Zoom Out"
-            >
-              <ZoomOut className="h-3 w-3" />
-            </button>
-            <button
-              onClick={() => resetZoom(chartRef)}
-              className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
-              title="Reset Zoom"
-            >
-              <RotateCcw className="h-3 w-3" />
-            </button>
+        {/* Zoom Controls - Only show when zoom is enabled */}
+        {zoomEnabled && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-muted-foreground">Chart Controls:</span>
+              <button
+                onClick={() => chartRef.current?.zoom(1.1)}
+                className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
+                title="Zoom In"
+              >
+                <ZoomIn className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => chartRef.current?.zoom(0.9)}
+                className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
+                title="Zoom Out"
+              >
+                <ZoomOut className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => resetZoom(chartRef)}
+                className="p-1.5 rounded-lg bg-background hover:bg-background/80 transition-colors border"
+                title="Reset Zoom"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              💡 Scroll to zoom • Drag to pan
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground">
-            💡 Scroll to zoom • Drag to pan
-          </div>
-        </div>
+        )}
         
         <div className="h-48">
           <Line ref={chartRef} data={chartData} options={chartOptions} />
