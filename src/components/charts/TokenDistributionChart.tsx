@@ -1,17 +1,8 @@
 'use client'
 
 import { Doughnut } from 'react-chartjs-2'
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Title,
-  ChartOptions,
-} from 'chart.js'
-
-// Register Chart.js components
-ChartJS.register(ArcElement, Tooltip, Legend, Title)
+import { ChartOptions } from 'chart.js'
+import { createBaseChartOptions, ChartJS } from '@/lib/chart-config'
 
 interface TokenDistributionProps {
   data: {

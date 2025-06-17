@@ -1,29 +1,7 @@
 'use client'
 
 import { Line } from 'react-chartjs-2'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-} from 'chart.js'
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-)
+import { createBaseChartOptions, CHART_COLORS } from '@/lib/chart-config'
 
 interface BlocksChartProps {
   blocks: Array<{
@@ -55,8 +33,8 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       {
         label: 'Block Number',
         data: blockNumbers,
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: CHART_COLORS.primary,
+        backgroundColor: CHART_COLORS.primary + '1A', // 10% opacity
         tension: 0.4,
         fill: true,
         yAxisID: 'y',
@@ -64,8 +42,8 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       {
         label: 'Extrinsics Count',
         data: extrinsicsCounts,
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderColor: CHART_COLORS.secondary,
+        backgroundColor: CHART_COLORS.secondary + '1A', // 10% opacity
         tension: 0.4,
         fill: false,
         yAxisID: 'y1',

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { CopyableValue } from '@/components/ui/copyable-value'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { DataSubmissionsChart } from '@/components/charts/DataSubmissionsChart'
 
 // Helper function to format data size
 const formatDataSize = (bytes: number): string => {
@@ -29,69 +29,6 @@ const formatDataSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-// Color palette for App IDs - Professional theme with good contrast and accessibility
-const APP_ID_COLORS = [
-  '#3B82F6', // Blue 500
-  '#10B981', // Emerald 500  
-  '#F59E0B', // Amber 500
-  '#EF4444', // Red 500
-  '#8B5CF6', // Violet 500
-  '#06B6D4', // Cyan 500
-  '#F97316', // Orange 500
-  '#84CC16', // Lime 500
-  '#EC4899', // Pink 500
-  '#6366F1', // Indigo 500
-  '#14B8A6', // Teal 500
-  '#F59E0B', // Yellow 500
-  '#8B5A2B', // Brown 600
-  '#6B7280', // Gray 500
-  '#7C3AED', // Purple 600
-  '#059669', // Emerald 600
-  '#DC2626', // Red 600
-  '#2563EB', // Blue 600
-  '#DB2777', // Pink 600
-  '#16A34A'  // Green 600
-]
-
-// Get consistent color for App ID
-const getAppIdColor = (appId: number): string => {
-  return APP_ID_COLORS[appId % APP_ID_COLORS.length]
-}
-
-// Generate nice, round tick values for Y-axis based on data size
-const generateNiceDataSizeTicks = (maxValue: number): number[] => {
-  if (maxValue === 0) return [0]
-  
-  // Define nice round values in bytes
-  const niceValues = [
-    // Bytes
-    100, 250, 500, 1000,
-    // KB
-    2 * 1024, 5 * 1024, 10 * 1024, 25 * 1024, 50 * 1024, 100 * 1024, 250 * 1024, 500 * 1024,
-    // MB  
-    1024 * 1024, 2 * 1024 * 1024, 5 * 1024 * 1024, 10 * 1024 * 1024, 
-    25 * 1024 * 1024, 50 * 1024 * 1024, 100 * 1024 * 1024, 250 * 1024 * 1024, 500 * 1024 * 1024,
-    // GB
-    1024 * 1024 * 1024, 2 * 1024 * 1024 * 1024, 5 * 1024 * 1024 * 1024, 10 * 1024 * 1024 * 1024
-  ]
-  
-  // Find appropriate tick interval
-  const targetTicks = 5 // Aim for about 5 ticks
-  const roughInterval = maxValue / targetTicks
-  
-  // Find the smallest nice value that's >= roughInterval
-  const interval = niceValues.find(val => val >= roughInterval) || maxValue / targetTicks
-  
-  // Generate ticks
-  const ticks: number[] = [0]
-  let tick = interval
-  while (tick <= maxValue * 1.1) { // Go slightly beyond max for better visualization
-    ticks.push(tick)
-    tick += interval
-  }
-  
-  return ticks
-}
 
 // Type for chart data point
 interface ChartDataPoint {
@@ -163,66 +100,6 @@ const processSubmissionsForChart = (submissions: DataSubmission[]): { chartData:
   return { chartData, appIds: Array.from(appIds).sort((a, b) => a - b) }
 }
 
-// Types for custom tooltip
-interface TooltipPayload {
-  value: number
-  dataKey: string
-  color: string
-  payload: ChartDataPoint
-}
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: TooltipPayload[]
-  label?: string | number
-}
-
-// Custom tooltip component that only shows contributing App IDs
-const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    // Get timestamp from the first payload item
-    const timestamp = payload[0]?.payload?.timestamp
-    const formattedTime = timestamp ? formatTimeAgo(timestamp) : ''
-    
-    // Filter out entries with zero values
-    const contributingApps = payload.filter((entry: TooltipPayload) => entry.value > 0)
-    
-    if (contributingApps.length === 0) {
-      return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-medium">{`Block: ${label}`}</p>
-          {formattedTime && <p className="text-xs text-muted-foreground mb-1">{formattedTime}</p>}
-          <p className="text-sm text-muted-foreground">No data submissions</p>
-        </div>
-      )
-    }
-    
-    return (
-      <div className="bg-white p-3 border rounded-lg shadow-lg">
-        <p className="font-medium mb-1">{`Block: ${label}`}</p>
-        {formattedTime && <p className="text-xs text-muted-foreground mb-2">{formattedTime}</p>}
-        {contributingApps.map((entry: TooltipPayload, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-sm" 
-                style={{ backgroundColor: entry.color }}
-              />
-              <span className="text-sm">
-                App ID {entry.dataKey.replace('app_', '')}
-              </span>
-            </div>
-            <span className="text-sm font-medium">
-              {formatDataSize(entry.value)}
-            </span>
-          </div>
-        ))}
-      </div>
-    )
-  }
-  
-  return null
-}
 
 export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
@@ -462,59 +339,7 @@ export default function DataSubmissionsPage() {
           </div>
         </div>
 
-        {chartData.length > 0 ? (
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="blockNumber" 
-                  fontSize={12}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  fontSize={12}
-                  tickFormatter={(value) => formatDataSize(value)}
-                  ticks={(() => {
-                    // Calculate max value from chart data
-                    const maxValue = Math.max(
-                      ...chartData.map(dataPoint => 
-                        chartAppIds.reduce((sum, appId) => {
-                          const value = dataPoint[`app_${appId}`]
-                          return sum + (typeof value === 'number' ? value : 0)
-                        }, 0)
-                      )
-                    )
-                    return generateNiceDataSizeTicks(maxValue)
-                  })()}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  formatter={(value) => `App ID ${value.replace('app_', '')}`}
-                />
-                {chartAppIds.map((appId) => (
-                  <Bar
-                    key={appId}
-                    dataKey={`app_${appId}`}
-                    stackId="submissions"
-                    fill={getAppIdColor(appId)}
-                    name={`app_${appId}`}
-                  />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>No data available for chart visualization</p>
-              <p className="text-xs">Load more submissions to see chart data</p>
-            </div>
-          </div>
-        )}
+        <DataSubmissionsChart chartData={chartData} appIds={chartAppIds} />
       </div>
 
       {/* Filters */}

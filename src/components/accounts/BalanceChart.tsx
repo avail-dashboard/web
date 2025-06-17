@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown } from 'lucide-react'
+import { Line } from 'react-chartjs-2'
+import { TooltipItem } from 'chart.js'
+import { createBaseChartOptions, CHART_COLORS } from '@/lib/chart-config'
 
 interface BalanceChartProps {
   address: string
@@ -19,9 +22,26 @@ export function BalanceChart({ address }: BalanceChartProps) {
 
   useEffect(() => {
     // TODO: Replace with actual API call to fetch balance history
-    // For now, simulate loading and then show no data state
+    // For now, simulate loading and generate some mock data for demonstration
     setTimeout(() => {
-      setBalanceData([]) // No mock data
+      // Generate mock data for demonstration
+      const mockData: BalanceDataPoint[] = []
+      const baseBalance = 1000000 // Start with 1M AVAIL
+      const now = Date.now()
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(now - i * 24 * 60 * 60 * 1000)
+        const variation = (Math.random() - 0.5) * 0.1 // ±10% variation
+        const balance = baseBalance * (1 + variation * (i / 30)) // Slight trend over time
+        
+        mockData.push({
+          date: date.toLocaleDateString(),
+          balance: Math.max(0, balance),
+          timestamp: date.getTime()
+        })
+      }
+      
+      setBalanceData(mockData)
       setLoading(false)
     }, 1000)
   }, [address])
@@ -44,6 +64,100 @@ export function BalanceChart({ address }: BalanceChartProps) {
     )
   }
 
+  // Calculate percentage change
+  const firstBalance = balanceData[0]?.balance || 0
+  const lastBalance = balanceData[balanceData.length - 1]?.balance || 0
+  const percentageChange =
+    firstBalance > 0 ? ((lastBalance - firstBalance) / firstBalance) * 100 : 0
+  const isPositive = percentageChange >= 0
+
+  // Chart.js configuration
+  const chartData = {
+    labels: balanceData.map(point => {
+      const date = new Date(point.timestamp)
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }),
+    datasets: [
+      {
+        label: 'Balance',
+        data: balanceData.map(point => point.balance),
+        borderColor: CHART_COLORS.primary,
+        backgroundColor: CHART_COLORS.primary + '1A', // 10% opacity
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: CHART_COLORS.primary,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  }
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          title: function(context: TooltipItem<'line'>[]) {
+            const index = context[0]?.dataIndex
+            if (index !== undefined) {
+              return balanceData[index]?.date || ''
+            }
+            return ''
+          },
+          label: function(context: TooltipItem<'line'>) {
+            const value = context.parsed.y
+            return `Balance: ${value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} AVAIL`
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        grid: {
+          display: false,
+        },
+        ticks: {
+          maxTicksLimit: 7, // Show about 7 labels to avoid crowding
+          font: {
+            size: 11,
+          },
+        },
+      },
+      y: {
+        display: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        ticks: {
+          callback: function(value: any) {
+            return value.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            })
+          },
+          font: {
+            size: 11,
+          },
+        },
+      },
+    },
+    elements: {
+      point: {
+        hoverBackgroundColor: CHART_COLORS.primary,
+      },
+    },
+  }
+
   if (balanceData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -59,38 +173,6 @@ export function BalanceChart({ address }: BalanceChartProps) {
       </div>
     )
   }
-
-  // Calculate min and max for scaling
-  const balances = balanceData.map(d => d.balance)
-  const minBalance = Math.min(...balances)
-  const maxBalance = Math.max(...balances)
-  const range = maxBalance - minBalance || 1
-
-  // Calculate percentage change
-  const firstBalance = balanceData[0]?.balance || 0
-  const lastBalance = balanceData[balanceData.length - 1]?.balance || 0
-  const percentageChange =
-    firstBalance > 0 ? ((lastBalance - firstBalance) / firstBalance) * 100 : 0
-  const isPositive = percentageChange >= 0
-
-  // Generate SVG path
-  const width = 400
-  const height = 200
-  const padding = 20
-
-  const points = balanceData
-    .map((point, index) => {
-      const x =
-        padding + (index / (balanceData.length - 1)) * (width - 2 * padding)
-      const y =
-        height -
-        padding -
-        ((point.balance - minBalance) / range) * (height - 2 * padding)
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  const pathData = `M ${points.split(' ').join(' L ')}`
 
   return (
     <div className="space-y-4">
@@ -125,72 +207,9 @@ export function BalanceChart({ address }: BalanceChartProps) {
 
       {/* Chart */}
       <div className="bg-muted/30 rounded-lg p-4">
-        <svg
-          width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          className="overflow-visible"
-        >
-          {/* Grid lines */}
-          <defs>
-            <pattern
-              id="grid"
-              width="40"
-              height="40"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 40 0 L 0 0 0 40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="0.5"
-                opacity="0.1"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-
-          {/* Area under the curve */}
-          <path
-            d={`${pathData} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`}
-            fill="currentColor"
-            fillOpacity="0.1"
-            className="text-avail-600"
-          />
-
-          {/* Main line */}
-          <path
-            d={pathData}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-avail-600"
-          />
-
-          {/* Data points */}
-          {balanceData.map((point, index) => {
-            const x =
-              padding +
-              (index / (balanceData.length - 1)) * (width - 2 * padding)
-            const y =
-              height -
-              padding -
-              ((point.balance - minBalance) / range) * (height - 2 * padding)
-
-            return (
-              <circle
-                key={index}
-                cx={x}
-                cy={y}
-                r="3"
-                fill="currentColor"
-                className="text-avail-600"
-              >
-                <title>{`${point.date}: ${point.balance.toFixed(2)} AVAIL`}</title>
-              </circle>
-            )
-          })}
-        </svg>
+        <div className="h-48">
+          <Line data={chartData} options={chartOptions} />
+        </div>
       </div>
 
       {/* Time range indicator */}
