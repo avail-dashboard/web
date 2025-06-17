@@ -12,6 +12,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
+import zoomPlugin from 'chartjs-plugin-zoom'
 
 // Register all Chart.js components used across the app in one place
 ChartJS.register(
@@ -24,7 +25,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  zoomPlugin
 )
 
 // Common chart options for consistency
@@ -58,6 +60,52 @@ export const createBaseChartOptions = (type: 'bar' | 'line' | 'doughnut') => ({
     easing: 'easeInOutQuart' as const,
   },
 })
+
+// Enhanced chart options with zoom/pan functionality
+export const createZoomableChartOptions = (type: 'bar' | 'line' | 'doughnut') => ({
+  ...createBaseChartOptions(type),
+  plugins: {
+    ...createBaseChartOptions(type).plugins,
+    zoom: {
+      zoom: {
+        wheel: {
+          enabled: true,
+          speed: 0.1,
+        },
+        pinch: {
+          enabled: true
+        },
+        mode: type === 'line' ? 'xy' as const : 'x' as const,
+        drag: {
+          enabled: true,
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: 'rgba(59, 130, 246, 0.3)',
+          borderWidth: 1,
+        }
+      },
+      pan: {
+        enabled: true,
+        mode: type === 'line' ? 'xy' as const : 'x' as const,
+        threshold: 10,
+      },
+      limits: {
+        x: {min: 'original' as const, max: 'original' as const},
+        y: {min: 'original' as const, max: 'original' as const}
+      }
+    }
+  },
+  interaction: {
+    intersect: false,
+    mode: 'index' as const,
+  }
+})
+
+// Reset zoom function for components
+export const resetZoom = (chartRef: React.RefObject<any>) => {
+  if (chartRef.current) {
+    chartRef.current.resetZoom()
+  }
+}
 
 // Color palette for consistent theming
 export const CHART_COLORS = {
