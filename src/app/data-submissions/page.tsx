@@ -96,7 +96,8 @@ const generateNiceDataSizeTicks = (maxValue: number): number[] => {
 // Type for chart data point
 interface ChartDataPoint {
   blockNumber: number
-  [key: string]: number // Dynamic keys for app_${appId}
+  timestamp: string
+  [key: string]: number | string // Dynamic keys for app_${appId} and timestamp
 }
 
 // Process submissions data for chart visualization
@@ -105,6 +106,7 @@ const processSubmissionsForChart = (submissions: DataSubmission[]): { chartData:
 
   // Group submissions by block number and App ID, summing dataSize
   const groupedData: { [blockNumber: number]: { [appId: number]: number } } = {}
+  const blockTimestamps: { [blockNumber: number]: string } = {}
   const appIds = new Set<number>()
 
   submissions.forEach(submission => {
@@ -120,6 +122,12 @@ const processSubmissionsForChart = (submissions: DataSubmission[]): { chartData:
     
     // Sum dataSize instead of counting submissions
     groupedData[blockNumber][submission.appId] += submission.dataSize
+    
+    // Store timestamp for this block (use the first submission's timestamp)
+    if (!blockTimestamps[blockNumber]) {
+      blockTimestamps[blockNumber] = submission.timestamp
+    }
+    
     appIds.add(submission.appId)
   })
 
@@ -139,7 +147,8 @@ const processSubmissionsForChart = (submissions: DataSubmission[]): { chartData:
   const chartData: ChartDataPoint[] = []
   for (let blockNumber = minBlock; blockNumber <= maxBlock; blockNumber++) {
     const dataPoint: ChartDataPoint = {
-      blockNumber
+      blockNumber,
+      timestamp: blockTimestamps[blockNumber] || '' // Use actual timestamp or empty string for blocks without data
     }
     
     // Add total data size for each App ID (or 0 if no data for this block)
@@ -171,6 +180,10 @@ interface CustomTooltipProps {
 // Custom tooltip component that only shows contributing App IDs
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
+    // Get timestamp from the first payload item
+    const timestamp = payload[0]?.payload?.timestamp
+    const formattedTime = timestamp ? formatTimeAgo(timestamp) : ''
+    
     // Filter out entries with zero values
     const contributingApps = payload.filter((entry: TooltipPayload) => entry.value > 0)
     
@@ -178,6 +191,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-medium">{`Block: ${label}`}</p>
+          {formattedTime && <p className="text-xs text-muted-foreground mb-1">{formattedTime}</p>}
           <p className="text-sm text-muted-foreground">No data submissions</p>
         </div>
       )
@@ -185,7 +199,8 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     
     return (
       <div className="bg-white p-3 border rounded-lg shadow-lg">
-        <p className="font-medium mb-2">{`Block: ${label}`}</p>
+        <p className="font-medium mb-1">{`Block: ${label}`}</p>
+        {formattedTime && <p className="text-xs text-muted-foreground mb-2">{formattedTime}</p>}
         {contributingApps.map((entry: TooltipPayload, index: number) => (
           <div key={index} className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -229,7 +244,7 @@ export default function DataSubmissionsPage() {
     averageSize: 0,
   })
 
-  const limit = 100
+  const limit = 82
 
   // Fetch data submissions
   const fetchSubmissions = async (
@@ -466,9 +481,10 @@ export default function DataSubmissionsPage() {
                     // Calculate max value from chart data
                     const maxValue = Math.max(
                       ...chartData.map(dataPoint => 
-                        chartAppIds.reduce((sum, appId) => 
-                          sum + (dataPoint[`app_${appId}`] || 0), 0
-                        )
+                        chartAppIds.reduce((sum, appId) => {
+                          const value = dataPoint[`app_${appId}`]
+                          return sum + (typeof value === 'number' ? value : 0)
+                        }, 0)
                       )
                     )
                     return generateNiceDataSizeTicks(maxValue)
