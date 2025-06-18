@@ -13,6 +13,7 @@ import {
 
 import { useBlocks } from '@/lib/hooks/useAvailAPI'
 import { formatTimeAgo } from '@/lib/utils'
+import { LiveTimeAgo } from '@/components/ui/LiveTimeAgo'
 
 interface BlockListProps {
   initialPage?: number
@@ -213,9 +214,7 @@ export function BlockList({
                 {/* Timestamp */}
                 <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                   <Clock className="h-3 w-3" />
-                  <span>
-                    {formatTimeAgo(block.timestamp)}
-                  </span>
+                  <LiveTimeAgo timestamp={block.timestamp} />
                 </div>
 
                 {!compact && (

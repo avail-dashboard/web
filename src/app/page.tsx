@@ -7,6 +7,7 @@ import { SearchComponent } from '@/components/dashboard/SearchComponent'
 import { TransfersTable } from '@/components/transfers/TransfersTable'
 import { AnimatedNavigationCard } from '@/components/navigation/AnimatedNavigationCard'
 import { formatTimeAgo } from '@/lib/utils'
+import { LiveTimeAgo } from '@/components/ui/LiveTimeAgo'
 import Link from 'next/link'
 import { Blocks, Activity, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -297,7 +298,7 @@ export default function Dashboard() {
                         </div>
                         <div className="text-right text-sm">
                           <div>
-                            {formatTimeAgo(block.timestamp)}
+                            <LiveTimeAgo timestamp={block.timestamp} />
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {block.extrinsicsCount || block.extrinsics || 0}{' '}
