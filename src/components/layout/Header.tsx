@@ -18,7 +18,7 @@ export const Header = React.memo(function Header() {
     error: chainError,
     refetch: refetchChain,
   } = useChainData({
-    refetchInterval: 60000, // Refresh every 60 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds
   })
 
 
