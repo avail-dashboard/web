@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { useChainData } from '@/lib/hooks/useAvailAPI'
@@ -11,7 +10,6 @@ import { AnimatedNavigation, AnimatedSearchBar } from '@/components/navigation/A
 import { MobileNavigation } from '@/components/navigation/MobileNavigation'
 
 export const Header = React.memo(function Header() {
-  const router = useRouter()
 
   const {
     data: chainData,
@@ -23,11 +21,6 @@ export const Header = React.memo(function Header() {
     refetchInterval: 60000, // Refresh every 60 seconds
   })
 
-  const handleRefresh = useCallback(() => {
-    refetchChain()
-    // Trigger a page refresh to update all data
-    router.refresh()
-  }, [refetchChain, router])
 
   // Memoize formatted price data to prevent unnecessary recalculations
   const priceData = useMemo(() => {
@@ -41,10 +34,6 @@ export const Header = React.memo(function Header() {
     }
   }, [chainData?.tokenPrice, chainData?.priceChange])
 
-  // Memoize button text to prevent unnecessary re-renders
-  const buttonText = useMemo(() => {
-    return chainLoading ? 'Loading...' : 'Refresh'
-  }, [chainLoading])
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50">
@@ -90,18 +79,11 @@ export const Header = React.memo(function Header() {
             {chainError && (
               <ErrorDisplay
                 error={chainError}
-                onRetry={handleRefresh}
+                onRetry={refetchChain}
                 compact={true}
               />
             )}
             <RefreshIndicator isRefreshing={chainRefreshing} />
-            <button
-              onClick={handleRefresh}
-              disabled={chainLoading}
-              className="text-xs bg-avail-600 text-white px-3 py-1 rounded hover:bg-avail-700 disabled:opacity-50 transition-colors whitespace-nowrap"
-            >
-              {buttonText}
-            </button>
             {priceData && (
               <div className="text-right text-sm whitespace-nowrap">
                 <div className="font-semibold">{priceData.formattedPrice}</div>
