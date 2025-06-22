@@ -11,6 +11,7 @@ import {
   AnimatedSearchBar,
 } from '@/components/navigation/AnimatedNavigation'
 import { MobileMenuButton } from '@/components/navigation/MobileMenuButton'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 export const Header = React.memo(function Header() {
   const {
@@ -84,6 +85,7 @@ export const Header = React.memo(function Header() {
               />
             )}
             <RefreshIndicator isRefreshing={chainRefreshing} />
+            <ThemeToggle />
             {priceData && (
               <div className="text-right text-sm whitespace-nowrap">
                 <div className="font-semibold">{priceData.formattedPrice}</div>

@@ -2,7 +2,9 @@
 
 import { Doughnut } from 'react-chartjs-2'
 import { ChartOptions } from 'chart.js'
-import { createBaseChartOptions, ChartJS } from '@/lib/chart-config'
+import { ChartJS } from '@/lib/chart-config'
+import { useTheme } from '@/contexts/ThemeContext'
+import { getThemeColors, getChartColorPalette } from '@/lib/chart-themes'
 
 interface TokenDistributionProps {
   data: {
@@ -18,6 +20,10 @@ export function TokenDistributionChart({
   data,
   totalIssuance,
 }: TokenDistributionProps) {
+  const { actualTheme } = useTheme()
+  const themeColors = getThemeColors(actualTheme)
+  const colors = getChartColorPalette(actualTheme, 4)
+
   // Create labels with both amounts and percentages
   const labelsWithAmounts = [
     `Circulating: ${data.circulating?.amount || '0'} (${(data.circulating?.percentage || 0).toFixed(2)}%)`,
@@ -36,13 +42,8 @@ export function TokenDistributionChart({
           data.treasury?.percentage || 0,
           data.others?.percentage || 0,
         ],
-        backgroundColor: [
-          '#3B82F6', // Blue for circulating
-          '#10B981', // Green for staking
-          '#F59E0B', // Yellow for treasury
-          '#6B7280', // Gray for others
-        ],
-        borderColor: ['#2563EB', '#059669', '#D97706', '#4B5563'],
+        backgroundColor: colors,
+        borderColor: colors.map(color => color + 'CC'), // Add transparency
         borderWidth: 2,
         hoverOffset: 8,
       },
@@ -56,6 +57,7 @@ export function TokenDistributionChart({
       legend: {
         position: 'bottom' as const,
         labels: {
+          color: themeColors.foreground,
           padding: 20,
           usePointStyle: true,
           font: {
@@ -96,6 +98,14 @@ export function TokenDistributionChart({
         },
       },
       tooltip: {
+        backgroundColor: actualTheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: themeColors.foreground,
+        bodyColor: themeColors.foreground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        padding: 12,
         callbacks: {
           label: function (context: { dataIndex: number; label: string }) {
             const dataIndex = context.dataIndex
@@ -115,6 +125,7 @@ export function TokenDistributionChart({
       title: {
         display: true,
         text: `Total Issuance: ${totalIssuance}`,
+        color: themeColors.foreground,
         font: {
           size: 14,
           weight: 'bold' as const,

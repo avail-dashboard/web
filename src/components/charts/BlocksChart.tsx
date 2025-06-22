@@ -1,7 +1,8 @@
 'use client'
 
 import { Line } from 'react-chartjs-2'
-import { createBaseChartOptions, CHART_COLORS } from '@/lib/chart-config'
+import { useTheme } from '@/contexts/ThemeContext'
+import { getChartColorPalette, getThemeColors } from '@/lib/chart-themes'
 
 interface BlocksChartProps {
   blocks: Array<{
@@ -12,6 +13,9 @@ interface BlocksChartProps {
 }
 
 export function BlocksChart({ blocks }: BlocksChartProps) {
+  const { actualTheme } = useTheme()
+  const colors = getChartColorPalette(actualTheme, 2)
+
   // Generate time labels and block data
   const sortedBlocks = [...blocks].sort((a, b) => a.number - b.number)
 
@@ -33,8 +37,8 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       {
         label: 'Block Number',
         data: blockNumbers,
-        borderColor: CHART_COLORS.primary,
-        backgroundColor: CHART_COLORS.primary + '1A', // 10% opacity
+        borderColor: colors[0],
+        backgroundColor: colors[0] + '1A', // 10% opacity
         tension: 0.4,
         fill: true,
         yAxisID: 'y',
@@ -42,8 +46,8 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       {
         label: 'Extrinsics Count',
         data: extrinsicsCounts,
-        borderColor: CHART_COLORS.secondary,
-        backgroundColor: CHART_COLORS.secondary + '1A', // 10% opacity
+        borderColor: colors[1],
+        backgroundColor: colors[1] + '1A', // 10% opacity
         tension: 0.4,
         fill: false,
         yAxisID: 'y1',
@@ -51,6 +55,8 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
     ],
   }
 
+  const themeColors = getThemeColors(actualTheme)
+  
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -62,6 +68,7 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       title: {
         display: true,
         text: 'Recent Block Activity',
+        color: themeColors.foreground,
         font: {
           size: 16,
           weight: 'bold' as const,
@@ -69,15 +76,32 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
       },
       legend: {
         position: 'top' as const,
+        labels: {
+          color: themeColors.foreground,
+          font: {
+            size: 11,
+          },
+          padding: 20,
+          usePointStyle: true,
+        },
       },
       tooltip: {
+        backgroundColor: actualTheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: themeColors.foreground,
+        bodyColor: themeColors.foreground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        padding: 12,
         callbacks: {
-          title: function (context: any) {
-            const blockIndex = context[0].dataIndex
+          title: function (context: unknown[]) {
+            const ctx = context[0] as { dataIndex: number }
+            const blockIndex = ctx.dataIndex
             const block = sortedBlocks[blockIndex]
             return `Block #${block.number}`
           },
-          label: function (context: any) {
+          label: function (context: { dataset: { label?: string }, parsed: { y: number } }) {
             const label = context.dataset.label || ''
             const value = context.parsed.y
             if (label === 'Block Number') {
@@ -94,6 +118,16 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
         title: {
           display: true,
           text: 'Time',
+          color: themeColors.foreground,
+        },
+        ticks: {
+          color: themeColors.foreground,
+        },
+        grid: {
+          color: themeColors.grid,
+        },
+        border: {
+          color: themeColors.border,
         },
       },
       y: {
@@ -103,11 +137,19 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
         title: {
           display: true,
           text: 'Block Number',
+          color: themeColors.foreground,
         },
         ticks: {
-          callback: function (value: any) {
-            return '#' + value.toLocaleString()
+          color: themeColors.foreground,
+          callback: function (value: number | string) {
+            return '#' + Number(value).toLocaleString()
           },
+        },
+        grid: {
+          color: themeColors.grid,
+        },
+        border: {
+          color: themeColors.border,
         },
       },
       y1: {
@@ -117,9 +159,17 @@ export function BlocksChart({ blocks }: BlocksChartProps) {
         title: {
           display: true,
           text: 'Extrinsics',
+          color: themeColors.foreground,
+        },
+        ticks: {
+          color: themeColors.foreground,
         },
         grid: {
           drawOnChartArea: false,
+          color: themeColors.grid,
+        },
+        border: {
+          color: themeColors.border,
         },
       },
     },

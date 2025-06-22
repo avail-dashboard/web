@@ -4,7 +4,9 @@ import { useRef, useEffect, useState } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { TooltipItem } from 'chart.js'
 import { formatTimeAgo } from '@/lib/utils'
-import { createZoomableChartOptions, getAppIdColor, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
+import { createZoomableChartOptions, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
+import { useTheme } from '@/contexts/ThemeContext'
+import { getAppIdColor, getThemeColors } from '@/lib/chart-themes'
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 // Helper function to format data size
@@ -65,6 +67,8 @@ interface DataSubmissionsChartProps {
 }
 
 export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChartProps) {
+  const { actualTheme } = useTheme()
+  const themeColors = getThemeColors(actualTheme)
   const chartRef = useRef<any>(null)
   const [zoomEnabled, setZoomEnabled] = useState(false)
 
@@ -99,8 +103,8 @@ export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChart
     datasets: appIds.map(appId => ({
       label: `App ID ${appId}`,
       data: chartData.map(point => point[`app_${appId}`] as number || 0),
-      backgroundColor: getAppIdColor(appId),
-      borderColor: getAppIdColor(appId),
+      backgroundColor: getAppIdColor(appId, actualTheme),
+      borderColor: getAppIdColor(appId, actualTheme),
       borderWidth: 1,
       stack: 'submissions',
     }))
@@ -121,9 +125,24 @@ export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChart
       legend: {
         ...baseOptions.plugins.legend,
         position: 'bottom' as const,
+        labels: {
+          color: themeColors.foreground,
+          font: {
+            size: 11,
+          },
+          padding: 20,
+          usePointStyle: true,
+        },
       },
       tooltip: {
-        ...baseOptions.plugins.tooltip,
+        backgroundColor: actualTheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: themeColors.foreground,
+        bodyColor: themeColors.foreground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        padding: 12,
         callbacks: {
           title: function(context: TooltipItem<'bar'>[]) {
             const dataIndex = context[0]?.dataIndex
@@ -160,33 +179,49 @@ export function DataSubmissionsChart({ chartData, appIds }: DataSubmissionsChart
         title: {
           display: true,
           text: 'Block Number',
+          color: themeColors.foreground,
         },
         ticks: {
+          color: themeColors.foreground,
           maxRotation: 45,
           minRotation: 0,
           font: {
             size: 12
           }
-        }
+        },
+        grid: {
+          color: themeColors.grid,
+        },
+        border: {
+          color: themeColors.border,
+        },
       },
       y: {
         display: true,
         title: {
           display: true,
           text: 'Data Size',
+          color: themeColors.foreground,
         },
         ticks: {
-          callback: function(value: any) {
-            return formatDataSize(value)
+          color: themeColors.foreground,
+          callback: function(value: number | string) {
+            return formatDataSize(Number(value))
           },
           font: {
             size: 12
           }
         },
+        grid: {
+          color: themeColors.grid,
+        },
+        border: {
+          color: themeColors.border,
+        },
         // Use the nice tick generation
         min: 0,
         max: maxValue * 1.1,
-        afterBuildTicks: function(axis: any) {
+        afterBuildTicks: function(axis: { ticks: { value: number }[] }) {
           axis.ticks = generateNiceDataSizeTicks(maxValue).map(value => ({ value }))
         }
       }

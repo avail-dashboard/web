@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { TrendingUp, TrendingDown, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { Line } from 'react-chartjs-2'
 import { TooltipItem } from 'chart.js'
-import { createZoomableChartOptions, CHART_COLORS, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
+import { createZoomableChartOptions, resetZoom, registerZoomPlugin } from '@/lib/chart-config'
+import { useTheme } from '@/contexts/ThemeContext'
+import { getThemeColors, getChartColorPalette } from '@/lib/chart-themes'
 
 interface BalanceChartProps {
   address: string
@@ -17,6 +19,9 @@ interface BalanceDataPoint {
 }
 
 export function BalanceChart({ address }: BalanceChartProps) {
+  const { actualTheme } = useTheme()
+  const themeColors = getThemeColors(actualTheme)
+  const colors = getChartColorPalette(actualTheme, 1)
   const chartRef = useRef<any>(null)
   const [balanceData, setBalanceData] = useState<BalanceDataPoint[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,12 +93,12 @@ export function BalanceChart({ address }: BalanceChartProps) {
       {
         label: 'Balance',
         data: balanceData.map(point => point.balance),
-        borderColor: CHART_COLORS.primary,
-        backgroundColor: CHART_COLORS.primary + '1A', // 10% opacity
+        borderColor: colors[0],
+        backgroundColor: colors[0] + '1A', // 10% opacity
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: CHART_COLORS.primary,
-        pointBorderColor: '#ffffff',
+        pointBackgroundColor: colors[0],
+        pointBorderColor: themeColors.background,
         pointBorderWidth: 2,
         pointRadius: 4,
         pointHoverRadius: 6,
@@ -110,7 +115,14 @@ export function BalanceChart({ address }: BalanceChartProps) {
         display: false,
       },
       tooltip: {
-        ...baseOptions.plugins.tooltip,
+        backgroundColor: actualTheme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: themeColors.foreground,
+        bodyColor: themeColors.foreground,
+        borderColor: themeColors.border,
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        padding: 12,
         callbacks: {
           title: function(context: TooltipItem<'line'>[]) {
             const index = context[0]?.dataIndex
@@ -136,6 +148,7 @@ export function BalanceChart({ address }: BalanceChartProps) {
           display: false,
         },
         ticks: {
+          color: themeColors.foreground,
           maxTicksLimit: 7, // Show about 7 labels to avoid crowding
           font: {
             size: 11,
@@ -145,11 +158,12 @@ export function BalanceChart({ address }: BalanceChartProps) {
       y: {
         display: true,
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: themeColors.grid,
         },
         ticks: {
-          callback: function(value: any) {
-            return value.toLocaleString(undefined, {
+          color: themeColors.foreground,
+          callback: function(value: number | string) {
+            return Number(value).toLocaleString(undefined, {
               minimumFractionDigits: 0,
               maximumFractionDigits: 0,
             })
@@ -162,7 +176,7 @@ export function BalanceChart({ address }: BalanceChartProps) {
     },
     elements: {
       point: {
-        hoverBackgroundColor: CHART_COLORS.primary,
+        hoverBackgroundColor: colors[0],
       },
     },
   }
