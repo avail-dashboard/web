@@ -4,15 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { DataSubmission, availAPI } from '@/lib/api'
 import { formatTimeAgo } from '@/lib/utils'
 import {
-  Search,
-  Filter,
-  ExternalLink,
   Database,
-  Clock,
-  Hash,
   Activity,
   TrendingUp,
-  FileText,
   Layers,
   BarChart3,
 } from 'lucide-react'
@@ -105,9 +99,6 @@ export default function DataSubmissionsPage() {
   const [submissions, setSubmissions] = useState<DataSubmission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [appIdFilter, setAppIdFilter] = useState<string>('')
-  const [submitterFilter, setSubmitterFilter] = useState('')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [chartData, setChartData] = useState<ChartDataPoint[]>([])
@@ -132,24 +123,7 @@ export default function DataSubmissionsPage() {
       setLoading(true)
       setError(null)
 
-      const params: {
-        page: number
-        limit: number
-        appId?: number
-        submitter?: string
-      } = {
-        page: pageNum,
-        limit,
-      }
-
-      if (appIdFilter) {
-        params.appId = parseInt(appIdFilter)
-      }
-      if (submitterFilter) {
-        params.submitter = submitterFilter
-      }
-
-      const response = await availAPI.getDataSubmissions(params.page, params.limit, params.appId, params.submitter)
+      const response = await availAPI.getDataSubmissions(pageNum, limit)
       const dataSubmissions = response.dataSubmissions || []
 
       if (reset || pageNum === 1) {
@@ -206,36 +180,14 @@ export default function DataSubmissionsPage() {
       }
     }
     loadData()
-  }, [appIdFilter, submitterFilter])
+  }, [])
 
-  // Helper function to get extrinsic ID from submission
-  const getExtrinsicId = (submission: DataSubmission): string => {
-    return `${submission.blockNumber}-${submission.extrinsicIndex}`
-  }
 
-  // Search functionality
-  const filteredSubmissions = (submissions || []).filter(submission => {
-    const extrinsicId = getExtrinsicId(submission)
-    const matchesSearch =
-      !searchTerm ||
-      submission.dataHash.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.submitter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      extrinsicId.toLowerCase().includes(searchTerm.toLowerCase())
-
-    return matchesSearch
-  })
 
   const loadMore = () => {
     if (!loading && hasMore) {
       fetchSubmissions(page + 1, false)
     }
-  }
-
-  const resetFilters = () => {
-    setSearchTerm('')
-    setAppIdFilter('')
-    setSubmitterFilter('')
-    setPage(1)
   }
 
   if (loading && submissions.length === 0) {
@@ -342,52 +294,7 @@ export default function DataSubmissionsPage() {
         <DataSubmissionsChart chartData={chartData} appIds={chartAppIds} />
       </div>
 
-      {/* Filters */}
-      <div className="bg-card p-6 rounded-lg border shadow-sm mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search by hash, submitter, or extrinsic..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-avail-600"
-            />
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <input
-              type="number"
-              placeholder="App ID"
-              value={appIdFilter}
-              onChange={e => setAppIdFilter(e.target.value)}
-              className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-avail-600 w-24"
-            />
-          </div>
-
-          <input
-            type="text"
-            placeholder="Submitter address"
-            value={submitterFilter}
-            onChange={e => setSubmitterFilter(e.target.value)}
-            className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-avail-600"
-          />
-
-          <button
-            onClick={resetFilters}
-            className="px-4 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80"
-          >
-            Reset
-          </button>
-
-          <div className="ml-auto text-sm text-muted-foreground">
-            Showing {filteredSubmissions.length} of {submissions.length}{' '}
-            submissions
-          </div>
-        </div>
-      </div>
 
       {/* Error State */}
       {error && (
@@ -402,146 +309,155 @@ export default function DataSubmissionsPage() {
         </div>
       )}
 
-      {/* Submissions List */}
-      <div className="space-y-4">
-        {filteredSubmissions.length > 0 ? (
-          <>
-            {filteredSubmissions.map((submission, index) => (
-              <div key={`${submission.blockNumber}-${index}`} className="p-6">
-                <div className="bg-card rounded-lg border shadow-sm hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-avail-100 rounded-lg">
-                          <FileText className="h-5 w-5 text-avail-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-lg">
-                            Data Submission #{submission.extrinsicIndex}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            App ID: {submission.appId}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            submission.success
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {submission.success ? 'Success' : 'Failed'}
-                        </span>
-                        <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatTimeAgo(submission.timestamp)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center space-x-4">
-                        <span className="text-muted-foreground">Size:</span>
-                        <span className="font-mono">
-                          {formatDataSize(submission.dataSize)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <span className="text-muted-foreground">
-                          Submitter:
-                        </span>
-                        <Link
-                          href={`/accounts/${submission.submitter}`}
-                          className="text-avail-600 hover:text-avail-700 flex items-center space-x-1"
-                        >
-                          <CopyableValue
-                            value={submission.submitter}
-                            truncate={true}
-                            truncateStart={8}
-                            truncateEnd={8}
-                            valueClassName="text-avail-600"
-                          />
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <span className="text-muted-foreground">
-                          Extrinsic:
-                        </span>
-                        <Link
-                          href={`/extrinsics/${submission.extrinsicHash}`}
-                          className="font-mono text-avail-600 hover:text-avail-700 flex items-center space-x-1"
-                        >
-                          <span>{getExtrinsicId(submission)}</span>
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <span className="text-muted-foreground">Block:</span>
-                        <Link
-                          href={`/blocks/${submission.blockNumber}`}
-                          className="text-avail-600 hover:text-avail-700 flex items-center space-x-1"
-                        >
-                          <Hash className="h-3 w-3" />
-                          <CopyableValue
-                            value={submission.blockNumber.toString()}
-                            displayValue={`#${submission.blockNumber}`}
-                            monospace={true}
-                            valueClassName="text-avail-600"
-                          />
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <span className="text-muted-foreground">
-                          Data Hash:
-                        </span>
-                        <CopyableValue
-                          value={submission.dataHash}
-                          truncate={true}
-                          truncateStart={10}
-                          truncateEnd={10}
-                          className="text-xs bg-muted px-2 py-1 rounded"
-                        />
-                      </div>
-                    </div>
+      {/* Two-Column Grid Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column: Data Submissions Table */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Data Submissions</h2>
+            <div className="text-sm text-muted-foreground">
+              {submissions.length} submissions
+            </div>
+          </div>
+          <div className="bg-card rounded-lg border shadow-sm">
+            {submissions.length > 0 ? (
+              <>
+                {/* Table Header */}
+                <div className="px-6 py-4 border-b bg-muted/50">
+                  <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground">
+                    <div className="col-span-2">App ID</div>
+                    <div className="col-span-2">Index</div>
+                    <div className="col-span-2">Size</div>
+                    <div className="col-span-3">Submitter</div>
+                    <div className="col-span-2">Time</div>
+                    <div className="col-span-1">Status</div>
                   </div>
                 </div>
-              </div>
-            ))}
+                
+                {/* Table Body - Scrollable */}
+                <div className="max-h-96 overflow-y-auto">
+                  {submissions.map((submission, index) => (
+                    <div
+                      key={`${submission.blockNumber}-${index}`}
+                      className="px-6 py-4 border-b last:border-b-0 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="grid grid-cols-12 gap-4 items-center text-sm">
+                        <div className="col-span-2">
+                          <span className="font-medium text-avail-600">
+                            {submission.appId}
+                          </span>
+                        </div>
+                        <div className="col-span-2">
+                          <Link
+                            href={`/extrinsics/${submission.extrinsicHash}`}
+                            className="text-avail-600 hover:text-avail-700"
+                          >
+                            #{submission.extrinsicIndex}
+                          </Link>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="font-mono text-xs">
+                            {formatDataSize(submission.dataSize)}
+                          </span>
+                        </div>
+                        <div className="col-span-3">
+                          <Link
+                            href={`/accounts/${submission.submitter}`}
+                            className="text-avail-600 hover:text-avail-700"
+                          >
+                            <CopyableValue
+                              value={submission.submitter}
+                              truncate={true}
+                              truncateStart={6}
+                              truncateEnd={6}
+                              valueClassName="text-avail-600 text-xs"
+                            />
+                          </Link>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimeAgo(submission.timestamp)}
+                          </span>
+                        </div>
+                        <div className="col-span-1">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              submission.success
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {submission.success ? '✓' : '✗'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="text-center py-6">
-                <button
-                  onClick={loadMore}
-                  disabled={loading}
-                  className="px-6 py-3 bg-avail-600 text-white rounded-lg hover:bg-avail-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Loading...' : 'Load More'}
-                </button>
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="p-4 border-t bg-muted/30">
+                    <button
+                      onClick={loadMore}
+                      disabled={loading}
+                      className="w-full px-4 py-2 bg-avail-600 text-white rounded-lg hover:bg-avail-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      {loading ? 'Loading...' : 'Load More'}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="p-8 text-center">
+                <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">
+                  No Data Submissions Found
+                </h3>
+                <p className="text-muted-foreground">
+                  No data submissions have been made yet.
+                </p>
               </div>
             )}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <Database className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">
-              No Data Submissions Found
-            </h3>
-            <p className="text-muted-foreground">
-              {searchTerm || appIdFilter || submitterFilter
-                ? 'Try adjusting your filters to see more results.'
-                : 'No data submissions have been made yet.'}
-            </p>
           </div>
-        )}
+        </section>
+
+        {/* Right Column: Future Charts Placeholder */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Additional Analytics</h2>
+            <div className="text-sm text-muted-foreground">
+              Coming soon
+            </div>
+          </div>
+          <div className="space-y-6">
+            {/* Placeholder for future chart 1 */}
+            <div className="bg-card rounded-lg border shadow-sm p-6">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="font-medium mb-2">App Distribution Chart</h3>
+                  <p className="text-sm">
+                    Visualization of submissions by App ID
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Placeholder for future chart 2 */}
+            <div className="bg-card rounded-lg border shadow-sm p-6">
+              <div className="flex items-center justify-center h-48 text-muted-foreground">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="font-medium mb-2">Submission Trends</h3>
+                  <p className="text-sm">
+                    Historical trends and patterns
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
