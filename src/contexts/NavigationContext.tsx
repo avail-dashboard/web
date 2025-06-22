@@ -19,14 +19,28 @@ interface NavigationContextType {
   animationTarget: string | null
   setAnimationTarget: (target: string | null) => void
   navigationItems: NavigationItem[]
+  isMobileMenuOpen: boolean
+  setIsMobileMenuOpen: (open: boolean) => void
+  toggleMobileMenu: () => void
 }
 
-const NavigationContext = createContext<NavigationContextType | undefined>(undefined)
+const NavigationContext = createContext<NavigationContextType | undefined>(
+  undefined
+)
 
-export function NavigationProvider({ children }: { children: React.ReactNode }) {
+export function NavigationProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const [isAnimating, setIsAnimating] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [animationTarget, setAnimationTarget] = useState<string | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(prev => !prev)
+  }
 
   // Define the navigation items that match the homepage cards
   const navigationItems: NavigationItem[] = [
@@ -35,14 +49,14 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       label: 'Blocks',
       href: '/blocks',
       icon: null, // Will use Blocks icon
-      color: 'avail'
+      color: 'avail',
     },
     {
       id: 'extrinsics',
       label: 'Transactions',
       href: '/extrinsics',
       icon: null, // Will use Activity icon
-      color: 'blue'
+      color: 'blue',
     },
     {
       id: 'accounts',
@@ -50,14 +64,14 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       href: '/accounts',
       icon: null, // Will use User icon
       color: 'green',
-      disabled: true
+      disabled: true,
     },
     {
       id: 'data-submissions',
       label: 'Data Submissions',
       href: '/data-submissions',
       icon: null, // Will use Activity icon
-      color: 'purple'
+      color: 'purple',
     },
     {
       id: 'rollups',
@@ -65,7 +79,7 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       href: '/rollups',
       icon: null, // Will add later
       color: 'orange',
-      disabled: true
+      disabled: true,
     },
     {
       id: 'validators',
@@ -73,8 +87,8 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
       href: '/validators',
       icon: null, // Will add later
       color: 'red',
-      disabled: true
-    }
+      disabled: true,
+    },
   ]
 
   return (
@@ -87,6 +101,9 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
         animationTarget,
         setAnimationTarget,
         navigationItems,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+        toggleMobileMenu,
       }}
     >
       {children}

@@ -4,6 +4,7 @@ import { StagewiseToolbar } from '@/components/StagewiseToolbar'
 import { Providers } from '@/lib/providers'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { MobileNavigation } from '@/components/navigation/MobileNavigation'
 
 export const metadata: Metadata = {
   title: 'Avail Explorer',
@@ -29,6 +30,7 @@ export default function RootLayout({
             </main>
             <Footer />
           </div>
+          <MobileNavigation />
           <StagewiseToolbar />
         </Providers>
       </body>

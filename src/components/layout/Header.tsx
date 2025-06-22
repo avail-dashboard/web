@@ -10,6 +10,7 @@ import {
   AnimatedNavigation,
   AnimatedSearchBar,
 } from '@/components/navigation/AnimatedNavigation'
+import { MobileMenuButton } from '@/components/navigation/MobileMenuButton'
 
 export const Header = React.memo(function Header() {
   const {
@@ -71,6 +72,10 @@ export const Header = React.memo(function Header() {
 
           {/* Right section - Controls and Info */}
           <div className="flex items-center space-x-3 flex-shrink-0">
+            {/* Mobile Menu Button - only visible on mobile */}
+            <div className="lg:hidden">
+              <MobileMenuButton />
+            </div>
             {chainError && (
               <ErrorDisplay
                 error={chainError}
