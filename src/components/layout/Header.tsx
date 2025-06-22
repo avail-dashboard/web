@@ -6,21 +6,20 @@ import Image from 'next/image'
 import { RefreshIndicator } from '@/components/ui/RefreshIndicator'
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay'
 import { useChainData } from '@/lib/hooks/useAvailAPI'
-import { AnimatedNavigation, AnimatedSearchBar } from '@/components/navigation/AnimatedNavigation'
-import { MobileNavigation } from '@/components/navigation/MobileNavigation'
+import {
+  AnimatedNavigation,
+  AnimatedSearchBar,
+} from '@/components/navigation/AnimatedNavigation'
 
 export const Header = React.memo(function Header() {
-
   const {
     data: chainData,
-    loading: chainLoading,
     refreshing: chainRefreshing,
     error: chainError,
     refetch: refetchChain,
   } = useChainData({
     refetchInterval: 10000, // Refresh every 10 seconds
   })
-
 
   // Memoize formatted price data to prevent unnecessary recalculations
   const priceData = useMemo(() => {
@@ -33,7 +32,6 @@ export const Header = React.memo(function Header() {
         (chainData.priceChange || 0) < 0 ? 'text-red-500' : 'text-green-500',
     }
   }, [chainData?.tokenPrice, chainData?.priceChange])
-
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50">
@@ -54,17 +52,17 @@ export const Header = React.memo(function Header() {
                 Explorer
               </span>
             </Link>
-            
+
             <div className="hidden md:flex items-center space-x-2 bg-muted/30 border border-border/40 rounded-md px-2.5 py-1 text-xs text-muted-foreground">
               <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></span>
               <span>Mainnet</span>
             </div>
-            
+
             {/* Search bar - positioned before navigation */}
             <div className="max-w-md">
               <AnimatedSearchBar />
             </div>
-            
+
             {/* Navigation - now show on all pages including homepage */}
             <div className="hidden lg:block">
               <AnimatedNavigation />
@@ -73,9 +71,6 @@ export const Header = React.memo(function Header() {
 
           {/* Right section - Controls and Info */}
           <div className="flex items-center space-x-3 flex-shrink-0">
-            {/* Mobile Navigation - show on all pages */}
-            <MobileNavigation />
-            
             {chainError && (
               <ErrorDisplay
                 error={chainError}
