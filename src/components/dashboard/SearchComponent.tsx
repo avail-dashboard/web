@@ -60,8 +60,12 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
       try {
         const searchResults = await searchApi.search(searchQuery)
         console.log('Frontend received search results:', searchResults)
-        
-        if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
+
+        if (
+          !searchResults ||
+          !searchResults.results ||
+          searchResults.results.length === 0
+        ) {
           setError('No results found for your search query.')
           return
         }
@@ -77,7 +81,8 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
               router.push(`/extrinsics/${result.data.hash || result.id}`)
               break
             case 'rollup':
-              router.push(`/rollups/${result.id}`)
+              // Redirect to data-submissions with app filter since rollups are disabled
+              router.push(`/data-submissions?app=${result.id}`)
               break
             case 'data_submission':
               router.push(`/data-submissions/${result.id}`)
@@ -85,11 +90,13 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
           }
         } else {
           // Multiple results - set them for display
-          setResults(searchResults.results.map(r => ({
-            type: r.type,
-            id: r.id,
-            data: r.data
-          })))
+          setResults(
+            searchResults.results.map(r => ({
+              type: r.type,
+              id: r.id,
+              data: r.data,
+            }))
+          )
         }
       } catch (apiError) {
         console.error('Search API error:', apiError)
@@ -112,7 +119,7 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
 
       // Clear the search input
       setQuery('')
-      
+
       onSearch?.(searchQuery, [])
     } catch (err) {
       console.error('Search error:', err)
@@ -152,8 +159,6 @@ export function SearchComponent({ onSearch }: SearchComponentProps) {
           </button>
         </div>
       </form>
-
-
 
       {/* Error Display */}
       {error && (

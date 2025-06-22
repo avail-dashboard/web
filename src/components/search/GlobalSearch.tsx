@@ -1,23 +1,22 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { Search, Loader2, Hash, User, Blocks, Shield, Database, Package } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import Fuse from "fuse.js"
+import * as React from 'react'
+import { Search, Loader2, Hash, Blocks, Database, Package } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 
-import { cn } from "@/lib/utils"
-import { searchApi, SearchResult, SearchData } from "@/lib/api"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { cn } from '@/lib/utils'
+import { searchApi, SearchResult } from '@/lib/api'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 
 // Use SearchResult from API but extend with score for fuzzy search
 interface ExtendedSearchResult extends SearchResult {
@@ -30,19 +29,19 @@ interface GlobalSearchProps {
   showShortcut?: boolean
 }
 
-export function GlobalSearch({ 
-  className, 
-  placeholder = "Search blocks, extrinsics, rollups, data submissions...",
-  showShortcut = true 
+export function GlobalSearch({
+  className,
+  placeholder = 'Search blocks, extrinsics, rollups, data submissions...',
+  showShortcut = true,
 }: GlobalSearchProps) {
   const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
+  const [query, setQuery] = React.useState('')
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const router = useRouter()
 
   // Debounced search query
-  const [debouncedQuery, setDebouncedQuery] = React.useState("")
-  
+  const [debouncedQuery, setDebouncedQuery] = React.useState('')
+
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(query)
@@ -64,20 +63,7 @@ export function GlobalSearch({
 
     const results: ExtendedSearchResult[] = searchResults.results
 
-    // Use Fuse.js for better fuzzy search scoring if needed
-    const fuse = new Fuse(results, {
-      keys: [
-        { name: 'context', weight: 1.0 },
-        { name: 'id', weight: 0.9 },
-        { name: 'data.hash', weight: 1.0 },
-        { name: 'data.number', weight: 0.9 },
-        { name: 'data.name', weight: 0.8 },
-        { name: 'data.module', weight: 0.7 },
-        { name: 'data.call', weight: 0.6 },
-      ],
-      threshold: 0.4,
-      includeScore: true,
-    })
+    // Fuse.js could be used for better fuzzy search scoring if needed in the future
 
     // For exact API matches, don't re-score since API already did the matching
     if (results.length > 0) {
@@ -102,13 +88,13 @@ export function GlobalSearch({
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev < allResults.length - 1 ? prev + 1 : 0
           )
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev > 0 ? prev - 1 : allResults.length - 1
           )
           break
@@ -135,8 +121,8 @@ export function GlobalSearch({
 
   const handleResultClick = (result: ExtendedSearchResult) => {
     setOpen(false)
-    setQuery("")
-    
+    setQuery('')
+
     switch (result.type) {
       case 'block': {
         router.push(`/blocks/${result.id}`)
@@ -147,7 +133,8 @@ export function GlobalSearch({
         break
       }
       case 'rollup': {
-        router.push(`/rollups/${result.id}`)
+        // Redirect to data-submissions with app filter since rollups are disabled
+        router.push(`/data-submissions?app=${result.id}`)
         break
       }
       case 'data_submission': {
@@ -178,7 +165,7 @@ export function GlobalSearch({
         return `Block #${result.data.number || result.id}`
       }
       case 'extrinsic': {
-        return result.data.module && result.data.call 
+        return result.data.module && result.data.call
           ? `${result.data.module}.${result.data.call}`
           : `Extrinsic ${result.id}`
       }
@@ -202,7 +189,10 @@ export function GlobalSearch({
         return `Block #${result.data.blockNumber || result.data.block_number} • ${result.data.success ? 'Success' : 'Failed'}`
       }
       case 'rollup': {
-        return result.data.description || `App ID: ${result.data.appId || result.data.app_id}`
+        return (
+          result.data.description ||
+          `App ID: ${result.data.appId || result.data.app_id}`
+        )
       }
       case 'data_submission': {
         return `Size: ${result.data.dataSize || result.data.data_size} bytes • App ID: ${result.data.appId || result.data.app_id}`
@@ -218,7 +208,7 @@ export function GlobalSearch({
         <Button
           variant="outline"
           className={cn(
-            "relative w-full justify-start text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64",
+            'relative w-full justify-start text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64',
             className
           )}
         >
@@ -240,35 +230,37 @@ export function GlobalSearch({
             <Input
               placeholder={placeholder}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value)}
               className="pl-8 border-0 focus-visible:ring-0 text-base"
               autoFocus
             />
           </div>
         </DialogHeader>
-        
+
         <div className="max-h-96 overflow-y-auto">
           {isLoading && query.length > 2 && (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+              <span className="ml-2 text-sm text-muted-foreground">
+                Searching...
+              </span>
             </div>
           )}
-          
+
           {!isLoading && query.length > 2 && allResults.length === 0 && (
             <div className="py-8 text-center text-sm text-muted-foreground">
               No results found for &quot;{query}&quot;
             </div>
           )}
-          
+
           {allResults.length > 0 && (
             <div className="p-2">
               {allResults.map((result, index) => (
                 <button
                   key={`${result.type}-${index}`}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent",
-                    index === selectedIndex && "bg-accent"
+                    'w-full flex items-center gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent',
+                    index === selectedIndex && 'bg-accent'
                   )}
                   onClick={() => handleResultClick(result)}
                 >
@@ -297,14 +289,14 @@ export function GlobalSearch({
               ))}
             </div>
           )}
-          
+
           {query.length <= 2 && (
             <div className="p-4 text-center text-sm text-muted-foreground">
               Type at least 3 characters to search
             </div>
           )}
         </div>
-        
+
         <div className="border-t px-4 py-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Use ↑↓ to navigate, Enter to select, Esc to close</span>
@@ -314,4 +306,4 @@ export function GlobalSearch({
       </DialogContent>
     </Dialog>
   )
-} 
+}
