@@ -1,8 +1,9 @@
 'use client'
 
 import { Doughnut } from 'react-chartjs-2'
-import { ChartOptions } from 'chart.js'
-import { ChartJS } from '@/lib/chart-config'
+import { ChartOptions, Chart as ChartJS } from 'chart.js'
+// Import the chart configuration to ensure Chart.js components are registered
+import '@/lib/chart-config'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getThemeColors, getChartColorPalette } from '@/lib/chart-themes'
 

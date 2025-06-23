@@ -650,6 +650,21 @@ export const dataSubmissionsApi = {
   }): Promise<DataSubmission[]> =>
     api.get('/data-submissions', { params }).then(res => res.data || []),
 
+  // New: Get large datasets specifically for charting
+  getDataSubmissionsForChart: (params?: {
+    limit?: number // Support up to 5000+ records
+    appId?: number
+    submitter?: string
+    orderBy?: string
+    order?: string
+    from_block?: number
+    to_block?: number
+    from_date?: string
+    to_date?: string
+  }): Promise<DataSubmission[]> =>
+    api.get('/data-submissions', { params: { ...params, limit: params?.limit || 3000 } })
+      .then(res => res.data || []),
+
   getDataSubmissionStats: (): Promise<DataSubmissionStats> =>
     api.get('/data-submissions/stats').then(res => res.data),
 }

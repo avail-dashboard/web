@@ -1,6 +1,8 @@
 'use client'
 
 import { Line } from 'react-chartjs-2'
+// Import chart configuration to ensure Chart.js components are registered
+import '@/lib/chart-config'
 import { useTheme } from '@/contexts/ThemeContext'
 import { getChartColorPalette, getThemeColors } from '@/lib/chart-themes'
 

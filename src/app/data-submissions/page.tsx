@@ -13,6 +13,7 @@ import {
 import Link from 'next/link'
 import { CopyableValue } from '@/components/ui/copyable-value'
 import { DataSubmissionsChart } from '@/components/charts/DataSubmissionsChart'
+import { EnhancedDataSubmissionsChart } from '@/components/charts/EnhancedDataSubmissionsChart'
 
 // Helper function to format data size
 const formatDataSize = (bytes: number): string => {
@@ -275,7 +276,7 @@ export default function DataSubmissionsPage() {
         </div>
       </div>
 
-      {/* Chart Section */}
+      {/* Enhanced Chart Section */}
       <div className="bg-card p-6 rounded-lg border shadow-sm mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -283,15 +284,24 @@ export default function DataSubmissionsPage() {
               <BarChart3 className="h-5 w-5 text-avail-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold">Data Size by Block & App ID</h2>
+              <h2 className="text-lg font-semibold">Data Availability Analytics</h2>
               <p className="text-sm text-muted-foreground">
-                Total data size per block, grouped by App ID (shows gaps for blocks without submissions)
+                Interactive charts with time range and metric selection
               </p>
             </div>
           </div>
         </div>
 
-        <DataSubmissionsChart chartData={chartData} appIds={chartAppIds} />
+        <EnhancedDataSubmissionsChart className="mb-8" />
+        
+        {/* Legacy Chart - Keep for comparison during transition */}
+        <div className="border-t pt-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <h3 className="text-md font-medium text-muted-foreground">Legacy View</h3>
+            <span className="text-xs bg-muted px-2 py-1 rounded">Block-based</span>
+          </div>
+          <DataSubmissionsChart chartData={chartData} appIds={chartAppIds} />
+        </div>
       </div>
 
 
