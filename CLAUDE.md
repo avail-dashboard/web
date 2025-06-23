@@ -13,6 +13,8 @@
 10. When working on a task, there are tasks that you don't do immediately but need to be done at some point. Please maintain them in todo.md, tasks like you created a test script for testing, but you need to remove it once fixed.
 
 11. This contains the scope of the project. ./Docs/Avail DA Explorer Scope.md
+12. Not all the design decisions we make in the file ./design_notes.md
 
+13. Summarize and re-summarize throughout the conversation. A report file of summaries, logs file for the communication I'm having with you and the   decisions we take: - What have we done - What are we not doing - What issues we faced in a file and antyhing of relevance. Store in directory /ai_logs/. Keep compacting them maintaining them, by updating them everytime something of relevance happens.
 
 references - https://explorer.availproject.org/#/explorer, https://avail.subscan.io/
