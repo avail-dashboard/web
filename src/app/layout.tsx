@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 // Import chart configuration to ensure Chart.js components are registered globally
 import '@/lib/chart-config'
-import { StagewiseToolbar } from '@/components/StagewiseToolbar'
 import { Providers } from '@/lib/providers'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -35,7 +34,6 @@ export default function RootLayout({
               <Footer />
             </div>
             <MobileNavigation />
-            <StagewiseToolbar />
           </Providers>
         </ThemeProvider>
       </body>
