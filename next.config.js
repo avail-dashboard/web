@@ -17,6 +17,21 @@ const nextConfig = {
   // Enable standalone output for Docker optimization
   output: 'standalone',
 
+  // Enable source maps for development mode
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Enable high-quality source maps for client-side development
+      config.devtool = 'eval-source-map'
+    }
+    return config
+  },
+
+  // Additional development optimizations
+  ...(process.env.NODE_ENV === 'development' && {
+    // Disable webpack bundling optimization in dev for better source maps
+    swcMinify: false,
+  }),
+
   images: {
     domains: ['localhost'],
   },
