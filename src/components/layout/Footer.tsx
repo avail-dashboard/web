@@ -8,7 +8,15 @@ export const Footer = React.memo(function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-center md:text-left">
             <p className="text-sm text-muted-foreground">
-              Avail Explorer - Built with Next.js and Tailwind CSS
+              Built by Vineet Kumar. Check out my resume:{' '}
+              <a
+                href="https://vineetk1998.github.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-avail-600 transition-colors hover:underline"
+              >
+                vineetk1998.github.io
+              </a>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Exploring the Avail blockchain network

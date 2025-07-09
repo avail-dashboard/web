@@ -21,7 +21,7 @@ describe('Footer Component', () => {
     render(<Footer />)
 
     expect(
-      screen.getByText('Avail Explorer - Built with Next.js and Tailwind CSS')
+      screen.getByText(/Built by Vineet Kumar/)
     ).toBeInTheDocument()
     expect(
       screen.getByText('Exploring the Avail blockchain network')
@@ -138,7 +138,7 @@ describe('Footer Component', () => {
 
     // Branding section
     expect(
-      screen.getByText('Avail Explorer - Built with Next.js and Tailwind CSS')
+      screen.getByText(/Built by Vineet Kumar/)
     ).toBeInTheDocument()
     expect(
       screen.getByText('Exploring the Avail blockchain network')

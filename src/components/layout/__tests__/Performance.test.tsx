@@ -197,7 +197,7 @@ describe('Layout Performance Tests', () => {
 
       // Verify Footer still works correctly
       expect(
-        screen.getByText('Avail Explorer - Built with Next.js and Tailwind CSS')
+        screen.getByText(/Built by Vineet Kumar/)
       ).toBeInTheDocument()
       expect(
         screen.getByText('© 2024 Avail Project. All rights reserved.')

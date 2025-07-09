@@ -128,7 +128,7 @@ describe('Layout Integration Tests', () => {
 
     // Footer elements
     expect(
-      screen.getByText('Avail Explorer - Built with Next.js and Tailwind CSS')
+      screen.getByText(/Built by Vineet Kumar/)
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Blocks' })).toBeInTheDocument()
     expect(
