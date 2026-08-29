@@ -107,3 +107,8 @@ jspm_packages/
 .vscode-test 
 
 package-lock.json
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
